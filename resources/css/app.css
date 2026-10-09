@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+@source '../../storage/framework/views/*.php';
+
+@plugin "daisyui" {
+    themes: false;
+    logs: false;
+}
+
+@plugin "daisyui/theme" {
+    name: 'farm';
+    default: true;
+    prefersdark: false;
+    color-scheme: light;
+
+    --color-base-100: oklch(99% 0.006 85);
+    --color-base-200: oklch(96.5% 0.009 85);
+    --color-base-300: oklch(92.5% 0.012 82);
+    --color-base-content: oklch(28% 0.015 60);
+
+    --color-primary: oklch(45% 0.075 145);
+    --color-primary-content: oklch(98% 0.01 145);
+
+    --color-secondary: oklch(48% 0.055 55);
+    --color-secondary-content: oklch(98% 0.01 55);
+
+    --color-accent: oklch(60% 0.06 75);
+    --color-accent-content: oklch(20% 0.02 75);
+
+    --color-neutral: oklch(32% 0.012 65);
+    --color-neutral-content: oklch(97% 0.008 65);
+
+    --color-info: oklch(58% 0.09 235);
+    --color-info-content: oklch(98% 0.01 235);
+
+    --color-success: oklch(52% 0.11 150);
+    --color-success-content: oklch(98% 0.01 150);
+
+    --color-warning: oklch(70% 0.13 75);
+    --color-warning-content: oklch(24% 0.04 75);
+
+    --color-error: oklch(52% 0.16 25);
+    --color-error-content: oklch(98% 0.01 25);
+
+    --radius-selector: 0.25rem;
+    --radius-field: 0.25rem;
+    --radius-box: 0.375rem;
+
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-base-200 text-base-content antialiased;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    /* One visible focus ring for the whole app, so keyboard navigation never
+       disappears into the theme. */
+    :focus-visible {
+        @apply outline-primary outline-2 outline-offset-2;
+    }
+}
+
+@layer components {
+    .page-title {
+        @apply text-2xl font-semibold tracking-tight;
+    }
+
+    .page-subtitle {
+        @apply text-sm text-base-content/60;
+    }
+
+    .field-label {
+        @apply mb-1 block text-sm font-medium text-base-content/80;
+    }
+}
+
+@media print {
+    /* Reports should print cleanly: drop the chrome, keep the data. */
+    .print\:hidden,
+    [data-print='hide'] {
+        display: none !important;
+    }
+
+    body {
+        @apply bg-white text-black;
+    }
+
+    .card,
+    [class*='rounded-box'] {
+        border-color: #ccc !important;
+        break-inside: avoid;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+}
