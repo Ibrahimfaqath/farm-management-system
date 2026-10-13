@@ -93,7 +93,7 @@ class DashboardContentTest extends TestCase
         $response->assertOk()
             ->assertSee('Inventori Pakan')
             ->assertSee('Nilai Stok')
-            ->assertSee('Batas Ulang');
+            ->assertSee('Batas Pemesanan Ulang');
     }
 
     public function test_sold_animal_page_explains_that_history_is_kept(): void
@@ -165,7 +165,7 @@ class DashboardContentTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Pengguna Sistem')
-            ->assertSee('+ Tambah Pengguna');
+            ->assertSee('Tambah Pengguna');
     }
 
     public function test_role_enum_exposes_modules_and_abilities(): void

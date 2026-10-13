@@ -1,54 +1,57 @@
-@extends('layouts.app', ['title' => 'Pembayaran'])
+@extends('layouts.app', ['title' => __('Payments')])
 
 @section('content')
-    <x-page-header title="Pembayaran Pelanggan" subtitle="Setiap pembayaran tercatat pada piutang dan arus kas">
+    <x-page-header :title="__('Customer payments')"
+                   :subtitle="__('Each payment reduces receivables and adds to the cash flow record.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('payment.record'))
-                <a href="{{ route('payments.create') }}" class="btn btn-primary btn-sm">+ Catat Pembayaran</a>
+                <a href="{{ route('payments.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Record payment') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <x-stat label="Diterima Bulan Ini" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="success" />
-        <x-stat label="Total Catatan" :value="$payments->total()" />
-        <x-stat label="Rata-rata" :value="$payments->count() > 0 ? 'Rp'.number_format($monthTotal / $payments->count(), 0, ',', '.') : '—'" />
+        <x-stat :label="__('Received this month')" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="success" />
+        <x-stat :label="__('Total records')" :value="$payments->total()" />
+        <x-stat :label="__('Average')"
+               :value="$payments->count() > 0 ? 'Rp'.number_format($monthTotal / $payments->count(), 0, ',', '.') : '—'"
+               :hint="__('Per payment this month')" />
     </div>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-4">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nomor pembayaran…" class="input input-sm input bg-base-100">
-            <select name="customer_id" class="select select-sm select bg-base-100">
-                <option value="">Semua pelanggan</option>
-                @foreach ($customers as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['customer_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <input name="date_from" type="date" value="{{ $filters['date_from'] ?? '' }}" class="input input-sm input bg-base-100">
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('payments.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search payment number…')" :reset="route('payments.index')">
+            <x-filter-select name="customer_id"
+                :options="$customers"
+                :selected="$filters['customer_id'] ?? ''"
+                :placeholder="__('All customers') "
+                :label="__('Filter by customer') " />
+
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('From date') }}">
+        </x-filter-bar>
 
         @if ($payments->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pembayaran" description="Catat pembayaran pelanggan untuk mengurangi piutang dan menambah kas."
-                              action-label="Catat Pembayaran" action-url="{{ route('payments.create') }}" />
+                <x-empty-state :label="__('No payments yet')"
+                              :description="__('Record a customer payment to reduce receivables and increase cash.')"
+                              :url="route('payments.create')" :submit-label="__('Record payment')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Tanggal</th>
-                            <th>Pelanggan</th>
-                            <th>Faktur</th>
-                            <th>Metode</th>
-                            <th>Referensi</th>
-                            <th>Dicatat Oleh</th>
-                            <th class="text-right">Jumlah</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Invoice') }}</th>
+                            <th>{{ __('Method') }}</th>
+                            <th>{{ __('Reference') }}</th>
+                            <th>{{ __('Recorded by') }}</th>
+                            <th class="num">{{ __('Amount') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,17 +60,19 @@
                                 <td class="font-mono text-xs">{{ $payment->payment_number }}</td>
                                 <td class="whitespace-nowrap">{{ $payment->payment_date->translatedFormat('d M Y') }}</td>
                                 <td>{{ $payment->customer->name }}</td>
-                                <td class="text-[11px]">
+                                <td class="text-meta ">
                                     @if ($payment->invoice)
-                                        <a href="{{ route('invoices.show', $payment->invoice) }}" class="text-primary hover:underline">{{ $payment->invoice->invoice_number }}</a>
+                                        <a href="{{ route('invoices.show', $payment->invoice) }}" class="link link-hover font-mono text-primary">
+                                            {{ $payment->invoice->invoice_number }}
+                                        </a>
                                     @else
                                         <span class="text-base-content/45">—</span>
                                     @endif
                                 </td>
                                 <td>{{ $payment->method->label() }}</td>
-                                <td class="text-[11px] text-base-content/60">{{ $payment->reference_number ?? '—' }}</td>
+                                <td class="text-meta truncate text-base-content/60">{{ $payment->reference_number ?? '—' }}</td>
                                 <td class="text-base-content/65">{{ $payment->recorder?->name ?? '—' }}</td>
-                                <td class="text-right font-medium text-success"><x-money :amount="$payment->amount" /></td>
+                                <td class="num font-medium text-tone-success"><x-money :amount="$payment->amount" /></td>
                             </tr>
                         @endforeach
                     </tbody>

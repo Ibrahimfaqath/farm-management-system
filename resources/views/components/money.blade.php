@@ -3,8 +3,8 @@
 @php
     $formatted = 'Rp'.number_format((float) $amount, 0, ',', '.');
     $cls = $tone ? match ($tone) {
-        'positive' => 'text-success',
-        'negative' => 'text-error',
+        'positive' => 'text-tone-success',
+        'negative' => 'text-tone-error',
         default => '',
     } : '';
 @endphp

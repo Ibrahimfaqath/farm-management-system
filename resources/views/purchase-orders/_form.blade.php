@@ -1,9 +1,9 @@
 @php $editing = $purchaseOrder->exists; @endphp
-@extends('layouts.app', ['title' => $editing ? 'Ubah Pesanan Pembelian' : 'Pesanan Pembelian Baru'])
+@extends('layouts.app', ['title' => $editing ? __('Edit purchase order') : __('New purchase order')])
 
 @section('content')
-    <x-page-header :title="$editing ? 'Ubah '.$purchaseOrder->po_number : 'Pesanan Pembelian Baru'"
-                   subtitle="Pesanan hanya mencatat komitmen belanja dan tidak menambah stok."
+    <x-page-header :title="$editing ? __('Edit :number', ['number' => $purchaseOrder->po_number]) : __('New purchase order')"
+                   :subtitle="__('An order records a buying commitment only. It never increases stock.')"
                    :back="route('purchase-orders.index')" />
 
     <form method="POST" action="{{ $editing ? route('purchase-orders.update', $purchaseOrder) : route('purchase-orders.store') }}"
@@ -11,26 +11,28 @@
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <x-panel title="Informasi Pesanan">
+        <x-panel :title="__('Order information')">
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <x-form.select name="supplier_id" label="Pemasok" :options="$suppliers" :selected="$purchaseOrder->supplier_id" required />
-                <x-form.input name="order_date" label="Tanggal Pesan" type="date" :value="($purchaseOrder->order_date ?? now())->toDateString()" required />
-                <x-form.input name="expected_date" label="Perkiraan Tiba" type="date" :value="($purchaseOrder->expected_date ?? now()->addDays(7))->toDateString()" />
-                <x-form.money name="discount_amount" label="Diskon" :value="$purchaseOrder->discount_amount ?? 0" />
+                <x-form.select name="supplier_id" :label="__('Supplier')" :options="$suppliers" :selected="$purchaseOrder->supplier_id" required />
+                <x-form.input name="order_date" :label="__('Order date')" type="date" required
+                              :value="($purchaseOrder->order_date ?? now())->toDateString()" />
+                <x-form.input name="expected_date" :label="__('Expected arrival')" type="date"
+                              :value="($purchaseOrder->expected_date ?? now()->addDays(7))->toDateString()" />
+                <x-form.money name="discount_amount" :label="__('Discount')" :value="$purchaseOrder->discount_amount ?? 0" />
             </div>
         </x-panel>
 
-        <x-panel title="Item Pesanan" description="Tambahkan minimal satu item pakan.">
-            <div class="overflow-x-auto">
-                <table class="table table-sm">
+        <x-panel :title="__('Order lines')" :description="__('Add at least one feed item.')" padding="p-0">
+            <div class="table-scroll" data-line-editor>
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th class="w-2/5">Item Pakan</th>
-                            <th class="w-24">Jumlah</th>
-                            <th class="w-24">Satuan</th>
-                            <th class="w-36">Harga Satuan</th>
-                            <th class="w-40">Nomor Batch</th>
-                            <th class="w-10"></th>
+                            <th class="w-2/5">{{ __('Feed item') }}</th>
+                            <th class="w-24">{{ __('Quantity') }}</th>
+                            <th class="w-24">{{ __('Unit') }}</th>
+                            <th class="w-36">{{ __('Unit price') }}</th>
+                            <th class="w-40">{{ __('Batch number') }}</th>
+                            <th class="w-10 text-center"><span class="sr-only">{{ __('Remove') }}</span></th>
                         </tr>
                     </thead>
                     <tbody id="po-items">
@@ -40,34 +42,41 @@
                                 : collect([null]);
                         @endphp
                         @foreach ($rows as $row)
-                            <tr class="po-line">
+                            <tr data-line-row>
                                 <td>
-                                    <select name="items[{{ $loop->index }}][feed_item_id]" class="select select-sm select w-full bg-base-100" required>
-                                        <option value="">— Pilih item —</option>
+                                    <select name="items[{{ $loop->index }}][feed_item_id]" data-line-item required
+                                            class="select select-sm w-full bg-base-100" aria-label="{{ __('Feed item') }}">
+                                        <option value="">{{ __('— Select item —') }}</option>
                                         @foreach ($feedItems as $item)
-                                            <option value="{{ $item->id }}" data-price="{{ (float) $item->price_per_unit }}" data-unit="{{ $item->unit->shortLabel() }}"
+                                            <option value="{{ $item->id }}" data-price="{{ (float) $item->price_per_unit }}"
+                                                    data-unit="{{ $item->unit->shortLabel() }}"
                                                     @selected($row && (int) $row->feed_item_id === $item->id)>{{ $item->name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
                                 <td>
                                     <input name="items[{{ $loop->index }}][quantity]" type="number" step="0.01" min="0.01" required
-                                           value="{{ $row ? (float) $row->quantity : '' }}" class="input input-sm input w-full bg-base-100">
+                                           value="{{ $row ? (float) $row->quantity : '' }}"
+                                           class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
                                 </td>
                                 <td>
-                                    <input name="items[{{ $loop->index }}][unit]" type="text" readonly
-                                           value="{{ $row ? $row->unit->shortLabel() : '' }}" class="input input-sm input w-full bg-base-200 text-base-content/60">
+                                    <input name="items[{{ $loop->index }}][unit]" type="text" readonly data-line-unit
+                                           value="{{ $row ? $row->unit->shortLabel() : '' }}"
+                                           class="input input-sm w-full bg-base-200 text-base-content/60" tabindex="-1" aria-label="{{ __('Unit') }}">
                                 </td>
                                 <td>
-                                    <input name="items[{{ $loop->index }}][unit_price]" type="number" step="1" min="0" required
-                                           value="{{ $row ? (float) $row->unit_price : '' }}" class="input input-sm input w-full bg-base-100">
+                                    <input name="items[{{ $loop->index }}][unit_price]" type="number" step="1" min="0" required data-line-price
+                                           value="{{ $row ? (float) $row->unit_price : '' }}"
+                                           class="input input-sm w-full bg-base-100" aria-label="{{ __('Unit price') }}">
                                 </td>
                                 <td>
                                     <input name="items[{{ $loop->index }}][batch_hint]" type="text"
-                                           value="{{ $row?->batch_hint }}" class="input input-sm input w-full bg-base-100">
+                                           value="{{ $row?->batch_hint }}" class="input input-sm w-full bg-base-100"
+                                           aria-label="{{ __('Batch number') }}">
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-ghost btn-xs text-error" onclick="this.closest('tr').remove()">&times;</button>
+                                    <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
+                                            aria-label="{{ __('Remove line') }}">&times;</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -75,64 +84,63 @@
                 </table>
             </div>
 
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <button type="button" class="btn btn-ghost btn-sm" onclick="addPoLine()">+ Tambah Baris</button>
-                <p class="text-xs text-base-content/50">Subtotal dihitung otomatis dari jumlah dikali harga satuan.</p>
+            <div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 p-3">
+                <button type="button" class="btn btn-ghost btn-sm" data-line-add="po-items" data-line-template="po-line-template">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Add line') }}
+                </button>
+                <p class="text-xs text-base-content/50">{{ __('The subtotal is calculated from quantity × unit price.') }}</p>
             </div>
 
-            @error('items')<p class="mt-2 text-xs text-error">{{ $message }}</p>@enderror
-            @error('items.*.feed_item_id')<p class="mt-1 text-xs text-error">{{ $message }}</p>@enderror
-            @error('items.*.quantity')<p class="mt-1 text-xs text-error">{{ $message }}</p>@enderror
+            @error('items')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
+            @error('items.*.feed_item_id')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
+            @error('items.*.quantity')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
         </x-panel>
 
-        <x-panel title="Catatan">
-            <x-form.textarea name="notes" label="Catatan" :value="$purchaseOrder->notes" rows="2" />
+        <x-panel :title="__('Notes')">
+            <x-form.textarea name="notes" :label="__('Notes')" :value="$purchaseOrder->notes" rows="2" />
         </x-panel>
 
-        <div class="rounded-box border border-base-300 bg-base-100 p-4">
-            <x-form.actions>
-                <button class="btn btn-primary btn-sm">{{ $editing ? 'Simpan Perubahan' : 'Simpan Pesanan' }}</button>
-                <a href="{{ route('purchase-orders.index') }}" class="btn btn-ghost btn-sm">Batal</a>
+        <x-panel>
+            <x-form.actions bare>
+                <x-form.submit>{{ $editing ? __('Save changes') : __('Save purchase order') }}</x-form.submit>
+                <a href="{{ route('purchase-orders.index') }}" class="btn btn-ghost btn-sm">{{ __('Cancel') }}</a>
             </x-form.actions>
-        </div>
+        </x-panel>
     </form>
 
     <template id="po-line-template">
-        <tr class="po-line">
+        <tr data-line-row>
             <td>
-                <select name="items[__INDEX__][feed_item_id]" class="select select-sm select w-full bg-base-100" required>
-                    <option value="">— Pilih item —</option>
+                <select name="items[__INDEX__][feed_item_id]" data-line-item required
+                        class="select select-sm w-full bg-base-100" aria-label="{{ __('Feed item') }}">
+                    <option value="">{{ __('— Select item —') }}</option>
                     @foreach ($feedItems as $item)
-                        <option value="{{ $item->id }}" data-price="{{ (float) $item->price_per_unit }}" data-unit="{{ $item->unit->shortLabel() }}">{{ $item->name }}</option>
+                        <option value="{{ $item->id }}" data-price="{{ (float) $item->price_per_unit }}"
+                                data-unit="{{ $item->unit->shortLabel() }}">{{ $item->name }}</option>
                     @endforeach
                 </select>
             </td>
-            <td><input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required class="input input-sm input w-full bg-base-100"></td>
-            <td><input name="items[__INDEX__][unit]" type="text" readonly class="input input-sm input w-full bg-base-200 text-base-content/60"></td>
-            <td><input name="items[__INDEX__][unit_price]" type="number" step="1" min="0" required class="input input-sm input w-full bg-base-100"></td>
-            <td><input name="items[__INDEX__][batch_hint]" type="text" class="input input-sm input w-full bg-base-100"></td>
-            <td class="text-center"><button type="button" class="btn btn-ghost btn-xs text-error" onclick="this.closest('tr').remove()">&times;</button></td>
+            <td>
+                <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required
+                       class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
+            </td>
+            <td>
+                <input name="items[__INDEX__][unit]" type="text" readonly data-line-unit
+                       class="input input-sm w-full bg-base-200 text-base-content/60" tabindex="-1" aria-label="{{ __('Unit') }}">
+            </td>
+            <td>
+                <input name="items[__INDEX__][unit_price]" type="number" step="1" min="0" required data-line-price
+                       class="input input-sm w-full bg-base-100" aria-label="{{ __('Unit price') }}">
+            </td>
+            <td>
+                <input name="items[__INDEX__][batch_hint]" type="text" class="input input-sm w-full bg-base-100"
+                       aria-label="{{ __('Batch number') }}">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
+                        aria-label="{{ __('Remove line') }}">&times;</button>
+            </td>
         </tr>
     </template>
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('change', function (event) {
-            const select = event.target.closest('.po-line select[name*="feed_item_id"]');
-            if (!select) return;
-            const row = select.closest('tr');
-            const option = select.options[select.selectedIndex];
-            row.querySelector('input[name*="unit_price"]').value = option?.dataset.price ?? '';
-            const unitInput = row.querySelector('input[name*="unit"]');
-            if (unitInput) unitInput.value = option?.dataset.unit ?? '';
-        });
-
-        function addPoLine() {
-            const body = document.getElementById('po-items');
-            const index = body.querySelectorAll('tr').length;
-            const html = document.getElementById('po-line-template').innerHTML.replaceAll('__INDEX__', index);
-            body.insertAdjacentHTML('beforeend', html);
-        }
-    </script>
-@endpush

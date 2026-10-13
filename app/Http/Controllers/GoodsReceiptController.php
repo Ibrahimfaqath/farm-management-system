@@ -46,10 +46,21 @@ class GoodsReceiptController extends Controller
 
     public function create(Request $request): View
     {
+        /*
+         * `whereKey` rather than `findOrFail` inside the `when`: findOrFail
+         * returns a model, and the following `first()` would then run as a new
+         * query and silently load the *first* purchase order instead of the one
+         * the user asked for. That left the line rows pointing at the wrong
+         * order while the selector showed nothing selected.
+         */
+        $requestedOrderId = $request->integer('purchase_order_id');
+
         $purchaseOrder = PurchaseOrder::query()
             ->with(['supplier', 'items.feedItem'])
-            ->when($request->integer('purchase_order_id'), fn ($q, $id) => $q->findOrFail($id))
+            ->when($requestedOrderId, fn ($query, $id) => $query->whereKey($id))
             ->first();
+
+        abort_if($requestedOrderId && ! $purchaseOrder, 404);
 
         $receipt = new GoodsReceipt([
             'received_date' => now()->toDateString(),

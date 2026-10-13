@@ -1,78 +1,85 @@
-@extends('layouts.app', ['title' => 'Penerimaan Barang'])
+@extends('layouts.app', ['title' => __('Goods receipts')])
 
 @section('content')
-    <x-page-header title="Penerimaan Barang" subtitle="Hanya penerimaan yang dikonfirmasi menambah stok">
+    <x-page-header :title="__('Goods receipts')"
+                   :subtitle="__('Only a confirmed receipt increases stock.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.receive'))
-                <a href="{{ route('goods-receipts.create') }}" class="btn btn-primary btn-sm">+ Catat Penerimaan</a>
+                <a href="{{ route('goods-receipts.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Record receipt') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <x-stat label="Draf Belum Dikonfirmasi" :value="$draftCount" :tone="$draftCount > 0 ? 'warning' : 'success'"
-               hint="stok belum bertambah" />
-        <x-stat label="Utang ke Pemasok" :value="'Rp'.number_format($payableTotal, 0, ',', '.')" :tone="$payableTotal > 0 ? 'warning' : 'success'"
-               hint="dari penerimaan terkonfirmasi" />
-        <x-stat label="Penerimaan Terkonfirmasi"
-        <x-stat label="Penerimaan Terkonfirmasi" :value="$postedCount" tone="success" />
+        <x-stat :label="__('Draft receipts')" :value="$draftCount"
+               :tone="$draftCount > 0 ? 'warning' : 'success'"
+               :hint="__('Stock has not moved yet')" />
+        <x-stat :label="__('Supplier payable')" :value="'Rp'.number_format($payableTotal, 0, ',', '.')"
+               :tone="$payableTotal > 0 ? 'warning' : 'success'"
+               :hint="__('From confirmed receipts')" />
+        <x-stat :label="__('Confirmed receipts')" :value="$postedCount" tone="success" />
     </div>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-4">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nomor penerimaan…" class="input input-sm input bg-base-100">
-            <select name="status" class="select select-sm select bg-base-100">
-                <option value="">Semua status</option>
-                @foreach ($statuses as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <select name="supplier_id" class="select select-sm select bg-base-100">
-                <option value="">Semua pemasok</option>
-                @foreach ($suppliers as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['supplier_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('goods-receipts.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search receipt number…')" :reset="route('goods-receipts.index')">
+            <x-filter-select name="status"
+                :options="$statuses"
+                :selected="$filters['status'] ?? ''"
+                :placeholder="__('All statuses') "
+                :label="__('Filter by status') " />
+
+            <x-filter-select name="supplier_id"
+                :options="$suppliers"
+                :selected="$filters['supplier_id'] ?? ''"
+                :placeholder="__('All suppliers') "
+                :label="__('Filter by supplier') " />
+        </x-filter-bar>
 
         @if ($receipts->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada penerimaan barang"
-                              description="Catat penerimaan untuk menambah stok. Penerimaan dapat dibuat dari pesanan pembelian agar sisa pesanan terpantau."
-                              action-label="Catat Penerimaan" action-url="{{ route('goods-receipts.create') }}" />
+                <x-empty-state :label="__('No goods receipts yet')"
+                              :description="__('Record a receipt to add stock. Creating one from a purchase order keeps the outstanding quantity visible.')"
+                              :url="route('goods-receipts.create')" :submit-label="__('Record receipt')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Pemasok</th>
-                            <th>Pesanan</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th class="text-right">Item</th>
-                            <th class="text-right">Nilai</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Supplier') }}</th>
+                            <th>{{ __('Purchase order') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="num">{{ __('Items') }}</th>
+                            <th class="num">{{ __('Value') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($receipts as $receipt)
                             <tr>
-                                <td class="font-mono text-xs">
-                                    <a href="{{ route('goods-receipts.show', $receipt) }}" class="text-primary hover:underline">{{ $receipt->receipt_number }}</a>
+                                <td>
+                                    <a href="{{ route('goods-receipts.show', $receipt) }}" class="link link-hover font-mono text-xs text-primary">
+                                        {{ $receipt->receipt_number }}
+                                    </a>
                                 </td>
                                 <td>{{ $receipt->supplier->name }}</td>
-                                <td class="font-mono text-[11px] text-base-content/65">{{ $receipt->purchaseOrder?->po_number ?? '—' }}</td>
+                                <td class="text-meta font-mono text-base-content/65">{{ $receipt->purchaseOrder?->po_number ?? '—' }}</td>
                                 <td class="whitespace-nowrap">{{ $receipt->received_date->translatedFormat('d M Y') }}</td>
                                 <td><x-badge :label="$receipt->status->label()" :class="$receipt->status->badgeClass()" /></td>
-                                <td class="text-right tabular-nums">{{ $receipt->items_count }}</td>
-                                <td class="text-right"><x-money :amount="$receipt->total_amount" /></td>
-                                <td class="text-right"><a href="{{ route('goods-receipts.show', $receipt) }}" class="btn btn-ghost btn-xs">Detail</a></td>
+                                <td class="num">{{ $receipt->items_count }}</td>
+                                <td class="num"><x-money :amount="$receipt->total_amount" /></td>
+                                <td class="row-actions">
+                                    <x-actions-menu :label="__('Actions for receipt :number', ['number' => $receipt->receipt_number])">
+                                            <x-menu-link :href="route('goods-receipts.show', $receipt)" icon="eye">
+                                                {{ __('Details') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

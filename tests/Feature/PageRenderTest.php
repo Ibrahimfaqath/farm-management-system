@@ -97,6 +97,41 @@ class PageRenderTest extends TestCase
         $this->assertSame([], $failures, "Pages returned server errors:\n".implode("\n", array_unique($failures)));
     }
 
+    /**
+     * A page that takes no parameters has to answer, whatever the records look
+     * like. Three create pages answered 404 because the matching `{model}` show
+     * route was declared first and swallowed the static segment, and a render
+     * test that only fails on 5xx let them pass: the URL still resolved to a
+     * route, it just bound "create" as a model id.
+     */
+    public function test_parameterless_get_routes_are_reachable(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $failures = [];
+        $checked = 0;
+
+        foreach (Route::getRoutes() as $route) {
+            if (! in_array('GET', $route->methods(), true) || $route->parameterNames() !== []) {
+                continue;
+            }
+
+            if (str_starts_with($route->uri(), 'api') || str_starts_with($route->uri(), '_') || $route->uri() === 'up') {
+                continue;
+            }
+
+            $checked++;
+            $status = $this->actingAs($this->owner())->get('/'.ltrim($route->uri(), '/'))->getStatusCode();
+
+            if ($status === 404) {
+                $failures[] = '/'.$route->uri().' returned 404 — a parameterised route declared earlier is shadowing it';
+            }
+        }
+
+        $this->assertGreaterThan(20, $checked, 'Too few routes were checked for the test to mean anything.');
+        $this->assertSame([], $failures, "Unreachable pages:\n".implode("\n", $failures));
+    }
+
     private function rootCause($response): string
     {
         $exception = $response->exception;

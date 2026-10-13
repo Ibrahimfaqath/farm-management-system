@@ -16,7 +16,7 @@
     </label>
 
     @error($name)
-        <p class="mt-1 flex items-start gap-1 text-xs text-error">
+        <p class="mt-1 flex items-start gap-1 text-xs text-tone-error">
             <x-icon name="error" :size="13" class="mt-px" />
             <span>{{ $message }}</span>
         </p>

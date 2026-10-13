@@ -1,67 +1,72 @@
-@extends('layouts.app', ['title' => 'Pesanan Penjualan'])
+@extends('layouts.app', ['title' => __('Sales orders')])
 
 @section('content')
-    <x-page-header title="Pesanan Penjualan" subtitle="Pesanan menjadi dasar pembuatan faktur">
+    <x-page-header :title="__('Sales orders')" :subtitle="__('An order is the basis on which an invoice is created.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('sales.manage'))
-                <a href="{{ route('sales-orders.create') }}" class="btn btn-primary btn-sm">+ Pesanan Baru</a>
+                <a href="{{ route('sales-orders.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('New sales order') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-4">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nomor SO…" class="input input-sm input bg-base-100">
-            <select name="status" class="select select-sm select bg-base-100">
-                <option value="">Semua status</option>
-                @foreach ($statuses as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <select name="customer_id" class="select select-sm select bg-base-100">
-                <option value="">Semua pelanggan</option>
-                @foreach ($customers as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['customer_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('sales-orders.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search SO number…')" :reset="route('sales-orders.index')">
+            <x-filter-select name="status"
+                :options="$statuses"
+                :selected="$filters['status'] ?? ''"
+                :placeholder="__('All statuses') "
+                :label="__('Filter by status') " />
+
+            <x-filter-select name="customer_id"
+                :options="$customers"
+                :selected="$filters['customer_id'] ?? ''"
+                :placeholder="__('All customers') "
+                :label="__('Filter by customer') " />
+        </x-filter-bar>
 
         @if ($orders->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pesanan penjualan"
-                              description="Pesanan penjualan mencatat barang yang dijual. Faktur dibuat dari pesanan untuk recognise pendapatan."
-                              action-label="Buat Pesanan" action-url="{{ route('sales-orders.create') }}" />
+                <x-empty-state :label="__('No sales orders yet')"
+                              :description="__('A sales order records what is being sold. Invoices are created from an order to recognise revenue.')"
+                              :url="route('sales-orders.create')" :submit-label="__('Create sales order')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Pelanggan</th>
-                            <th>Tanggal</th>
-                            <th>Status</th>
-                            <th class="text-right">Item</th>
-                            <th class="text-right">Total</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="num">{{ __('Items') }}</th>
+                            <th class="num">{{ __('Total') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($orders as $order)
                             <tr>
-                                <td class="font-mono text-xs">
-                                    <a href="{{ route('sales-orders.show', $order) }}" class="text-primary hover:underline">{{ $order->so_number }}</a>
+                                <td>
+                                    <a href="{{ route('sales-orders.show', $order) }}" class="link link-hover font-mono text-xs text-primary">
+                                        {{ $order->so_number }}
+                                    </a>
                                 </td>
                                 <td>{{ $order->customer->name }}</td>
                                 <td class="whitespace-nowrap">{{ $order->order_date->translatedFormat('d M Y') }}</td>
                                 <td><x-badge :label="$order->status->label()" :class="$order->status->badgeClass()" /></td>
-                                <td class="text-right tabular-nums">{{ $order->items_count }}</td>
-                                <td class="text-right"><x-money :amount="$order->total" /></td>
-                                <td class="text-right"><a href="{{ route('sales-orders.show', $order) }}" class="btn btn-ghost btn-xs">Detail</a></td>
+                                <td class="num">{{ $order->items_count }}</td>
+                                <td class="num"><x-money :amount="$order->total" /></td>
+                                <td class="row-actions">
+                                    <x-actions-menu :label="__('Actions for order :number', ['number' => $order->so_number])">
+                                            <x-menu-link :href="route('sales-orders.show', $order)" icon="eye">
+                                                {{ __('Details') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

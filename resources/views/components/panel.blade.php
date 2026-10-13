@@ -9,11 +9,11 @@
     (tables, forms, key-value lists) that would otherwise pick up
     `card-body`'s flex gap.
 --}}
-<section {{ $attributes->class(['card border border-base-300 bg-base-100']) }}>
+<div {{ $attributes->class(['card min-w-0 border border-base-300 bg-base-100']) }}>
     @if ($title || isset($actions))
-        <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300 px-4 py-3">
+        <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300 px-4 py-2.5">
             <div class="min-w-0">
-                @if ($title)<h3 class="card-title text-sm leading-tight">{{ $title }}</h3>@endif
+                @if ($title)<h3 class="truncate text-sm font-semibold leading-tight">{{ $title }}</h3>@endif
                 @if ($description)<p class="mt-0.5 text-xs text-base-content/55">{{ $description }}</p>@endif
             </div>
             @isset($actions)<div class="flex shrink-0 items-center gap-2">{{ $actions }}</div>@endisset
@@ -28,5 +28,5 @@
 
     @isset($footer)
         <footer class="border-t border-base-300 px-4 py-3">{{ $footer }}</footer>
-    @endisset
-</section>
+    @endif
+</div>

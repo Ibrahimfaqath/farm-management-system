@@ -1,35 +1,40 @@
 @php $editing = $breed->exists; @endphp
-@extends('layouts.app', ['title' => $editing ? 'Ubah Ras' : 'Tambah Ras'])
+@extends('layouts.app', ['title' => $editing ? __('Edit breed') : __('Add breed')])
 
 @section('content')
-    <x-page-header :title="$editing ? 'Ubah '.$breed->name : 'Tambah Ras'" :back="route('breeds.index')" />
+    <x-page-header :title="$editing ? __('Edit :name', ['name' => $breed->name]) : __('Add breed')"
+                   :subtitle="__('Breed reference data and its productivity parameters.')"
+                   :back="route('breeds.index')" />
 
     <form method="POST" action="{{ $editing ? route('breeds.update', $breed) : route('breeds.store') }}" class="max-w-3xl space-y-4">
         @csrf
         @if ($editing) @method('PUT') @endif
 
-        <x-panel title="Data Ras">
+        <x-panel :title="__('Breed details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.input name="code" label="Kode Ras" :value="$breed->code" required maxlength="20" placeholder="HRF-01" />
-                <x-form.input name="name" label="Nama Ras" :value="$breed->name" required maxlength="150" />
-                <x-form.select name="species" label="Jenis Hewan" :options="$speciesOptions" :selected="$breed->species" required />
-                <x-form.input name="origin" label="Asal" :value="$breed->origin" />
-                <x-form.input name="average_milk_liters" label="Rata-rata Produksi Susu (L/hari)" type="number" step="0.1" min="0" :value="$breed->average_milk_liters" />
-                <x-form.input name="average_lactation_days" label="Rata-rata Lama Laktasi (hari)" type="number" min="1" :value="$breed->average_lactation_days" />
-                <x-form.input name="adult_weight_kg" label="Berat Dewasa (kg)" type="number" step="0.1" min="0" :value="$breed->adult_weight_kg" />
+                <x-form.input name="code" :label="__('Breed code')" :value="$breed->code" required maxlength="20" placeholder="HRF-01" />
+                <x-form.input name="name" :label="__('Breed name')" :value="$breed->name" required maxlength="150" />
+                <x-form.select name="species" :label="__('Species')" :options="$speciesOptions" :selected="$breed->species" required />
+                <x-form.input name="origin" :label="__('Origin')" :value="$breed->origin" />
+                <x-form.input name="average_milk_liters" :label="__('Average milk (L/day)')" type="number" step="0.1" min="0"
+                              :value="$breed->average_milk_liters" />
+                <x-form.input name="average_lactation_days" :label="__('Average lactation (days)')" type="number" min="1"
+                              :value="$breed->average_lactation_days" />
+                <x-form.input name="adult_weight_kg" :label="__('Adult weight (kg)')" type="number" step="0.1" min="0"
+                              :value="$breed->adult_weight_kg" />
             </div>
-            <div class="mt-4"><x-form.checkbox name="is_active" label="Ras aktif digunakan" :checked="$breed->is_active ?? true" /></div>
+            <div class="mt-4">
+                <x-form.checkbox name="is_active" :label="__('Breed is in use')" :checked="$breed->is_active ?? true" />
+            </div>
         </x-panel>
 
-        <x-panel title="Catatan">
-            <x-form.textarea name="notes" label="Catatan" :value="$breed->notes" rows="3" />
+        <x-panel :title="__('Notes')">
+            <x-form.textarea name="notes" :label="__('Notes')" :value="$breed->notes" rows="3" />
         </x-panel>
 
-        <div class="rounded-box border border-base-300 bg-base-100 p-4">
-            <x-form.actions>
-                <button class="btn btn-primary btn-sm">{{ $editing ? 'Simpan Perubahan' : 'Simpan Ras' }}</button>
-                <a href="{{ route('breeds.index') }}" class="btn btn-ghost btn-sm">Batal</a>
-            </x-form.actions>
-        </div>
+        <x-form.actions boxed>
+            <x-form.submit>{{ $editing ? __('Save changes') : __('Save breed') }}</x-form.submit>
+            <a href="{{ route('breeds.index') }}" class="btn btn-ghost btn-sm">{{ __('Cancel') }}</a>
+        </x-form.actions>
     </form>
 @endsection

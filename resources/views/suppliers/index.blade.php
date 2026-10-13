@@ -1,48 +1,47 @@
-@extends('layouts.app', ['title' => 'Pemasok'])
+@extends('layouts.app', ['title' => __('Suppliers')])
 
 @section('content')
-    <x-page-header title="Pemasok" subtitle="Mitra pemasok pakan, peralatan, dan kebutuhan kebun">
+    <x-page-header :title="__('Suppliers')" :subtitle="__('Feed, equipment and other suppliers.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.purchase'))
-                <a href="{{ route('suppliers.create') }}" class="btn btn-primary btn-sm">+ Tambah Pemasok</a>
+                <a href="{{ route('suppliers.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Add supplier') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-3">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama atau kode…" class="input input-sm input bg-base-100">
-            <select name="category" class="select select-sm select bg-base-100">
-                <option value="">Semua jenis</option>
-                @foreach ($categories as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Cari</button>
-                <a href="{{ route('suppliers.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search by name or code…')" :reset="route('suppliers.index')"
+                      columns="sm:grid-cols-2 lg:grid-cols-3">
+            <x-filter-select name="category"
+                :options="$categories"
+                :selected="$filters['category'] ?? ''"
+                :placeholder="__('All categories') "
+                :label="__('Filter by category') " />
+        </x-filter-bar>
 
         @if ($suppliers->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pemasok" description="Tambahkan pemasok sebelum membuat pesanan pembelian."
-                              action-label="Tambah Pemasok" action-url="{{ route('suppliers.create') }}" />
+                <x-empty-state :label="__('No suppliers yet')"
+                              :description="__('Add a supplier before creating a purchase order.')"
+                              :url="route('suppliers.create')" :submit-label="__('Add supplier')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Kode</th>
-                            <th>Nama</th>
-                            <th>Jenis</th>
-                            <th>Kontak</th>
-                            <th class="text-right">Termin</th>
-                            <th class="text-right">PO</th>
-                            <th class="text-right">Penerimaan</th>
-                            <th>Status</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Code') }}</th>
+                            <th>{{ __('Name') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Contact') }}</th>
+                            <th class="num">{{ __('Terms') }}</th>
+                            <th class="num">{{ __('PO') }}</th>
+                            <th class="num">{{ __('Receipts') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,20 +49,29 @@
                             <tr>
                                 <td class="font-mono text-xs">{{ $supplier->code }}</td>
                                 <td>
-                                    <a href="{{ route('suppliers.show', $supplier) }}" class="font-medium text-primary hover:underline">{{ $supplier->name }}</a>
+                                    <a href="{{ route('suppliers.show', $supplier) }}" class="link link-hover font-medium text-primary">
+                                        {{ $supplier->name }}
+                                    </a>
                                 </td>
                                 <td class="text-base-content/70">{{ $categories[$supplier->category] ?? $supplier->category }}</td>
-                                <td class="text-base-content/65">{{ $supplier->contact_person ?? '—' }}<br><span class="text-[11px]">{{ $supplier->phone ?? '—' }}</span></td>
-                                <td class="text-right tabular-nums">{{ $supplier->payment_terms_days }} hr</td>
-                                <td class="text-right tabular-nums">{{ $supplier->purchase_orders_count }}</td>
-                                <td class="text-right tabular-nums">{{ $supplier->goods_receipts_count }}</td>
+                                <td class="text-base-content/65">
+                                    <span class="block truncate">{{ $supplier->contact_person ?? '—' }}</span>
+                                    <span class="text-meta block">{{ $supplier->phone ?? '—' }}</span>
+                                </td>
+                                <td class="num">{{ $supplier->payment_terms_days }} {{ __('days') }}</td>
+                                <td class="num">{{ $supplier->purchase_orders_count }}</td>
+                                <td class="num">{{ $supplier->goods_receipts_count }}</td>
                                 <td>
-                                    <x-badge :label="$supplier->is_active ? 'Aktif' : 'Nonaktif'"
+                                    <x-badge :label="$supplier->is_active ? __('Active') : __('Inactive')"
                                              :class="$supplier->is_active ? 'badge-soft badge-success' : 'badge-ghost'" />
                                 </td>
-                                <td class="text-right whitespace-nowrap">
+                                <td class="row-actions">
                                     @if (auth()->user()->hasAbility('feed.purchase'))
-                                        <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-ghost btn-xs">Ubah</a>
+                                        <x-actions-menu :label="__('Actions for :name', ['name' => $supplier->name])">
+                                            <x-menu-link :href="route('suppliers.edit', $supplier)" icon="edit">
+                                                {{ __('Edit') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
                                     @endif
                                 </td>
                             </tr>

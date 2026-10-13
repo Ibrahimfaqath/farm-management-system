@@ -111,6 +111,7 @@ class ProductionAnalyticsService
         $previous = $this->perAnimalTotals($farmId, $previousFrom, $from->copy()->subDay());
 
         $declines = [];
+        $candidates = [];
 
         foreach ($current as $animalId => $totals) {
             $currentAvg = $totals['total'] / $totals['days'];
@@ -128,16 +129,23 @@ class ProductionAnalyticsService
             $change = round(($currentAvg - $previousAvg) / $previousAvg * 100, 1);
 
             if ($change <= -$thresholdPct) {
-                $animal = Animal::find($animalId);
+                $candidates[$animalId] = [
+                    'previous' => round($previousAvg, 2),
+                    'current' => round($currentAvg, 2),
+                    'change_pct' => $change,
+                ];
+            }
+        }
 
-                if ($animal) {
-                    $declines[] = [
-                        'animal' => $animal,
-                        'previous' => round($previousAvg, 2),
-                        'current' => round($currentAvg, 2),
-                        'change_pct' => $change,
-                    ];
-                }
+        // Resolve the animals in one query instead of one per declining animal,
+        // and load `barn` up front because the caller renders it on every row.
+        $animals = Animal::query()->with('barn')->findMany(array_keys($candidates))->keyBy('id');
+
+        foreach ($candidates as $animalId => $figures) {
+            $animal = $animals->get((int) $animalId);
+
+            if ($animal) {
+                $declines[] = ['animal' => $animal] + $figures;
             }
         }
 
@@ -203,7 +211,7 @@ class ProductionAnalyticsService
     {
         $days = $from->diffInDays($to) + 1;
 
-        return MilkProduction::query()
+        $rows = MilkProduction::query()
             ->forFarm($farmId)
             ->between($from->toDateString(), $to->toDateString())
             ->whereNotNull('animal_id')
@@ -211,21 +219,26 @@ class ProductionAnalyticsService
             ->selectRaw('animal_id, SUM(liters) as total, COUNT(DISTINCT production_date) as days')
             ->orderByDesc('total')
             ->limit($limit)
-            ->get()
-            ->map(function ($row) use ($days): ?array {
-                $animal = Animal::find($row->animal_id);
+            ->get();
 
-                if (! $animal) {
-                    return null;
-                }
+        // Resolve the animals in one query instead of one per row, and load
+        // `barn` up front because the caller renders it on every entry.
+        $animals = Animal::query()->with('barn')->findMany($rows->pluck('animal_id'))->keyBy('id');
 
-                return [
-                    'animal' => $animal,
-                    'total' => round((float) $row->total, 2),
-                    'days' => max(1, (int) $row->days),
-                    'average' => round((float) $row->total / max(1, $days), 2),
-                ];
-            })
+        return $rows->map(function ($row) use ($days, $animals): ?array {
+            $animal = $animals->get((int) $row->animal_id);
+
+            if (! $animal) {
+                return null;
+            }
+
+            return [
+                'animal' => $animal,
+                'total' => round((float) $row->total, 2),
+                'days' => max(1, (int) $row->days),
+                'average' => round((float) $row->total / max(1, $days), 2),
+            ];
+        })
             ->filter()
             ->values()
             ->all();

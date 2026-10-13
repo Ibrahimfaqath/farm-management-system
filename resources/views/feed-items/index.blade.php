@@ -1,60 +1,62 @@
-@extends('layouts.app', ['title' => 'Item Pakan'])
+@extends('layouts.app', ['title' => __('Feed items')])
 
 @section('content')
-    <x-page-header title="Item Pakan" subtitle="Master data pakan dan ambang pemesanan ulang">
+    <x-page-header :title="__('Feed items')" :subtitle="__('Feed master data and reorder thresholds.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.purchase'))
-                <a href="{{ route('inventory.index') }}" class="btn btn-sm">Lihat Stok</a>
-                <a href="{{ route('feed-items.create') }}" class="btn btn-primary btn-sm">+ Tambah Item</a>
+                <a href="{{ route('inventory.index') }}" class="btn btn-sm">{{ __('View stock') }}</a>
+                <a href="{{ route('feed-items.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Add feed item') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     @if ($lowStockCount > 0)
         <div class="mb-4">
-            <x-alert-row tone="warning" title="{{ $lowStockCount }} item pakan berada di bawah batas pemesanan ulang"
-                         description="Periksa halaman Inventori untuk daftar dan estimasi kebutuhan."
-                         :url="route('inventory.index')" url-label="Buka Inventori" />
+            <x-alert-row tone="warning"
+                         :title="trans_choice(':count feed item is below its reorder point|:count feed items are below their reorder points', $lowStockCount, ['count' => $lowStockCount])"
+                         :description="__('Open the inventory page for the full list and remaining-days estimate.')"
+                         :url="route('inventory.index')" :url-label="__('Open inventory')" />
         </div>
     @endif
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-3">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama atau kode…" class="input input-sm input bg-base-100">
-            <select name="category" class="select select-sm select bg-base-100">
-                <option value="">Semua kategori</option>
-                @foreach ($categories as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="low_stock" value="1" @checked($filters['low_stock'] ?? false) class="checkbox checkbox-sm checkbox-primary">
-                    Stok menipis
-                </label>
-                <button class="btn btn-neutral btn-sm">Cari</button>
-                <a href="{{ route('feed-items.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search by name or code…')" :reset="route('feed-items.index')"
+                      columns="sm:grid-cols-2 lg:grid-cols-3">
+            <x-filter-select name="category"
+                :options="$categories"
+                :selected="$filters['category'] ?? ''"
+                :placeholder="__('All categories') "
+                :label="__('Filter by category') " />
+
+            <label class="flex cursor-pointer items-center gap-2 text-sm">
+                <input type="checkbox" name="low_stock" value="1" @checked($filters['low_stock'] ?? false)
+                       class="checkbox checkbox-sm checkbox-primary">
+                {{ __('Low stock only') }}
+            </label>
+        </x-filter-bar>
 
         @if ($feedItems->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada item pakan" description="Tambahkan master pakan agar bisa dipesan dan dilacak stoknya."
-                              action-label="Tambah Item Pakan" action-url="{{ route('feed-items.create') }}" />
+                <x-empty-state :label="__('No feed items yet')"
+                              :description="__('Add feed master data so it can be ordered and tracked.')"
+                              :url="route('feed-items.create')" :submit-label="__('Add feed item')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Item</th>
-                            <th>Kategori</th>
-                            <th>Satuan</th>
-                            <th class="text-right">Harga</th>
-                            <th class="text-right">Stok</th>
-                            <th class="text-right">Batas Ulang</th>
-                            <th>Lokasi</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Item') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Unit') }}</th>
+                            <th class="num">{{ __('Price') }}</th>
+                            <th class="num">{{ __('Stock') }}</th>
+                            <th class="num">{{ __('Reorder point') }}</th>
+                            <th>{{ __('Location') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,17 +64,21 @@
                             <tr>
                                 <td>
                                     <p class="font-medium">{{ $item->name }}</p>
-                                    <p class="text-[11px] text-base-content/45">{{ $item->code }}</p>
+                                    <p class="text-meta font-mono text-base-content/45">{{ $item->code }}</p>
                                 </td>
                                 <td class="text-base-content/70">{{ $item->category->label() }}</td>
                                 <td>{{ $item->unit->shortLabel() }}</td>
-                                <td class="text-right tabular-nums"><x-money :amount="$item->price_per_unit" /></td>
-                                <td class="text-right tabular-nums">{{ number_format((float) ($item->current_stock ?? 0), 2) }}</td>
-                                <td class="text-right tabular-nums text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
+                                <td class="num"><x-money :amount="$item->price_per_unit" /></td>
+                                <td class="num">{{ number_format((float) ($item->current_stock ?? 0), 2) }}</td>
+                                <td class="num text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
                                 <td class="text-base-content/65">{{ $item->storage_location ?? '—' }}</td>
-                                <td class="text-right whitespace-nowrap">
+                                <td class="row-actions">
                                     @if (auth()->user()->hasAbility('feed.purchase'))
-                                        <a href="{{ route('feed-items.edit', $item) }}" class="btn btn-ghost btn-xs">Ubah</a>
+                                        <x-actions-menu :label="__('Actions for :name', ['name' => $item->name])">
+                                            <x-menu-link :href="route('feed-items.edit', $item)" icon="edit">
+                                                {{ __('Edit') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
                                     @endif
                                 </td>
                             </tr>

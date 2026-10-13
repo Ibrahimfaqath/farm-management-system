@@ -1,72 +1,74 @@
-@extends('layouts.app', ['title' => 'Pendapatan'])
+@extends('layouts.app', ['title' => __('Other income')])
 
 @section('content')
-    <x-page-header title="Pendapatan Lain" subtitle="Pendapatan di luar penjualan susu yang dicatat lewat faktur">
+    <x-page-header :title="__('Other income')"
+                   :subtitle="__('Income outside milk sales, which are recorded through invoices.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('finance.manage'))
-                <a href="{{ route('incomes.create') }}" class="btn btn-primary btn-sm">+ Catat Pendapatan</a>
+                <a href="{{ route('incomes.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Record income') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <div class="mb-4">
-        <x-alert-row tone="info" title="Penjualan susu dicatat melalui faktur"
-                     description="Pendapatan dari penjualan susu dan produk lain tercatat pada modul Penjualan agar piutang dan kas tetap terhubung."
-                     :url="route('sales-orders.index')" url-label="Buka Penjualan" />
+        <x-alert-row tone="info"
+                     :title="__('Milk sales are recorded through invoices')"
+                     :description="__('Revenue from milk and other product sales is recorded in the Sales module so receivables and cash stay connected.')"
+                     :url="route('sales-orders.index')" :url-label="__('Open sales')" />
     </div>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-        <x-stat label="Bulan Ini" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="success" />
-        <x-stat label="Total Catatan" :value="$incomes->total()" />
-        <x-stat label="Rata-rata" :value="$incomes->count() > 0 ? 'Rp'.number_format($monthTotal / $incomes->count(), 0, ',', '.') : '—'" />
+        <x-stat :label="__('This month')" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="success" />
+        <x-stat :label="__('All records')" :value="$incomes->total()" />
+        <x-stat :label="__('Average')"
+               :value="$incomes->count() > 0 ? 'Rp'.number_format($monthTotal / $incomes->count(), 0, ',', '.') : '—'" />
     </div>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-4">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari deskripsi…" class="input input-sm input bg-base-100">
-            <select name="category" class="select select-sm select bg-base-100">
-                <option value="">Semua kategori</option>
-                @foreach ($categories as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <input name="date_from" type="date" value="{{ $filters['date_from'] ?? '' }}" class="input input-sm input bg-base-100">
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('incomes.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search description…')" :reset="route('incomes.index')">
+            <x-filter-select name="category"
+                :options="$categories"
+                :selected="$filters['category'] ?? ''"
+                :placeholder="__('All categories') "
+                :label="__('Filter by category') " />
+
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('From date') }}">
+        </x-filter-bar>
 
         @if ($incomes->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pendapatan lain"
-                              description="Contoh pendapatan lain: penjualan manure, penjualan anak, atau bantuan pemerintah."
-                              action-label="Catat Pendapatan" action-url="{{ route('incomes.create') }}" />
+                <x-empty-state :label="__('No other income yet')"
+                              :description="__('Examples: manure sales, calf sales, or government assistance.')"
+                              :url="route('incomes.create')" :submit-label="__('Record income')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Tanggal</th>
-                            <th>Kategori</th>
-                            <th>Deskripsi</th>
-                            <th>Sumber</th>
-                            <th>Metode</th>
-                            <th class="text-right">Jumlah</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Description') }}</th>
+                            <th>{{ __('Source') }}</th>
+                            <th>{{ __('Method') }}</th>
+                            <th class="num">{{ __('Amount') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($incomes as $income)
                             <tr>
-                                <td class="font-mono text-[11px]">{{ $income->income_number }}</td>
+                                <td class="text-meta font-mono">{{ $income->income_number }}</td>
                                 <td class="whitespace-nowrap">{{ $income->income_date->translatedFormat('d M Y') }}</td>
                                 <td>{{ $income->category->label() }}</td>
                                 <td class="max-w-xs truncate">{{ $income->description }}</td>
                                 <td class="text-base-content/65">{{ $income->source_name ?? '—' }}</td>
                                 <td class="text-base-content/65">{{ $income->payment_method->label() }}</td>
-                                <td class="text-right font-medium text-success"><x-money :amount="$income->amount" /></td>
+                                <td class="num font-medium text-tone-success"><x-money :amount="$income->amount" /></td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -12,7 +12,6 @@ Route::middleware('module:feed')->group(function (): void {
     // --- Master data ---
     Route::get('feed-items', [FeedItemController::class, 'index'])->name('feed-items.index');
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
-    Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
 
     Route::middleware('ability:feed.purchase')->group(function (): void {
         Route::get('feed-items/create', [FeedItemController::class, 'create'])->name('feed-items.create');
@@ -33,6 +32,10 @@ Route::middleware('module:feed')->group(function (): void {
         Route::post('purchase-orders/{purchase_order}/approve', [PurchaseOrderController::class, 'approve'])->name('purchase-orders.approve');
         Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])->name('purchase-orders.cancel');
     });
+
+    // Declared after `suppliers/create`: Laravel matches in declaration order,
+    // so a `{supplier}` show route listed first would swallow `/suppliers/create`.
+    Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
 
     Route::get('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
 
@@ -55,10 +58,15 @@ Route::middleware('module:feed')->group(function (): void {
 
     // --- Consumption ---
     Route::get('feed-consumptions', [FeedConsumptionController::class, 'index'])->name('feed-consumptions.index');
-    Route::get('feed-consumptions/{consumption}', [FeedConsumptionController::class, 'show'])->name('feed-consumptions.show');
+
+    // `create` is declared before `show` on purpose: Laravel matches in
+    // declaration order, so `feed-consumptions/{consumption}` listed first
+    // swallowed `/feed-consumptions/create` and turned the page into a 404.
     Route::middleware('ability:feed.consume')->group(function (): void {
         Route::get('feed-consumptions/create', [FeedConsumptionController::class, 'create'])->name('feed-consumptions.create');
         Route::post('feed-consumptions', [FeedConsumptionController::class, 'store'])->name('feed-consumptions.store');
         Route::post('feed-consumptions/{consumption}/reverse', [FeedConsumptionController::class, 'reverse'])->name('feed-consumptions.reverse');
     });
+
+    Route::get('feed-consumptions/{consumption}', [FeedConsumptionController::class, 'show'])->name('feed-consumptions.show');
 });

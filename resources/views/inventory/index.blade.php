@@ -1,72 +1,78 @@
-@extends('layouts.app', ['title' => 'Inventori'])
+@extends('layouts.app', ['title' => __('Inventory')])
 
 @section('content')
-    <x-page-header title="Inventori Pakan" subtitle="Stok saat ini diturunkan dari riwayat pergerakan, bukan angka yang diedit manual">
+    <x-page-header :title="__('Feed inventory')"
+                   :subtitle="__('Stock is derived from movement history, never edited by hand.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.adjust'))
-                <a href="{{ route('inventory.batches') }}" class="btn btn-sm">Batch</a>
-                <a href="{{ route('inventory.movements') }}" class="btn btn-sm">Pergerakan Stok</a>
-                <button class="btn btn-primary btn-sm" onclick="document.getElementById('adjust-modal').showModal()">Penyesuaian</button>
+                <a href="{{ route('inventory.batches') }}" class="btn btn-sm">{{ __('Batches') }}</a>
+                <a href="{{ route('inventory.movements') }}" class="btn btn-sm">{{ __('Stock movements') }}</a>
+                <button type="button" class="btn btn-primary btn-sm" data-modal-open="adjust-modal">
+                    <x-icon name="scale" :size="16" />
+                    {{ __('Adjust stock') }}
+                </button>
             @endif
             @if (auth()->user()->hasAbility('feed.consume'))
-                <a href="{{ route('feed-consumptions.create') }}" class="btn btn-primary btn-sm">Catat Pemakaian</a>
+                <a href="{{ route('feed-consumptions.create') }}" class="btn btn-primary btn-sm">{{ __('Record usage') }}</a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <x-stat label="Nilai Stok" :value="'Rp'.number_format($totalValue, 0, ',', '.')" tone="primary" />
-        <x-stat label="Stok Menipis" :value="$lowStock->count()" :tone="$lowStock->count() > 0 ? 'warning' : 'success'"
-               hint="di bawah batas pemesanan ulang" />
-        <x-stat label="Stok Habis" :value="$outOfStock->count()" :tone="$outOfStock->count() > 0 ? 'error' : 'success'" />
-        <x-stat label="Jenis Pakan Aktif" :value="$items->count()" />
+        <x-stat :label="__('Stock value')" :value="'Rp'.number_format($totalValue, 0, ',', '.')" tone="primary" />
+        <x-stat :label="__('Low stock')" :value="$lowStock->count()"
+               :tone="$lowStock->count() > 0 ? 'warning' : 'success'"
+               :hint="__('Below reorder point')" />
+        <x-stat :label="__('Out of stock')" :value="$outOfStock->count()"
+               :tone="$outOfStock->count() > 0 ? 'error' : 'success'" />
+        <x-stat :label="__('Active feed items')" :value="$items->count()" />
     </div>
 
     @if ($lowStock->isNotEmpty())
         <div class="mb-4 space-y-2">
             @foreach ($lowStock->take(4) as $item)
                 <x-alert-row tone="warning"
-                             :title="$item->name.' tersisa '.number_format((float) $item->current_stock, 1).' '.$item->unit->shortLabel().', batas pemesanan ulang '.number_format((float) $item->reorder_point, 1)"
-                             :description="'Rata-rata pemakaian 30 hari: '.number_format((float) $item->daily_consumption, 1).' '.$item->unit->shortLabel().($item->days_remaining ? ' · estimasi '.$item->days_remaining.' hari lagi' : '')"
-                             :url="route('purchase-orders.create')" url-label="Buat PO" />
+                             :title="__('Feed stock low: :name', ['name' => $item->name])"
+                             :description="__('Remaining :remaining :unit against a reorder point of :point. Average daily use: :daily :unit.', [
+                                 'remaining' => number_format((float) $item->current_stock, 1),
+                                 'unit' => $item->unit->shortLabel(),
+                                 'point' => number_format((float) $item->reorder_point, 1),
+                                 'daily' => number_format((float) $item->daily_consumption, 1),
+                             ]).($item->days_remaining ? ' '.__('About :days days left.', ['days' => $item->days_remaining]) : '')"
+                             :url="route('purchase-orders.create')" :url-label="__('Create PO')" />
             @endforeach
         </div>
     @endif
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-3">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari item pakan…" class="input input-sm input bg-base-100">
-            <select name="category" class="select select-sm select bg-base-100">
-                <option value="">Semua kategori</option>
-                @foreach ($categories as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['category'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('inventory.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search feed items…')" :reset="route('inventory.index')"
+                      columns="sm:grid-cols-3">
+            <x-filter-select name="category"
+                :options="$categories"
+                :selected="$filters['category'] ?? ''"
+                :placeholder="__('All categories') "
+                :label="__('Filter by category') " />
+        </x-filter-bar>
 
         @if ($items->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada item pakan aktif"
-                              description="Tambahkan item pakan lalu buat pesanan pembelian dan penerimaan barang untuk mulai melacak stok."
-                              action-label="Tambah Item Pakan" action-url="{{ route('feed-items.create') }}" />
+                <x-empty-state :label="__('No active feed items')"
+                              :description="__('Add a feed item, then a purchase order and a goods receipt, to start tracking stock.')"
+                              :url="route('feed-items.create')" :submit-label="__('Add feed item')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Item</th>
-                            <th>Kategori</th>
-                            <th class="text-right">Stok</th>
-                            <th class="text-right">Batas Ulang</th>
-                            <th class="text-right">Rata-rata/Hari</th>
-                            <th class="text-right">Estimasi</th>
-                            <th class="text-right">Nilai</th>
-                            <th>Status</th>
+                            <th>{{ __('Item') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th class="num">{{ __('Stock') }}</th>
+                            <th class="num">{{ __('Reorder point') }}</th>
+                            <th class="num">{{ __('Daily use') }}</th>
+                            <th class="num">{{ __('Estimated') }}</th>
+                            <th class="num">{{ __('Value') }}</th>
+                            <th>{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,31 +83,31 @@
                             <tr>
                                 <td>
                                     <p class="font-medium">{{ $item->name }}</p>
-                                    <p class="text-[11px] text-base-content/45">{{ $item->code }}</p>
+                                    <p class="text-meta font-mono text-base-content/45">{{ $item->code }}</p>
                                 </td>
                                 <td class="text-base-content/70">{{ $item->category->label() }}</td>
-                                <td class="text-right tabular-nums font-medium {{ (float) $item->current_stock <= 0 ? 'text-error' : '' }}">
-                                    {{ number_format((float) $item->current_stock, 2) }} <span class="text-[11px] text-base-content/50">{{ $item->unit->shortLabel() }}</span>
+                                <td class="num font-medium {{ (float) $item->current_stock <= 0 ? 'text-tone-error' : '' }}">
+                                    <x-qty :value="$item->current_stock" :unit="$item->unit->shortLabel()" />
                                 </td>
-                                <td class="text-right tabular-nums text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
-                                <td class="text-right tabular-nums text-base-content/65">{{ number_format((float) $item->daily_consumption, 2) }}</td>
-                                <td class="text-right tabular-nums">
+                                <td class="num text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
+                                <td class="num text-base-content/65">{{ number_format((float) $item->daily_consumption, 2) }}</td>
+                                <td class="num">
                                     @if ($item->days_remaining === null)
                                         <span class="text-base-content/45">—</span>
-                                    @elseif ($item->days_remaining <= 7)
-                                        <span class="text-warning">{{ $item->days_remaining }} hr</span>
                                     @else
-                                        {{ $item->days_remaining }} hr
+                                        <span @class(['text-tone-warning' => $item->days_remaining <= 7])>
+                                            {{ $item->days_remaining }} {{ __('days') }}
+                                        </span>
                                     @endif
                                 </td>
-                                <td class="text-right tabular-nums"><x-money :amount="$item->stock_value" /></td>
+                                <td class="num"><x-money :amount="$item->stock_value" /></td>
                                 <td>
                                     @if ((float) $item->current_stock <= 0)
-                                        <x-badge label="Habis" class="badge-soft badge-error" />
+                                        <x-badge :label="__('Out of stock')" class="badge-soft badge-error" />
                                     @elseif ($isLow)
-                                        <x-badge label="Menipis" class="badge-soft badge-warning" />
+                                        <x-badge :label="__('Low stock')" class="badge-soft badge-warning" />
                                     @else
-                                        <x-badge label="Aman" class="badge-soft badge-success" />
+                                        <x-badge :label="__('Healthy')" class="badge-soft badge-success" />
                                     @endif
                                 </td>
                             </tr>
@@ -113,32 +119,26 @@
     </x-panel>
 
     @if (auth()->user()->hasAbility('feed.adjust'))
-        <dialog id="adjust-modal" class="modal">
-            <div class="modal-box max-w-lg">
-                <h3 class="text-base font-semibold">Penyesuaian Stok</h3>
-                <p class="mt-1 text-xs text-base-content/60">
-                    Setiap penyesuaian wajib menyertakan alasan dan tercatat sebagai pergerakan stok terpisah.
-                </p>
-                <form method="POST" action="{{ route('inventory.adjust') }}" class="mt-4 space-y-3">
-                    @csrf
-                    <div class="grid gap-3 sm:grid-cols-2">
-                        <x-form.select name="feed_item_id" label="Item Pakan" required class="sm:col-span-2"
-                                       :options="$items->pluck('name', 'id')" />
-                        <x-form.select name="direction" label="Arah" required
-                                       :options="['in' => 'Tambah (+)', 'out' => 'Kurangi (-)']" />
-                        <x-form.input name="quantity" label="Jumlah" type="number" step="0.01" min="0.01" required />
-                        <x-form.input name="movement_date" label="Tanggal" type="date" :value="now()->toDateString()" />
-                        <x-form.input name="reason" label="Alasan" required minlength="5"
-                                      placeholder="Contoh: Koreksi timbangan gudang" />
-                    </div>
-                    <x-form.textarea name="notes" label="Catatan" rows="2" />
-                    <div class="modal-action">
-                        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('adjust-modal').close()">Batal</button>
-                        <button class="btn btn-primary btn-sm">Simpan Penyesuaian</button>
-                    </div>
-                </form>
-            </div>
-            <form method="dialog" class="modal-backdrop"><button>Tutup</button></form>
-        </dialog>
+        <x-modal id="adjust-modal" :title="__('Adjust stock')"
+                 :description="__('Every adjustment needs a reason and is recorded as its own stock movement.')">
+            <form method="POST" action="{{ route('inventory.adjust') }}" class="mt-4 space-y-3">
+                @csrf
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <x-form.select name="feed_item_id" :label="__('Feed item')" required class="sm:col-span-2"
+                                   :options="$items->pluck('name', 'id')" />
+                    <x-form.select name="direction" :label="__('Direction')" required
+                                   :options="['in' => __('Increase (+)'), 'out' => __('Decrease (−)')]" />
+                    <x-form.input name="quantity" :label="__('Quantity')" type="number" step="0.01" min="0.01" required />
+                    <x-form.input name="movement_date" :label="__('Date')" type="date" :value="now()->toDateString()" />
+                    <x-form.input name="reason" :label="__('Reason')" required minlength="5"
+                                  :placeholder="__('For example: corrected warehouse scale reading')" />
+                </div>
+                <x-form.textarea name="notes" :label="__('Notes')" rows="2" />
+                <x-form.actions>
+                    <button type="button" class="btn btn-ghost btn-sm" data-modal-close>{{ __('Cancel') }}</button>
+                    <x-form.submit>{{ __('Save adjustment') }}</x-form.submit>
+                </x-form.actions>
+            </form>
+        </x-modal>
     @endif
 @endsection

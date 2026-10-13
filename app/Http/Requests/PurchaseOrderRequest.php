@@ -6,6 +6,7 @@ use App\Enums\UnitOfMeasure;
 use App\Models\Supplier;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PurchaseOrderRequest extends FormRequest
 {

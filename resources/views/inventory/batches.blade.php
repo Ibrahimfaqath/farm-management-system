@@ -1,46 +1,43 @@
-@extends('layouts.app', ['title' => 'Batch Pakan'])
+@extends('layouts.app', ['title' => __('Feed batches')])
 
 @section('content')
-    <x-page-header title="Batch Pakan" subtitle="Telusur asal-usul stok per batch pembayaran" :back="route('inventory.index')" />
+    <x-page-header :title="__('Feed batches')" :subtitle="__('Trace stock back to the receipt it came from.')"
+                   :back="route('inventory.index')" />
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-3">
-            <select name="feed_item_id" class="select select-sm select bg-base-100">
-                <option value="">Semua item pakan</option>
-                @foreach ($feedItems as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['feed_item_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <select name="status" class="select select-sm select bg-base-100">
-                <option value="">Semua status</option>
-                @foreach ($statuses as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('inventory.batches') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :reset="route('inventory.batches')" :with-search="false" columns="sm:grid-cols-3">
+            <x-filter-select name="feed_item_id"
+                :options="$feedItems"
+                :selected="$filters['feed_item_id'] ?? ''"
+                :placeholder="__('All feed items') "
+                :label="__('Filter by feed item') " />
+
+            <x-filter-select name="status"
+                :options="$statuses"
+                :selected="$filters['status'] ?? ''"
+                :placeholder="__('All statuses') "
+                :label="__('Filter by status') " />
+        </x-filter-bar>
 
         @if ($batches->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada batch" description="Batch terbentuk otomatis ketika penerimaan barang dikonfirmasi." />
+                <x-empty-state :label="__('No batches yet')"
+                              :description="__('Batches are created automatically when a goods receipt is confirmed.')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Kode Batch</th>
-                            <th>Item Pakan</th>
-                            <th>Diterima</th>
-                            <th class="text-right">Awal</th>
-                            <th class="text-right">Sisa</th>
-                            <th class="text-right">Terpakai</th>
-                            <th>Kedaluwarsa</th>
-                            <th>Lokasi</th>
-                            <th>Status</th>
+                            <th>{{ __('Batch code') }}</th>
+                            <th>{{ __('Feed item') }}</th>
+                            <th>{{ __('Received') }}</th>
+                            <th class="num">{{ __('Opening') }}</th>
+                            <th class="num">{{ __('Remaining') }}</th>
+                            <th class="num">{{ __('Used') }}</th>
+                            <th>{{ __('Expiry') }}</th>
+                            <th>{{ __('Location') }}</th>
+                            <th>{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,14 +49,14 @@
                                 <td class="font-mono text-xs">{{ $batch->batch_code }}</td>
                                 <td class="font-medium">{{ $batch->feedItem?->name ?? '—' }}</td>
                                 <td class="whitespace-nowrap">{{ $batch->received_date->translatedFormat('d M Y') }}</td>
-                                <td class="text-right tabular-nums">{{ number_format((float) $batch->original_quantity, 2) }}</td>
-                                <td class="text-right tabular-nums font-medium">{{ number_format((float) $batch->quantity_remaining, 2) }}</td>
-                                <td class="text-right tabular-nums text-base-content/65">{{ number_format($used, 2) }}</td>
+                                <td class="num">{{ number_format((float) $batch->original_quantity, 2) }}</td>
+                                <td class="num font-medium">{{ number_format((float) $batch->quantity_remaining, 2) }}</td>
+                                <td class="num text-base-content/65">{{ number_format($used, 2) }}</td>
                                 <td class="whitespace-nowrap">
                                     @if ($batch->expiry_date)
                                         {{ $batch->expiry_date->translatedFormat('d M Y') }}
                                         @if ($batch->isExpired())
-                                            <x-badge label="Kedaluwarsa" class="badge-soft badge-error" />
+                                            <x-badge :label="__('Expired')" class="badge-soft badge-error" />
                                         @endif
                                     @else
                                         <span class="text-base-content/45">—</span>

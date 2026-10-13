@@ -1,47 +1,48 @@
-@extends('layouts.app', ['title' => 'Pergerakan Stok'])
+@extends('layouts.app', ['title' => __('Stock movements')])
 
 @section('content')
-    <x-page-header title="Pergerakan Stok" subtitle="Jejak audit perubahan stok" :back="route('inventory.index')" />
+    <x-page-header :title="__('Stock movements')" :subtitle="__('The audit trail behind every stock change.')"
+                   :back="route('inventory.index')" />
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-2 lg:grid-cols-5">
-            <select name="feed_item_id" class="select select-sm select bg-base-100">
-                <option value="">Semua item</option>
-                @foreach ($feedItems as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['feed_item_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <select name="type" class="select select-sm select bg-base-100">
-                <option value="">Semua jenis</option>
-                @foreach ($types as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['type'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <input name="date_from" type="date" value="{{ $filters['date_from'] ?? '' }}" class="input input-sm input bg-base-100">
-            <input name="date_to" type="date" value="{{ $filters['date_to'] ?? '' }}" class="input input-sm input bg-base-100">
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('inventory.movements') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :reset="route('inventory.movements')" :with-search="false"
+                      columns="sm:grid-cols-2 lg:grid-cols-4">
+            <x-filter-select name="feed_item_id"
+                :options="$feedItems"
+                :selected="$filters['feed_item_id'] ?? ''"
+                :placeholder="__('All items') "
+                :label="__('Filter by feed item') " />
+
+            <x-filter-select name="type"
+                :options="$types"
+                :selected="$filters['type'] ?? ''"
+                :placeholder="__('All types') "
+                :label="__('Filter by movement type') " />
+
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('From date') }}">
+            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('To date') }}">
+        </x-filter-bar>
 
         @if ($movements->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pergerakan stok" description="Pergerakan muncul otomatis saat penerimaan barang, pemakaian, atau penyesuaian dicatat." />
+                <x-empty-state :label="__('No stock movements yet')"
+                              :description="__('Movements appear automatically when a goods receipt, consumption or adjustment is recorded.')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Tanggal</th>
-                            <th>Item</th>
-                            <th>Jenis</th>
-                            <th class="text-right">Jumlah</th>
-                            <th>Batch</th>
-                            <th>Referensi</th>
-                            <th>Alasan</th>
-                            <th>Oleh</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Item') }}</th>
+                            <th>{{ __('Type') }}</th>
+                            <th class="num">{{ __('Quantity') }}</th>
+                            <th>{{ __('Batch') }}</th>
+                            <th>{{ __('Reference') }}</th>
+                            <th>{{ __('Reason') }}</th>
+                            <th>{{ __('By') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -50,14 +51,14 @@
                                 <td class="whitespace-nowrap">{{ $movement->movement_date->translatedFormat('d M Y') }}</td>
                                 <td class="font-medium">{{ $movement->feedItem?->name ?? '—' }}</td>
                                 <td><x-badge :label="$movement->type->label()" :class="$movement->type->badgeClass()" /></td>
-                                <td class="text-right tabular-nums font-medium {{ $movement->direction()->sign() > 0 ? 'text-success' : 'text-warning' }}">
+                                <td class="num font-medium {{ $movement->direction()->sign() > 0 ? 'text-tone-success' : 'text-tone-warning' }}">
                                     {{ $movement->direction()->sign() > 0 ? '+' : '−' }}{{ number_format((float) $movement->quantity, 2) }}
-                                    <span class="text-[11px] text-base-content/50">{{ $movement->unit->shortLabel() }}</span>
+                                    <span class="text-meta text-base-content/50">{{ $movement->unit->shortLabel() }}</span>
                                 </td>
-                                <td class="font-mono text-[11px]">{{ $movement->batch?->batch_code ?? '—' }}</td>
+                                <td class="text-meta font-mono">{{ $movement->batch?->batch_code ?? '—' }}</td>
                                 <td class="text-base-content/65">{{ $movement->reference ?? '—' }}</td>
                                 <td class="max-w-xs truncate text-base-content/65">{{ $movement->reason ?? '—' }}</td>
-                                <td class="text-base-content/65">{{ $movement->creator?->name ?? 'Sistem' }}</td>
+                                <td class="text-base-content/65">{{ $movement->creator?->name ?? __('System') }}</td>
                             </tr>
                         @endforeach
                     </tbody>

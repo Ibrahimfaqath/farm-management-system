@@ -231,6 +231,11 @@ class Animal extends Model
 
     /**
      * Human readable age, e.g. "3 th 4 bln" (years/months).
+     *
+     * Carbon 3 returns a float from every `diffIn*` method, so the totals have
+     * to be cast before they are used. Without the cast this rendered
+     * "5.0009300612355 th 0 bln" and the `$years === 0` newborn branch was
+     * never taken, because a float zero is not identical to an integer zero.
      */
     public function getAgeLabelAttribute(): string
     {
@@ -239,18 +244,18 @@ class Animal extends Model
         }
 
         $reference = $this->exit_date ?? now();
-        $years = $this->date_of_birth->diffInYears($reference);
-        $months = $this->date_of_birth->diffInMonths($reference) % 12;
+        $years = (int) $this->date_of_birth->diffInYears($reference);
+        $months = ((int) $this->date_of_birth->diffInMonths($reference)) % 12;
 
         if ($years === 0 && $months === 0) {
-            return $this->date_of_birth->diffInDays($reference).' hr';
+            return (int) $this->date_of_birth->diffInDays($reference).' '.__('days');
         }
 
         if ($years === 0) {
-            return $months.' bln';
+            return $months.' '.__('months');
         }
 
-        return $years.' th '.$months.' bln';
+        return $years.' '.__('years').' '.$months.' '.__('months');
     }
 
     /**

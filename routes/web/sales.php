@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('module:sales')->group(function (): void {
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
-    Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
@@ -26,6 +25,10 @@ Route::middleware('module:sales')->group(function (): void {
 
         Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
     });
+
+    // Declared after `customers/create`: Laravel matches in declaration order,
+    // so a `{customer}` show route listed first would swallow `/customers/create`.
+    Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
 
     Route::get('sales-orders/{sales_order}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
 

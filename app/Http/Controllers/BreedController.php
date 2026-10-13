@@ -27,6 +27,8 @@ class BreedController extends Controller
         return view('breeds.index', [
             'breeds' => $breeds,
             'speciesOptions' => $this->enumOptions(AnimalSpecies::class),
+            // Without this the species filter cannot show which value is active.
+            'filters' => $request->only(['search', 'species']),
         ]);
     }
 

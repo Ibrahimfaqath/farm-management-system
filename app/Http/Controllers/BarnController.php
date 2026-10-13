@@ -28,6 +28,9 @@ class BarnController extends Controller
             'barns' => $barns,
             'farms' => Farm::orderBy('name')->pluck('name', 'id'),
             'types' => $this->enumOptions(BarnType::class),
+            // Without this the filter dropdowns cannot show which value is
+            // active, so a filtered list looked unfiltered.
+            'filters' => $request->only(['farm_id', 'type']),
         ]);
     }
 

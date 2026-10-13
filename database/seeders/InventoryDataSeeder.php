@@ -83,8 +83,8 @@ class InventoryDataSeeder extends Seeder
     {
         $definitions = [
             ['FD-SLS01', 'Silase Jagung', 'silage', 'kg', 3_500, 3_000, 5_000, 'Silo 1', 120],
-            ['FD-KNS01', 'Konsentrat 414', 'concentrate', 'kg', 11_500, 800, 2_500, 'Gudang A', 90],
-            ['FD-BRS01', 'Beras Padi', 'concentrate', 'kg', 9_800, 500, 1_500, 'Gudang A', 180],
+            ['FD-KNS01', 'Konsentrat Sapi 8-16', 'concentrate', 'kg', 11_500, 800, 2_500, 'Gudang A', 90],
+            ['FD-BRS01', 'Beras Padi', 'byproduct', 'kg', 9_800, 500, 1_500, 'Gudang A', 180],
             ['FD-DDK01', 'Dedak Jagung', 'byproduct', 'kg', 6_200, 400, 1_200, 'Gudang B', 120],
             ['FD-HPT01', 'Hay Padi', 'roughage', 'kg', 5_400, 1_500, 4_000, 'Gudang B', 150],
             ['FD-MIN01', 'Mineral Blok', 'mineral', 'bag', 185_000, 20, 50, 'Gudang A', 720],

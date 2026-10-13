@@ -26,7 +26,7 @@ class FarmDataSeeder extends Seeder
             $farm = Farm::create([
                 'code' => 'FRM-001',
                 'name' => 'Peternakan Suka Maju',
-                'address' => 'Jl. Raya 의무animal No. 88',
+                'address' => 'Jl. Raya Sukamaju No. 88',
                 'village' => 'Sukamaju',
                 'district' => 'Gondang',
                 'regency' => 'Malang',

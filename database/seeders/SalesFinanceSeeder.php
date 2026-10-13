@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\FinanceService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Sales, receivables, payables and cash movements.
@@ -73,24 +74,30 @@ class SalesFinanceSeeder extends Seeder
     private function customers(): array
     {
         $definitions = [
-            ['CUS-001', 'Koperasi Susu Sejahtera', 'partner', 30, 150_000_000],
-            ['CUS-002', 'Toko Segar Jaya', 'wholesale', 14, 60_000_000],
-            ['CUS-003', 'Warung Sumber ASI', 'retail', 0, 5_000_000],
-            ['CUS-004', 'CV Dairy Grosir', 'wholesale', 7, 75_000_000],
-            ['CUS-005', 'Rumah Susu Kita', 'retail', 0, 10_000_000],
+            ['CUS-001', 'Koperasi Susu Sejahtera', 'partner', 30, 150_000_000, 'Ibu Sumiati', 'Gresik'],
+            ['CUS-002', 'Toko Segar Jaya', 'wholesale', 14, 60_000_000, 'Bpk. Haryanto', 'Sidoarjo'],
+            ['CUS-003', 'Warung Sumber ASI', 'retail', 0, 5_000_000, 'Ibu Endah', 'Sidoarjo'],
+            ['CUS-004', 'CV Dairy Grosir', 'wholesale', 7, 75_000_000, 'Bpk. Sutrisno', 'Gresik'],
+            ['CUS-005', 'Rumah Susu Kita', 'retail', 0, 10_000_000, 'Ibu Lestari', 'Sidoarjo'],
         ];
 
         $customers = [];
 
-        foreach ($definitions as [$code, $name, $type, $terms, $limit]) {
+        foreach ($definitions as [$code, $name, $type, $terms, $limit, $contact, $city]) {
+            // The contact and the city are written out rather than generated.
+            // Faker produced names like "Zakary Wehner MD" and "Mr. Taurean
+            // Crist" as the people to call at an Indonesian dairy cooperative,
+            // which undoes the whole point of a realistic demo dataset.
+            $slug = Str::of($name)->lower()->replaceMatches('/[^a-z]+/', '-')->trim('-')->value();
+
             $customers[$code] = Customer::create([
                 'code' => $code,
                 'name' => $name,
                 'type' => $type,
-                'contact_person' => fake()->name(),
+                'contact_person' => $contact,
                 'phone' => '0812'.fake()->numerify('########'),
-                'email' => fake()->unique()->safeEmail(),
-                'city' => fake()->randomElement(['Sidoarjo', 'Surabaya', 'Malang', 'Gresik']),
+                'email' => $slug.'@contoh.id',
+                'city' => $city,
                 'credit_limit' => $limit,
                 'payment_terms_days' => $terms,
                 'is_active' => true,

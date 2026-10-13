@@ -10,7 +10,12 @@ use App\Models\Invoice;
 use App\Models\PregnancyCheck;
 use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
+use App\Models\User;
 use App\Models\Vaccination;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 /**
  * Builds the "what needs attention today" list shown on the dashboard.
@@ -24,6 +29,12 @@ class AttentionService
     ) {}
 
     /**
+     * Every entry carries the module its link is guarded by, so the dashboard
+     * can drop the ones this role may not open. A Farm Worker has no finance or
+     * feed module, and was being shown overdue invoices and unpaid supplier
+     * balances — figures they can do nothing about, linking to pages that
+     * answer 403.
+     *
      * @return list<array{tone: string, title: string, description?: string, url: string}>
      */
     public function items(): array
@@ -39,6 +50,65 @@ class AttentionService
             ...$this->productionDeclines(),
             ...$this->unpaidSupplierLiabilities(),
         ];
+    }
+
+    /**
+     * The same list, minus anything this role may not open.
+     *
+     * Showing a link the visitor cannot follow is worse than showing nothing:
+     * it advertises a figure they are not cleared for, then answers 403 when
+     * they act on it. A Farm Worker has no finance or feed module and was being
+     * shown overdue invoice totals and unpaid supplier balances.
+     *
+     * The module is read back from the route's own `module:` middleware rather
+     * than being declared alongside the item. Hand-tagged modules drifted
+     * immediately — every one was off by one, so the unpaid supplier balance was
+     * filed under `production` and reached exactly the role it must not.
+     *
+     * @return list<array{tone: string, title: string, description?: string, url: string}>
+     */
+    public function itemsFor(?Authenticatable $user): array
+    {
+        if (! $user instanceof User) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->items(),
+            function (array $item) use ($user): bool {
+                $modules = $this->modulesForUrl($item['url']);
+
+                // A route with no module guard is open to any signed-in role.
+                return $modules === []
+                    || array_intersect($modules, $user->role->modules()) !== [];
+            },
+        ));
+    }
+
+    /**
+     * Which modules guard the route behind a URL.
+     *
+     * @return list<string>
+     */
+    private function modulesForUrl(string $url): array
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+
+        try {
+            $route = Route::getRoutes()->match(Request::create($path, 'GET'));
+        } catch (\Throwable) {
+            return [];
+        }
+
+        $modules = [];
+
+        foreach ($route->gatherMiddleware() as $middleware) {
+            if (is_string($middleware) && str_starts_with($middleware, 'module:')) {
+                $modules = array_merge($modules, explode(',', Str::after($middleware, 'module:')));
+            }
+        }
+
+        return $modules;
     }
 
     /** @return list<array{tone: string, title: string, description?: string, url: string}> */

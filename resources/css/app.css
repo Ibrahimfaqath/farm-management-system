@@ -3,61 +3,80 @@
 @source '../../storage/framework/views/*.php';
 
 @plugin "daisyui" {
-    themes: false;
+    themes: light --default, black --prefersdark;
     logs: false;
 }
 
-@plugin "daisyui/theme" {
-    name: 'farm';
-    default: true;
-    prefersdark: false;
-    color-scheme: light;
+/*
+ * FARM uses the two shipped DaisyUI themes as they are, and only re-tunes the
+ * geometry and the green brand accent on top. The selectors below repeat
+ * DaisyUI's own theme selectors exactly and live in the `utilities` layer, so
+ * they win on source order without weakening the built-in themes.
+ *
+ * `black` keeps its own dark palette; nothing here repaints it. Green is the
+ * brand accent and never a page background.
+ */
+@layer utilities {
+    :is(:root:has(input.theme-controller[value=light]:checked), [data-theme=light]) {
+        --color-primary: oklch(45% 0.075 145);
+        --color-primary-content: oklch(98% 0.01 145);
 
-    --color-base-100: oklch(99% 0.006 85);
-    --color-base-200: oklch(96.5% 0.009 85);
-    --color-base-300: oklch(92.5% 0.012 82);
-    --color-base-content: oklch(28% 0.015 60);
+        --color-tone-success: oklch(45% 0.11 150);
+        --color-tone-warning: oklch(48% 0.11 55);
+        --color-tone-error: oklch(50% 0.17 25);
+        --color-tone-info: oklch(48% 0.13 245);
 
-    --color-primary: oklch(45% 0.075 145);
-    --color-primary-content: oklch(98% 0.01 145);
+        --radius-selector: 0.25rem;
+        --radius-field: 0.375rem;
+        --radius-box: 0.5rem;
+        --size-selector: 0.25rem;
+        --size-field: 0.25rem;
+        --border: 1px;
+        --depth: 0;
+        --noise: 0;
+    }
 
-    --color-secondary: oklch(48% 0.055 55);
-    --color-secondary-content: oklch(98% 0.01 55);
+    :is(:root:has(input.theme-controller[value=black]:checked), [data-theme=black]) {
+        --color-primary: oklch(62% 0.1 145);
+        --color-primary-content: oklch(16% 0.02 145);
 
-    --color-accent: oklch(60% 0.06 75);
-    --color-accent-content: oklch(20% 0.02 75);
+        --color-tone-success: oklch(74% 0.15 150);
+        --color-tone-warning: oklch(82% 0.14 78);
+        --color-tone-error: oklch(70% 0.17 25);
+        --color-tone-info: oklch(75% 0.11 245);
 
-    --color-neutral: oklch(32% 0.012 65);
-    --color-neutral-content: oklch(97% 0.008 65);
-
-    --color-info: oklch(58% 0.09 235);
-    --color-info-content: oklch(98% 0.01 235);
-
-    --color-success: oklch(52% 0.11 150);
-    --color-success-content: oklch(98% 0.01 150);
-
-    --color-warning: oklch(70% 0.13 75);
-    --color-warning-content: oklch(24% 0.04 75);
-
-    --color-error: oklch(52% 0.16 25);
-    --color-error-content: oklch(98% 0.01 25);
-
-    --radius-selector: 0.25rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.375rem;
-
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
+        --radius-selector: 0.25rem;
+        --radius-field: 0.375rem;
+        --radius-box: 0.5rem;
+        --size-selector: 0.25rem;
+        --size-field: 0.25rem;
+        --border: 1px;
+        --depth: 0;
+        --noise: 0;
+    }
 }
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
     --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+    /*
+     * Text-safe status colours.
+     *
+     * DaisyUI's `warning` is a light yellow that is unreadable as text on the
+     * light background (measured at 1.7:1). These are the same hues darkened
+     * to a readable contrast; the theme blocks above give the dark theme its
+     * own lighter set. Badges and alerts keep their real DaisyUI modifiers —
+     * only coloured *text* uses these.
+     *
+     * The values live in `@theme` so Tailwind generates `text-tone-*`, and they
+     * are re-declared per theme so each palette stays readable.
+     */
+    --color-tone-success: oklch(45% 0.11 150);
+    --color-tone-warning: oklch(48% 0.11 55);
+    --color-tone-error: oklch(50% 0.17 25);
+    --color-tone-info: oklch(48% 0.13 245);
 }
 
 @layer base {
@@ -73,11 +92,23 @@
         display: none !important;
     }
 
+    /*
+     * The filter dropdown ships a native <select> and a themed trigger; the
+     * script swaps which one is visible. Tailwind's preflight does not make the
+     * `hidden` attribute authoritative, so without this a DaisyUI component
+     * class such as `.select { display: inline-flex }` would beat it and both
+     * controls would paint at once.
+     */
+    [hidden] {
+        display: none !important;
+    }
+
     /* One visible focus ring for the whole app, so keyboard navigation never
        disappears into the theme. */
     :focus-visible {
         @apply outline-primary outline-2 outline-offset-2;
     }
+
 }
 
 @layer components {
@@ -91,6 +122,187 @@
 
     .field-label {
         @apply mb-1 block text-sm font-medium text-base-content/80;
+    }
+
+    /*
+     * Type scale.
+     *
+     * The views had grown eighty arbitrary pixel sizes across thirty-seven
+     * files, seventy of them the same `text-[11px]`, plus a `text-[9px]` axis
+     * label on the production report. Two sizes are too small to read and the
+     * rest had no shared name, so nothing could be adjusted coherently.
+     *
+     * Three roles cover every use in the application:
+     *
+     *   label — an uppercase caption: table headers, section headings, stat
+     *           titles, sidebar group names. Small by design so it never
+     *           competes with the data beside it, but never below 11px.
+     *   meta  — a quiet second line under a value: barn names under an animal
+     *           code, timestamps, units. One step above the body so the eye
+     *           lands on the value first.
+     *   nav   — sidebar entries. Body size, because they are the primary way
+     *           around the application.
+     */
+    .text-label {
+        @apply text-[11px] font-semibold uppercase tracking-wide;
+    }
+
+    .text-meta {
+        @apply text-xs;
+    }
+
+    .text-nav {
+        @apply text-sm;
+    }
+
+    /*
+     * One horizontal-scroll container for every data table so a wide table
+     * scrolls inside its panel instead of stretching the page.
+     */
+    .table-scroll {
+        @apply w-full overflow-x-auto overscroll-x-contain;
+    }
+
+    /*
+     * Shared table rhythm. Applied on top of DaisyUI's `table` component, this
+     * keeps headers quiet, numbers aligned, and rows a consistent height across
+     * the index pages.
+     *
+     * The selectors use `:is()` on purpose. DaisyUI sets
+     * `.table :where(th,td) { padding-block: .75rem }`, and although `:where()`
+     * has zero specificity, the plain `.app-table tbody td` form was still
+     * losing to it in the cascade — the cells kept 12px padding and every row
+     * came out ~20px taller than intended. `:is()` lifts these above it.
+     */
+    .app-table {
+        @apply w-full text-sm;
+    }
+
+    .app-table :is(thead, tbody) th {
+        @apply border-base-300 bg-base-200/60 py-2 px-3 text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap text-base-content/60 align-middle;
+    }
+
+    .app-table :is(thead, tbody) td {
+        @apply border-base-200 py-2 px-3 align-middle;
+    }
+
+    .app-table tbody tr {
+        @apply transition-colors;
+    }
+
+    .app-table .num {
+        @apply text-right tabular-nums;
+    }
+
+    /* Actions column never wraps, so row height stays stable. */
+    .app-table .row-actions {
+        @apply text-right whitespace-nowrap;
+    }
+
+    /* Match the compact row rhythm so the menu lines up with the table. */
+    .row-menu :is(ul > li > a, ul > li > button, ul > li > form > button) {
+        @apply py-1.5 text-[13px];
+    }
+}
+
+@layer utilities {
+    /*
+     * The open/hover state of the row menu trigger, for the same reason as the
+     * table padding above: `.btn-ghost` ships `background-color: transparent`
+     * from a layer nested inside `components`, which wins over anything written
+     * in the parent layer. `utilities` is last, so this sticks.
+     */
+    .row-menu-trigger:hover,
+    .row-menu:focus-within > .row-menu-trigger,
+    .row-menu-trigger[aria-expanded='true'] {
+        /* base-200 sits 0.98 on a 1.0 panel in the light theme — invisible.
+           base-300 is the first step that actually reads on both themes. */
+        background-color: var(--color-base-300);
+    }
+}
+
+@layer utilities {
+    /*
+     * Cell padding, again.
+     *
+     * These two properties are the only ones in the block above that the
+     * cascade keeps taking back: DaisyUI emits `.table :where(th, td)` from a
+     * layer nested inside `components`, and a nested layer wins over its parent
+     * no matter how specific the parent rule is. `utilities` is the last layer,
+     * so these land last and stick — measured 12px → 8px and rows ~20px shorter.
+     */
+    .app-table :is(thead, tbody) :is(th, td) {
+        padding-block: 0.5rem;
+        padding-inline: 0.75rem;
+    }
+
+    /*
+     * Theme toggle glyphs.
+     *
+     * These were switched with a `hidden` class, which did nothing: the icon
+     * component hardcodes `inline-block` when a size is given, and both are
+     * `display` utilities in the same layer. Tailwind emits `.inline-block`
+     * 44 bytes *after* `.hidden`, so it always won and both glyphs painted at
+     * once. Owning the rule here removes the ordering race entirely, and
+     * driving it off the `data-theme` attribute means it is also correct at
+     * first paint, before any script runs.
+     */
+    [data-theme-icon='sun'] {
+        display: inline-block;
+    }
+
+    [data-theme-icon='moon'] {
+        display: none;
+    }
+
+    :root[data-theme='black'] [data-theme-icon='sun'] {
+        display: none;
+    }
+
+    :root[data-theme='black'] [data-theme-icon='moon'] {
+        display: inline-block;
+    }
+}
+
+@layer utilities {
+    /*
+     * DaisyUI ships `warning` as a pale yellow that fails contrast as text on
+     * the light background (measured 1.7:1). These rules sit in the utilities
+     * layer so they land after DaisyUI's own component layer and keep the real
+     * DaisyUI modifiers, while mixing the tone toward the theme's text colour.
+     */
+    .badge-soft.badge-warning,
+    .alert-soft.alert-warning {
+        color: color-mix(in oklab, var(--color-warning) 42%, var(--color-base-content));
+    }
+
+    .badge-soft.badge-error,
+    .alert-soft.alert-error {
+        color: color-mix(in oklab, var(--color-error) 65%, var(--color-base-content));
+    }
+
+    .badge-soft.badge-info,
+    .alert-soft.alert-info {
+        color: color-mix(in oklab, var(--color-info) 65%, var(--color-base-content));
+    }
+
+    .badge-soft.badge-success,
+    .alert-soft.alert-success {
+        color: color-mix(in oklab, var(--color-success) 62%, var(--color-base-content));
+    }
+}
+
+@layer utilities {
+    /* Respect the OS reduced-motion setting for the handful of transitions we do use. */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
 }
 
@@ -113,5 +325,9 @@
 
     main {
         padding: 0 !important;
+    }
+
+    .app-table thead th {
+        @apply bg-white text-black;
     }
 }

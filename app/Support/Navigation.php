@@ -8,13 +8,20 @@ namespace App\Support;
  *
  * Labels are English translation keys; the active locale resolves them at
  * render time. Icons refer to the shared <x-icon> set.
+ *
+ * Every item declares the module its route is actually guarded by. That field
+ * is not optional bookkeeping: the "Production report" link lives in the
+ * Production group but its route sits behind `module:reports`, so a Farm Worker
+ * or Veterinarian — who have the `production` module but not `reports` — was
+ * offered a link that answered 403. An item may also name a single `ability`
+ * when the route behind it is finer grained than its module.
  */
 use Illuminate\Support\Facades\Route;
 
 class Navigation
 {
     /**
-     * @return list<array{key: string, label: string, icon: string, items: list<array{label: string, route: string, icon: string, ability?: string, badge?: string}>}>
+     * @return list<array{key: string, label: string, icon: string, items: list<array{label: string, route: string, icon: string, module?: string, ability?: string}>}>
      */
     public static function groups(): array
     {
@@ -77,7 +84,6 @@ class Navigation
                 'icon' => 'milk',
                 'items' => [
                     ['label' => 'Milk production', 'route' => 'milk-productions.index', 'icon' => 'milk'],
-                    ['label' => 'Production report', 'route' => 'reports.production.index', 'icon' => 'chart'],
                 ],
             ],
             [
@@ -108,8 +114,18 @@ class Navigation
                 'items' => [
                     ['label' => 'Farm report', 'route' => 'reports.animal.index', 'icon' => 'report'],
                     ['label' => 'Feed report', 'route' => 'reports.feed.index', 'icon' => 'report'],
+                    // Grouped with its sibling reports and, like them, behind
+                    // `module:reports` rather than the `production` module.
+                    ['label' => 'Production report', 'route' => 'reports.production.index', 'icon' => 'chart'],
                     ['label' => 'Financial report', 'route' => 'reports.financial.index', 'icon' => 'report'],
-                    ['label' => 'Activity trail', 'route' => 'activity-logs.index', 'icon' => 'history'],
+                    // The audit trail is not a report and is not part of
+                    // `module:reports`; it needs its own gate.
+                    [
+                        'label' => 'Activity trail',
+                        'route' => 'activity-logs.index',
+                        'icon' => 'history',
+                        'ability' => 'audit.view',
+                    ],
                 ],
             ],
             [
@@ -117,7 +133,12 @@ class Navigation
                 'label' => 'Settings',
                 'icon' => 'settings',
                 'items' => [
-                    ['label' => 'System settings', 'route' => 'settings.index', 'icon' => 'settings'],
+                    [
+                        'label' => 'System settings',
+                        'route' => 'settings.index',
+                        'icon' => 'settings',
+                        'ability' => 'settings.manage',
+                    ],
                 ],
             ],
         ];
@@ -132,12 +153,27 @@ class Navigation
             return [];
         }
 
-        return array_values(array_filter(array_map(function (array $group) use ($user): ?array {
+        $canSee = static function (array $item, array $group) use ($user): bool {
+            // An item may sit in a group for presentation while being guarded
+            // by a narrower module than the group's, so the item's own module
+            // wins over the group's.
+            if (! $user->canAccessModule($item['module'] ?? $group['key'])) {
+                return false;
+            }
+
+            if (isset($item['ability']) && ! $user->hasAbility($item['ability'])) {
+                return false;
+            }
+
+            // Skip entries that are not registered yet so the sidebar can never
+            // link to a missing route.
+            return Route::has($item['route']);
+        };
+
+        return array_values(array_filter(array_map(function (array $group) use ($canSee): ?array {
             $items = array_values(array_filter(
                 $group['items'],
-                // Skip entries that are not registered yet so the sidebar can never
-                // link to a missing route.
-                fn (array $item) => $user->canAccessModule($group['key']) && Route::has($item['route']),
+                fn (array $item) => $canSee($item, $group),
             ));
 
             return $items === [] ? null : [

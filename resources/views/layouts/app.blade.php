@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="farm">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="color-scheme" content="light dark">
     <title>{{ $title ?? __('Dashboard') }} &middot; FARM</title>
+    <x-theme-head />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-base-200 font-sans">
 <div class="drawer lg:drawer-open">
     <input id="app-drawer" type="checkbox" class="drawer-toggle">
 
-    <div class="drawer-content flex min-h-screen flex-col">
+    <div class="drawer-content flex min-h-dvh flex-col">
         <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100">
             <div class="navbar min-h-14 gap-2 px-3 sm:px-5">
                 <div class="flex-none lg:hidden">
@@ -21,84 +23,30 @@
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <h1 class="truncate text-sm font-semibold leading-tight">{{ $title ?? __('Dashboard') }}</h1>
-                    @isset($subtitle)
-                        <p class="truncate text-xs text-base-content/55">{{ $subtitle }}</p>
+                    {{-- The page header below the navbar already carries the
+                         title, so the bar shows breadcrumb context instead of
+                         repeating it. --}}
+                    @isset($moduleLabel)
+                        <p class="truncate text-xs font-medium uppercase tracking-wide text-base-content/45">{{ $moduleLabel }}</p>
                     @endisset
+                    <p class="truncate text-sm font-semibold leading-tight">{{ $title ?? __('Dashboard') }}</p>
                 </div>
 
                 <div class="flex flex-none items-center gap-1">
                     <x-global-alerts />
+                    <x-theme-switcher />
 
-                    <div class="dropdown dropdown-end">
-                        <button tabindex="0" class="btn btn-ghost btn-sm gap-2 px-2" type="button"
-                                aria-label="{{ auth()->user()->name }}">
-                            <span class="avatar avatar-placeholder">
-                                <span class="w-7 rounded-full bg-primary/15 text-[11px] font-semibold text-primary">
-                                    {{ auth()->user()->initials }}
-                                </span>
-                            </span>
-                            <span class="hidden text-left leading-tight sm:block">
-                                <span class="block max-w-32 truncate text-xs font-medium">{{ auth()->user()->name }}</span>
-                                <span class="block text-[11px] text-base-content/55">{{ auth()->user()->role_label }}</span>
-                            </span>
-                        </button>
-
-                        <ul tabindex="0" class="menu dropdown-content z-50 mt-2 w-60 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
-                            <li class="menu-title truncate px-3 text-xs font-normal" title="{{ auth()->user()->email }}">
-                                {{ auth()->user()->email }}
-                            </li>
-
-                            @if (auth()->user()->canAccessModule('settings') && \Illuminate\Support\Facades\Route::has('settings.index'))
-                                <li>
-                                    <a href="{{ route('settings.index') }}">
-                                        <x-icon name="settings" :size="16" />
-                                        {{ __('Settings') }}
-                                    </a>
-                                </li>
-                            @endif
-
-                            <li class="menu-title px-3 text-xs">{{ __('Language') }}</li>
-                            @foreach (\App\Support\Locale::SUPPORTED as $code)
-                                @php $isCurrent = app()->getLocale() === $code; @endphp
-                                <li>
-                                    <form method="POST" action="{{ route('locale.update') }}">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="locale" value="{{ $code }}">
-                                        <button type="submit" class="w-full justify-between" @disabled($isCurrent)>
-                                            <span class="flex items-center gap-2">
-                                                <span class="w-4 text-xs font-semibold uppercase {{ $isCurrent ? 'text-primary' : 'text-base-content/45' }}">
-                                                    {{ str($code)->upper() }}
-                                                </span>
-                                                {{ $code === 'id' ? __('Indonesian') : __('English') }}
-                                            </span>
-                                            @if ($isCurrent)
-                                                <x-icon name="success" :size="14" class="text-primary" />
-                                            @endif
-                                        </button>
-                                    </form>
-                                </li>
-                            @endforeach
-
-                            <li class="mt-1 border-t border-base-300 pt-1">
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="text-error">
-                                        <x-icon name="logout" :size="16" />
-                                        {{ __('Log out') }}
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
+                    <x-account-menu />
                 </div>
             </div>
         </header>
 
         <main class="flex-1 px-3 py-4 sm:px-5 sm:py-6">
             @if (session('status'))
-                <div role="status" class="alert alert-success alert-soft mb-4 py-2 text-sm">{{ session('status') }}</div>
+                <div role="status" class="alert alert-success alert-soft mb-4 py-2 text-sm">
+                    <x-icon name="success" :size="16" />
+                    <span>{{ session('status') }}</span>
+                </div>
             @endif
 
             @if ($errors->any() && ! $errors->has('_form'))
@@ -113,27 +61,36 @@
             </div>
         </main>
 
-        <footer class="border-t border-base-300 px-5 py-3 text-[11px] text-base-content/45">
-            FARM &middot; Farm Management System &middot; {{ now()->translatedFormat('d M Y') }}
+        <footer class="text-meta border-t border-base-300 px-5 py-3 text-base-content/45 print:hidden">
+            FARM &middot; {{ now()->translatedFormat('d M Y') }}
         </footer>
     </div>
 
     <aside class="drawer-side z-40">
         <label for="app-drawer" aria-label="{{ __('Close menu') }}" class="drawer-overlay"></label>
 
-        <div class="flex min-h-full w-72 flex-col border-r border-base-300 bg-base-100">
-            <div class="flex h-14 items-center gap-2.5 border-b border-base-300 px-4">
-                <span class="grid size-8 place-items-center rounded-field bg-primary text-sm font-bold text-primary-content">F</span>
-                <span class="leading-tight">
-                    <span class="block text-sm font-bold tracking-wide">FARM</span>
-                    <span class="block text-[10px] tracking-wide text-base-content/50">FARM MANAGEMENT SYSTEM</span>
+        <div class="flex h-dvh w-64 flex-col overflow-hidden border-r border-base-300 bg-base-100 lg:w-64">
+            <div class="flex h-14 shrink-0 items-center gap-2.5 border-b border-base-300 px-4">
+                <span class="grid size-8 shrink-0 place-items-center rounded-field bg-primary text-sm font-bold text-primary-content">F</span>
+                <span class="min-w-0 flex-1 leading-tight">
+                    <span class="block truncate text-sm font-bold tracking-wide">FARM</span>
+                    <span class="text-meta block truncate text-base-content/50">{{ __('Farm Management System') }}</span>
                 </span>
+
+                {{-- Explicit close control for the mobile drawer; the overlay and
+                     the navbar toggle remain, but keyboard and screen-reader users
+                     need a button they can reach. --}}
+                <button type="button" class="btn btn-ghost btn-sm btn-square lg:hidden"
+                        data-drawer-close aria-label="{{ __('Close menu') }}">
+                    <x-icon name="close" :size="18" />
+                </button>
             </div>
 
-            <nav class="flex-1 overflow-y-auto px-2 py-3" aria-label="{{ __('Dashboard') }}">
-                <ul class="menu menu-md w-full gap-0.5 p-0 text-[13px]">
+            <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3" data-drawer-nav
+                 aria-label="{{ __('Main navigation') }}">
+                <ul class="menu menu-md w-full gap-0.5 p-0 text-nav">
                     @foreach (\App\Support\Navigation::forUser(auth()->user()) as $group)
-                        <li class="menu-title mt-2 px-3 text-[10px] uppercase tracking-[0.12em] first:mt-0">
+                        <li class="text-label menu-title mt-2 px-3 text-base-content/65 first:mt-0">
                             {{ $group['label'] }}
                         </li>
                         @foreach ($group['items'] as $item)
@@ -150,7 +107,7 @@
                 </ul>
             </nav>
 
-            <div class="border-t border-base-300 px-4 py-3 text-[11px] text-base-content/45">
+            <div class="text-meta shrink-0 border-t border-base-300 px-4 py-3 text-base-content/45">
                 <p class="font-medium text-base-content/60">
                     {{ __('Season') }} {{ now()->month >= 9 ? '2026/2027' : '2025/2026' }}
                 </p>

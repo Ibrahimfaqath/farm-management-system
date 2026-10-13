@@ -1,79 +1,85 @@
-@extends('layouts.app', ['title' => 'Pesanan Pembelian'])
+@extends('layouts.app', ['title' => __('Purchase orders')])
 
 @section('content')
-    <x-page-header title="Pesanan Pembelian"
-                   subtitle="Pesanan tidak menambah stok; stok bertambah saat penerimaan barang dikonfirmasi">
+    <x-page-header :title="__('Purchase orders')"
+                   :subtitle="__('An order does not increase stock; stock grows when a goods receipt is confirmed.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.purchase'))
-                <a href="{{ route('goods-receipts.index') }}" class="btn btn-sm">Penerimaan Barang</a>
-                <a href="{{ route('purchase-orders.create') }}" class="btn btn-primary btn-sm">+ Pesanan Baru</a>
+                <a href="{{ route('goods-receipts.index') }}" class="btn btn-sm">{{ __('Goods receipts') }}</a>
+                <a href="{{ route('purchase-orders.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('New purchase order') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     @if ($openOrders > 0)
         <div class="mb-4">
-            <x-alert-row tone="info" title="{{ $openOrders }} pesanan pembelian belum diterima penuh"
-                         description="Sisa pesanan menunggu penerimaan barang dari pemasok."
-                         :url="route('purchase-orders.index', ['status' => 'partially_received'])" url-label="Lihat" />
+            <x-alert-row tone="info"
+                         :title="trans_choice(':count purchase order is not fully received|:count purchase orders are not fully received', $openOrders, ['count' => $openOrders])"
+                         :description="__('The remaining quantities are waiting for a goods receipt from the supplier.')"
+                         :url="route('purchase-orders.index', ['status' => 'partially_received'])" :url-label="__('Show them')" />
         </div>
     @endif
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-4">
-            <input name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nomor PO…" class="input input-sm input bg-base-100">
-            <select name="status" class="select select-sm select bg-base-100">
-                <option value="">Semua status</option>
-                @foreach ($statuses as $value => $label)
-                    <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <select name="supplier_id" class="select select-sm select bg-base-100">
-                <option value="">Semua pemasok</option>
-                @foreach ($suppliers as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['supplier_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('purchase-orders.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :search-placeholder="__('Search PO number…')" :reset="route('purchase-orders.index')">
+            <x-filter-select name="status"
+                :options="$statuses"
+                :selected="$filters['status'] ?? ''"
+                :placeholder="__('All statuses') "
+                :label="__('Filter by status') " />
+
+            <x-filter-select name="supplier_id"
+                :options="$suppliers"
+                :selected="$filters['supplier_id'] ?? ''"
+                :placeholder="__('All suppliers') "
+                :label="__('Filter by supplier') " />
+        </x-filter-bar>
 
         @if ($purchaseOrders->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pesanan pembelian"
-                              description="Pesanan pembelian mencatat komitmen Belanja. Stok baru bertambah setelah penerimaan barang dikonfirmasi."
-                              action-label="Buat Pesanan Pembelian" action-url="{{ route('purchase-orders.create') }}" />
+                <x-empty-state :label="__('No purchase orders yet')"
+                              :description="__('A purchase order records a buying commitment. Stock only increases once a goods receipt is confirmed.')"
+                              :url="route('purchase-orders.create')" :submit-label="__('Create purchase order')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Pemasok</th>
-                            <th>Tanggal</th>
-                            <th>Perkiraan</th>
-                            <th>Status</th>
-                            <th class="text-right">Item</th>
-                            <th class="text-right">Nilai</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Supplier') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Expected') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="num">{{ __('Items') }}</th>
+                            <th class="num">{{ __('Value') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($purchaseOrders as $order)
                             <tr>
-                                <td class="font-mono text-xs">
-                                    <a href="{{ route('purchase-orders.show', $order) }}" class="text-primary hover:underline">{{ $order->po_number }}</a>
+                                <td>
+                                    <a href="{{ route('purchase-orders.show', $order) }}" class="link link-hover font-mono text-xs text-primary">
+                                        {{ $order->po_number }}
+                                    </a>
                                 </td>
                                 <td>{{ $order->supplier->name }}</td>
                                 <td class="whitespace-nowrap">{{ $order->order_date->translatedFormat('d M Y') }}</td>
                                 <td class="whitespace-nowrap text-base-content/65">{{ $order->expected_date?->translatedFormat('d M Y') ?? '—' }}</td>
                                 <td><x-badge :label="$order->status->label()" :class="$order->status->badgeClass()" /></td>
-                                <td class="text-right tabular-nums">{{ $order->items_count }}</td>
-                                <td class="text-right"><x-money :amount="$order->total" /></td>
-                                <td class="text-right"><a href="{{ route('purchase-orders.show', $order) }}" class="btn btn-ghost btn-xs">Detail</a></td>
+                                <td class="num">{{ $order->items_count }}</td>
+                                <td class="num"><x-money :amount="$order->total" /></td>
+                                <td class="row-actions">
+                                    <x-actions-menu :label="__('Actions for order :number', ['number' => $order->po_number])">
+                                            <x-menu-link :href="route('purchase-orders.show', $order)" icon="eye">
+                                                {{ __('Details') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -1,78 +1,90 @@
-@extends('layouts.app', ['title' => 'Pemakaian Pakan'])
+@extends('layouts.app', ['title' => __('Feed consumption')])
 
 @section('content')
-    <x-page-header title="Pemakaian Pakan" subtitle="Pemakaian mengurangi stok dan tercatat pada jejak pergerakan">
+    <x-page-header :title="__('Feed consumption')"
+                   :subtitle="__('Consumption reduces stock and is recorded in the movement trail.')">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('feed.consume'))
-                <a href="{{ route('inventory.index') }}" class="btn btn-sm">Cek Stok</a>
-                <a href="{{ route('feed-consumptions.create') }}" class="btn btn-primary btn-sm">+ Catat Pemakaian</a>
+                <a href="{{ route('inventory.index') }}" class="btn btn-sm">{{ __('Check stock') }}</a>
+                <a href="{{ route('feed-consumptions.create') }}" class="btn btn-primary btn-sm">
+                    <x-icon name="plus" :size="16" />
+                    {{ __('Record consumption') }}
+                </a>
             @endif
         </x-slot:actions>
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <x-stat label="Jumlah Terpakai Bulan Ini" :value="number_format($monthQuantity, 2)" />
-        <x-stat label="Nilai Bulan Ini" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="warning" />
-        <x-stat label="Total Catatan" :value="$consumptions->total()" />
-        <x-stat label="Rata-rata per Catatan" :value="$consumptions->count() > 0 ? 'Rp'.number_format($monthTotal / max(1, $consumptions->count()), 0, ',', '.') : '—'" />
+        <x-stat :label="__('Quantity used this month')" :value="number_format($monthQuantity, 2)" />
+        <x-stat :label="__('Value this month')" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="warning" />
+        <x-stat :label="__('All records')" :value="$consumptions->total()" />
+        <x-stat :label="__('Average per record')"
+               :value="$consumptions->count() > 0 ? 'Rp'.number_format($monthTotal / max(1, $consumptions->count()), 0, ',', '.') : '—'" />
     </div>
 
     <x-panel padding="p-0">
-        <form method="GET" class="grid gap-2 border-b border-base-300 p-3 sm:grid-cols-5">
-            <select name="farm_id" class="select select-sm select bg-base-100">
-                <option value="">Semua peternakan</option>
-                @foreach ($farms as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['farm_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <select name="barn_id" class="select select-sm select bg-base-100">
-                <option value="">Semua kandang</option>
-                @foreach ($barns as $id => $name)
-                    <option value="{{ $id }}" @selected((int) ($filters['barn_id'] ?? 0) === $id)>{{ $name }}</option>
-                @endforeach
-            </select>
-            <input name="date_from" type="date" value="{{ $filters['date_from'] ?? '' }}" class="input input-sm input bg-base-100">
-            <input name="date_to" type="date" value="{{ $filters['date_to'] ?? '' }}" class="input input-sm input bg-base-100">
-            <div class="flex gap-2">
-                <button class="btn btn-neutral btn-sm">Terapkan</button>
-                <a href="{{ route('feed-consumptions.index') }}" class="btn btn-ghost btn-sm">Reset</a>
-            </div>
-        </form>
+        <x-filter-bar :reset="route('feed-consumptions.index')" :with-search="false"
+                      columns="sm:grid-cols-2 lg:grid-cols-4">
+            <x-filter-select name="farm_id"
+                :options="$farms"
+                :selected="$filters['farm_id'] ?? ''"
+                :placeholder="__('All farms') "
+                :label="__('Filter by farm') " />
+
+            <x-filter-select name="barn_id"
+                :options="$barns"
+                :selected="$filters['barn_id'] ?? ''"
+                :placeholder="__('All barns') "
+                :label="__('Filter by barn') " />
+
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('From date') }}">
+            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+                   class="input input-sm w-full bg-base-100" aria-label="{{ __('To date') }}">
+        </x-filter-bar>
 
         @if ($consumptions->isEmpty())
             <div class="p-4">
-                <x-empty-state title="Belum ada pemakaian pakan"
-                              description="Catat pemakaian agar stok berkurang dan biaya pakan dapat dihitung."
-                              action-label="Catat Pemakaian" action-url="{{ route('feed-consumptions.create') }}" />
+                <x-empty-state :label="__('No feed consumption yet')"
+                              :description="__('Record consumption so stock decreases and feed cost can be calculated.')"
+                              :url="route('feed-consumptions.create')" :submit-label="__('Record consumption')" />
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="table table-sm table-zebra">
+            <div class="table-scroll">
+                <table class="table app-table">
                     <thead>
                         <tr>
-                            <th>Nomor</th>
-                            <th>Tanggal</th>
-                            <th>Kandang</th>
-                            <th class="text-right">Item</th>
-                            <th class="text-right">Total</th>
-                            <th class="text-right">Nilai</th>
-                            <th>Oleh</th>
-                            <th class="text-right">Aksi</th>
+                            <th>{{ __('Number') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Barn') }}</th>
+                            <th class="num">{{ __('Items') }}</th>
+                            <th class="num">{{ __('Total quantity') }}</th>
+                            <th class="num">{{ __('Value') }}</th>
+                            <th>{{ __('Recorded by') }}</th>
+                            <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($consumptions as $consumption)
                             <tr>
-                                <td class="font-mono text-xs">
-                                    <a href="{{ route('feed-consumptions.show', $consumption) }}" class="text-primary hover:underline">{{ $consumption->consumption_number }}</a>
+                                <td>
+                                    <a href="{{ route('feed-consumptions.show', $consumption) }}" class="link link-hover font-mono text-xs text-primary">
+                                        {{ $consumption->consumption_number }}
+                                    </a>
                                 </td>
                                 <td class="whitespace-nowrap">{{ $consumption->consumption_date->translatedFormat('d M Y') }}</td>
-                                <td>{{ $consumption->barn?->name ?? 'Tanpa kandang' }}</td>
-                                <td class="text-right tabular-nums">{{ $consumption->items_count }}</td>
-                                <td class="text-right tabular-nums">{{ number_format((float) $consumption->total_quantity, 2) }}</td>
-                                <td class="text-right"><x-money :amount="$consumption->total_amount" /></td>
+                                <td>{{ $consumption->barn?->name ?? __('No barn') }}</td>
+                                <td class="num">{{ $consumption->items_count }}</td>
+                                <td class="num">{{ number_format((float) $consumption->total_quantity, 2) }}</td>
+                                <td class="num"><x-money :amount="$consumption->total_amount" /></td>
                                 <td class="text-base-content/65">{{ $consumption->creator?->name ?? '—' }}</td>
-                                <td class="text-right"><a href="{{ route('feed-consumptions.show', $consumption) }}" class="btn btn-ghost btn-xs">Detail</a></td>
+                                <td class="row-actions">
+                                    <x-actions-menu :label="__('Actions for consumption :number', ['number' => $consumption->id])">
+                                            <x-menu-link :href="route('feed-consumptions.show', $consumption)" icon="eye">
+                                                {{ __('Details') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\UnitOfMeasure;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SalesOrderRequest extends FormRequest
 {
