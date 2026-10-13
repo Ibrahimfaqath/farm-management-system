@@ -203,6 +203,25 @@
     .row-menu :is(ul > li > a, ul > li > button, ul > li > form > button) {
         @apply py-1.5 text-[13px];
     }
+
+    /*
+     * A row offering one action shows it directly.
+     *
+     * The entry keeps its own element, so this only has to make whatever the
+     * caller wrote look like the rest of the table. Width is the constraint
+     * this exists to respect: a labelled ghost button costs roughly 45px where
+     * the overflow trigger costs 24px, so the styling is deliberately tight and
+     * the glyph was dropped rather than paying for it.
+     */
+    .row-single-action :is(a, button) {
+        @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-field
+        border border-transparent px-2 py-1 text-sm font-medium leading-none
+        text-base-content/70 transition-colors;
+    }
+
+    .row-single-action :is(a, button):hover {
+        @apply bg-base-300 text-base-content;
+    }
 }
 
 @layer utilities {

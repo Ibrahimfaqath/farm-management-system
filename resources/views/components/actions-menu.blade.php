@@ -5,34 +5,50 @@
     'width' => 'w-52',
 ])
 
-{{--
-    Row action menu.
+@php
+    /*
+     * A row's actions have to earn a menu.
+     *
+     * Most rows here offer exactly one action — Detail on eight index pages,
+     * Edit on four — and hiding a single action behind an overflow button makes
+     * the common case cost two clicks to reach the row's primary action. The
+     * reason the menu exists at all is geometric: a row with two buttons
+     * stretched the row and pushed the table wider. One button does neither.
+     *
+     * So the component reads its own slot: a single entry renders as a direct
+     * control, two or more keep the dropdown. Nothing at the 111 call sites has
+     * to change, and a page whose actions are conditional settles on whichever
+     * shape it actually ended up with.
+     */
+    $content = trim((string) $slot);
+    $entryCount = preg_match_all('/<li\b/', $content);
 
-    One DaisyUI `dropdown` per table row, so a list can offer several actions
-    without stretching the row or pushing the table wider. The trigger and the
-    panel follow the DaisyUI 5 focus-within pattern: no JavaScript is needed to
-    open it, which is why the trigger and the panel both carry `tabindex="0"`.
+    $single = null;
 
-    Put the item links or `POST` forms inside as `menu` list items, for example:
+    if ($entryCount === 1 && preg_match('/^<li\b[^>]*>(.*)<\/li>$/s', $content, $matches)) {
+        // Keep whatever the entry was — a link or a POST form — so the control
+        // still navigates and still submits. The glyph goes: it cost about 20px
+        // per row and a single word already names the action unambiguously.
+        $single = trim(preg_replace('/<svg\b.*?<\/svg>/s', '', $matches[1]));
+    }
+@endphp
 
-        <x-actions-menu :label="__('Actions for :code', ['code' => $animal->animal_code])">
-            <li><a href="{{ route('animals.edit', $animal) }}">…</a></li>
-        </x-actions-menu>
+@if ($single !== null)
+    <div {{ $attributes->class(['row-single-action']) }}>
+        {!! $single !!}
+    </div>
+@else
+    <div {{ $attributes->class(['dropdown', $align, 'row-menu']) }}>
+        <button type="button" tabindex="0"
+                class="btn btn-ghost btn-xs btn-square row-menu-trigger"
+                aria-label="{{ $label ?? __('Actions') }}"
+                aria-haspopup="true" aria-expanded="false">
+            <x-icon name="more" :size="16" />
+        </button>
 
-    @see resources/js/app.js for the outside-click and Escape handling that
-         closes the panel again.
---}}
-
-<div {{ $attributes->class(['dropdown', $align, 'row-menu']) }}>
-    <button type="button" tabindex="0"
-            class="btn btn-ghost btn-xs btn-square row-menu-trigger"
-            aria-label="{{ $label ?? __('Actions') }}"
-            aria-haspopup="true" aria-expanded="false">
-        <x-icon name="more" :size="16" />
-    </button>
-
-    <ul tabindex="0" role="menu"
-        class="menu dropdown-content z-50 {{ $offset }} {{ $width }} flex-nowrap rounded-box border border-base-300 bg-base-100 p-1 shadow-lg">
-        {{ $slot }}
-    </ul>
-</div>
+        <ul tabindex="0" role="menu"
+            class="menu dropdown-content z-50 {{ $offset }} {{ $width }} flex-nowrap rounded-box border border-base-300 bg-base-100 p-1 shadow-lg">
+            {!! $content !!}
+        </ul>
+    </div>
+@endif

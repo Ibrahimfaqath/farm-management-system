@@ -95,8 +95,8 @@
                                         <span class="text-base-content/45">—</span>
                                     @endif
                                 </td>
-                                <td class="max-w-xs truncate">{{ $record->symptoms ?? '—' }}</td>
-                                <td class="max-w-xs truncate">{{ $record->diagnosis ?? '—' }}</td>
+                                <td class="max-w-[11rem] truncate" title="{{ $record->symptoms }}">{{ $record->symptoms ?? '—' }}</td>
+                                <td class="max-w-[11rem] truncate" title="{{ $record->diagnosis }}">{{ $record->diagnosis ?? '—' }}</td>
                                 <td><x-badge :label="$record->status->label()" :class="$record->status->badgeClass()" /></td>
                                 <td class="text-base-content/65">{{ $record->veterinarian?->name ?? '—' }}</td>
                                 <td class="num"><x-money :amount="$record->cost ?? 0" /></td>

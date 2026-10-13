@@ -21,8 +21,8 @@
                :hint="__('revenue + other income − expenses')" />
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-3">
-        <div class="min-w-0 lg:col-span-2">
+    <div class="grid gap-4">
+        <div class="min-w-0">
             <x-panel padding="p-0">
                 <x-filter-bar :search-placeholder="__('Search description…')" :reset="route('expenses.index')"
                               columns="sm:grid-cols-2 lg:grid-cols-4">

@@ -19,8 +19,8 @@
         <x-stat :label="__('All payments')" :value="$payments->total()" />
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-3">
-        <div class="min-w-0 lg:col-span-2">
+    <div class="grid gap-4">
+        <div class="min-w-0">
             <x-panel :title="__('Payment history')" padding="p-0">
                 @if ($payments->isEmpty())
                     <div class="p-4">

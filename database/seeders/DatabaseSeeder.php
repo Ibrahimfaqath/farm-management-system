@@ -98,23 +98,26 @@ class DatabaseSeeder extends Seeder
         }
 
         // SQLite ignores `foreign_keys = OFF` inside a transaction, which is
-        // exactly where a test suite runs the seeder. The deferred variant is
-        // honoured mid-transaction, so children are checked at commit instead
-        // of on every statement. Other drivers get the connection-wide switch.
-        $deferred = DB::connection()->getDriverName() === 'sqlite';
+        // exactly where a test suite runs this. The deferred variant is honoured
+        // mid-transaction and holds the children until commit — but only if
+        // there is a transaction to defer to, since outside one every statement
+        // commits itself. Other drivers get the connection-wide switch.
+        $sqlite = DB::connection()->getDriverName() === 'sqlite';
 
-        if ($deferred) {
+        if ($sqlite) {
             DB::statement('PRAGMA defer_foreign_keys = ON');
         } else {
             Schema::disableForeignKeyConstraints();
         }
 
         try {
-            foreach ($tables as $table) {
-                DB::table($table)->delete();
-            }
+            DB::transaction(function () use ($tables): void {
+                foreach ($tables as $table) {
+                    DB::table($table)->delete();
+                }
+            });
         } finally {
-            if ($deferred) {
+            if ($sqlite) {
                 DB::statement('PRAGMA defer_foreign_keys = OFF');
             } else {
                 Schema::enableForeignKeyConstraints();

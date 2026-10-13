@@ -155,8 +155,24 @@ class HerdHistorySeeder extends Seeder
             [$name, $dosage, $route, $frequency, $withdrawal, $days] = $medications[$index % count($medications)];
             $start = now()->subDays(random_int(4, 20));
 
+            // A treatment belongs to a health record in practice, and the
+            // treatments list only offers a row action when one exists. Leaving
+            // this null left every row in that list with nothing to click.
+            $healthRecord = HealthRecord::firstOrCreate(
+                ['animal_id' => $animal->id],
+                [
+                    'record_number' => 'HC-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
+                    'recorded_at' => $start->copy()->subDay(),
+                    'symptoms' => 'Susah berdiri dan tampak meringis pada sendi kaki belakang',
+                    'diagnosis' => $name === 'Ketoprofen' ? 'Nyeri sendi ringan' : 'Defisiensi vitamin',
+                    'status' => HealthRecordStatus::Resolved,
+                    'recorded_by' => $vet->id,
+                ],
+            );
+
             Treatment::create([
                 'animal_id' => $animal->id,
+                'health_record_id' => $healthRecord->id,
                 'medication_name' => $name,
                 'dosage' => $dosage,
                 'route' => $route,
