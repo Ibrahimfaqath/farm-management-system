@@ -42,9 +42,11 @@ class SeederSmokeTest extends TestCase
         $inventory = app(InventoryService::class);
         $concentrate = FeedItem::where('code', 'FD-KNS01')->firstOrFail();
 
-        // 4.000 kg diterima, 1.400 kg dipakai (336 + 264 harian + 800 skenario).
-        $this->assertSame(2600.0, $inventory->stockOf($concentrate));
+        // Opening 2.600 kg + 4.000 kg diterima, dikurangi pemakaian harian
+        // (336 + 264) dan 800 kg pada skenario fabriquer.
+        $this->assertSame(5200.0, $inventory->stockOf($concentrate));
 
+        // The opening balance posts its own batch, separate from the receipt.
         $batch = InventoryBatch::where('batch_code', 'KNS-2409-A')->firstOrFail();
         $this->assertSame(2600.0, (float) $batch->quantity_remaining);
 

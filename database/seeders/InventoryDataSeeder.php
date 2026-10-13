@@ -81,14 +81,35 @@ class InventoryDataSeeder extends Seeder
     /** @return array<string, FeedItem> */
     private function feedItems(): array
     {
+        // One axis: what the ration uses the item for. The list is ordered the
+        // way a ration is built — fibre, then energy and protein, then the
+        // supplements fed alongside, then anything else.
+        //
+        // Names are the ones an Indonesian dairy actually buys. "Beras Padi"
+        // (paddy rice) was the previous entry: rice is not fed to dairy cattle,
+        // its bran is, and the bran is a concentrate rather than a by-product
+        // for ration purposes.
         $definitions = [
-            ['FD-SLS01', 'Silase Jagung', 'silage', 'kg', 3_500, 3_000, 5_000, 'Silo 1', 120],
-            ['FD-KNS01', 'Konsentrat Sapi 8-16', 'concentrate', 'kg', 11_500, 800, 2_500, 'Gudang A', 90],
-            ['FD-BRS01', 'Beras Padi', 'byproduct', 'kg', 9_800, 500, 1_500, 'Gudang A', 180],
-            ['FD-DDK01', 'Dedak Jagung', 'byproduct', 'kg', 6_200, 400, 1_200, 'Gudang B', 120],
-            ['FD-HPT01', 'Hay Padi', 'roughage', 'kg', 5_400, 1_500, 4_000, 'Gudang B', 150],
-            ['FD-MIN01', 'Mineral Blok', 'mineral', 'bag', 185_000, 20, 50, 'Gudang A', 720],
-            ['FD-VIT01', 'Vitamin ADE', 'vitamin', 'liter', 320_000, 5, 12, 'Kantor', 365],
+            // Pakan Serat
+            ['FD-HPT01', 'Hay Padi', 'forage', 'kg', 5_400, 1_500, 4_000, 'Gudang Pakan A', 150],
+            ['FD-JTG01', 'Jerami Padi', 'forage', 'kg', 3_200, 1_200, 3_500, 'Gudang Pakan A', 120],
+            ['FD-SLS01', 'Silase Jagung', 'forage', 'kg', 3_500, 3_000, 5_000, 'Silo Pakan 1', 120],
+            ['FD-SLS02', 'Silase Rumput Sorgum', 'forage', 'kg', 3_800, 1_000, 3_000, 'Silo Pakan 2', 120],
+            ['FD-RMP02', 'Rumput Field', 'forage', 'kg', 2_600, 800, 2_500, 'Padang Rumput', 60],
+
+            // Konsentrat
+            ['FD-KNS01', 'Konsentrat Sapi 8-16', 'concentrate', 'kg', 11_500, 800, 2_500, 'Gudang Pakan B', 90],
+            ['FD-KNS02', 'Konsentrat Sapi Awal Laktasi', 'concentrate', 'kg', 12_800, 400, 1_200, 'Gudang Pakan B', 90],
+            ['FD-LMR01', 'Limir Beras', 'concentrate', 'kg', 9_800, 500, 1_500, 'Gudang Pakan B', 120],
+            ['FD-DDK01', 'Dedak Jagung', 'concentrate', 'kg', 6_200, 400, 1_200, 'Gudang Pakan B', 120],
+            ['FD-JNG01', 'Jagung Pipil Kering', 'concentrate', 'kg', 7_400, 700, 2_000, 'Gudang Pakan B', 180],
+            ['FD-KDL01', 'Bungkil Kelapa Sawit', 'concentrate', 'kg', 8_900, 600, 1_800, 'Gudang Pakan C', 150],
+            ['FD-KED01', 'Bungkil Kedelai', 'concentrate', 'kg', 16_500, 350, 1_000, 'Gudang Pakan C', 120],
+
+            // Suplemen
+            ['FD-MIN01', 'Mineral Blok Sapi Perah', 'supplement', 'bag', 185_000, 20, 50, 'Gudang Pakan C', 720],
+            ['FD-GRM01', 'Garam Dapur', 'supplement', 'kg', 4_500, 40, 100, 'Gudang Pakan C', 720],
+            ['FD-VIT01', 'Vitamin ADE 1L', 'supplement', 'liter', 320_000, 5, 12, 'Kantor', 365],
         ];
 
         $items = [];
@@ -201,12 +222,24 @@ class InventoryDataSeeder extends Seeder
     private function openingBalances(InventoryService $inventory, array $feedItems, User $owner): void
     {
         $balances = [
-            'FD-SLS01' => [12_000, 'Saldo awal persediaan silase tahun lalu'],
-            'FD-BRS01' => [4_000, 'Saldo awal persediaan beras padi'],
-            'FD-DDK01' => [2_500, 'Saldo awal dedak jagung'],
-            'FD-HPT01' => [6_000, 'Saldo awal hay padi'],
-            'FD-MIN01' => [40, 'Saldo awal mineral blok'],
-            'FD-VIT01' => [8, 'Saldo awal vitamin ADE'],
+            // Opening stock for the whole catalogue, not a handful of lines.
+            // Leaving the newly added feeds at zero made the list read as an
+            // empty warehouse with half the catalogue below its reorder point.
+            'FD-SLS01' => [12_000, 'Saldo awal persediaan silase jagung'],
+            'FD-SLS02' => [5_400, 'Saldo awal persediaan silase sorgum'],
+            'FD-HPT01' => [6_000, 'Saldo awal persediaan hay padi'],
+            'FD-JTG01' => [7_500, 'Saldo awal persediaan jerami padi'],
+            'FD-RMP02' => [2_100, 'Saldo awal rumput lapangan'],
+            'FD-KNS01' => [2_600, 'Saldo awal konsentrat 8-16'],
+            'FD-KNS02' => [380, 'Saldo awal konsentrat awal laktasi'],
+            'FD-LMR01' => [4_000, 'Saldo awal persediaan limir beras'],
+            'FD-DDK01' => [2_500, 'Saldo awal persediaan dedak jagung'],
+            'FD-JNG01' => [3_300, 'Saldo awal persediaan jagung pipil'],
+            'FD-KDL01' => [2_400, 'Saldo awal persediaan bungkil kelapa sawit'],
+            'FD-KED01' => [900, 'Saldo awal persediaan bungkil kedelai'],
+            'FD-MIN01' => [40, 'Saldo awal persediaan mineral blok'],
+            'FD-GRM01' => [95, 'Saldo awal persediaan garam dapur'],
+            'FD-VIT01' => [8, 'Saldo awal persediaan vitamin ADE'],
         ];
 
         foreach ($balances as $code => [$quantity, $reason]) {
@@ -241,7 +274,7 @@ class InventoryDataSeeder extends Seeder
             ]],
             ['barn' => 'KAND-C', 'days' => 6, 'animal_count' => 5, 'lines' => [
                 ['code' => 'FD-HPT01', 'quantity' => 16.0],
-                ['code' => 'FD-BRS01', 'quantity' => 3.0],
+                ['code' => 'FD-LMR01', 'quantity' => 3.0],
             ]],
         ];
 

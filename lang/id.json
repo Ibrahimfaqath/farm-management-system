@@ -32,12 +32,7 @@
     "Maintenance": "Pemeliharaan",
     "Transportation": "Transportasi",
     "Equipment": "Peralatan",
-    "Roughage": "Pakan Serat",
     "Concentrate": "Konsentrat",
-    "Silage": "Silase",
-    "Mineral": "Mineral",
-    "Vitamin": "Vitamin",
-    "By-product": "Limbah Olahan",
     "Manure sale": "Penjualan Pupuk Kotor",
     "Livestock sale": "Penjualan Ternak",
     "Other sale": "Penjualan Lainnya",
@@ -1219,5 +1214,7 @@
     "Use the black palette at night.": "Gunakan palet hitam pada malam hari.",
     "years": "tahun",
     "months": "bulan",
-    "No actions available for your role yet.": "Belum ada aksi yang tersedia untuk peran Anda."
+    "No actions available for your role yet.": "Belum ada aksi yang tersedia untuk peran Anda.",
+    "Forage": "Pakan Serat",
+    "Supplement": "Suplemen"
 }
