@@ -82,6 +82,39 @@ class NumberFormatTest extends TestCase
         }
     }
 
+    /**
+     * The hosting account had no ext-intl.
+     *
+     * The first version of `Number` went through `NumberFormatter` and passed
+     * every test locally, then 500'd on every stock page in production with
+     * `Class "NumberFormatter" not found`. A formatter the interface depends
+     * on cannot assume an extension the host may not have.
+     */
+    public function test_it_does_not_depend_on_the_intl_extension(): void
+    {
+        $source = file_get_contents(app_path('Support/Number.php'));
+
+        // Look for actual use, not the word: the docblock explains in prose
+        // why the class is not used, and that comment is allowed to name it.
+        $code = (string) preg_replace(['#/\*.*?\*/#s', '#//[^\n]*#'], '', $source);
+
+        $this->assertStringNotContainsString('NumberFormatter', $code);
+        $this->assertStringNotContainsString('Intl', $code);
+
+        // The behaviour must not depend on whether intl happens to be loaded.
+        $this->assertSame('2.400', Number::compact(2400));
+        $this->assertSame('11.220', Number::compact(11220));
+        $this->assertSame('1.234.567,89', Number::format(1234567.891, 2));
+    }
+
+    public function test_a_rounded_value_does_not_keep_a_stray_decimal_separator(): void
+    {
+        // Rounding 1.9999 up must not leave "2," behind.
+        $this->assertSame('2', Number::compact(1.9999));
+        $this->assertSame('0,75', Number::compact(0.75));
+        $this->assertSame('-1.500', Number::compact(-1500));
+    }
+
     public function test_english_switches_to_its_own_convention(): void
     {
         $this->app->setLocale('en');

@@ -2,20 +2,21 @@
 
 namespace App\Support;
 
-use NumberFormatter;
-
 /**
- * Number formatting that does not depend on the server's locale.
+ * Number formatting that does not depend on the server's locale or extensions.
  *
  * `number_format()` takes its separators from the process locale when one is
  * set, overriding the arguments it was given. That made the interface say two
  * different things at once on the feed list: currency rendered `Rp16.500`
- * because the process happened to be running `id_ID`, while stock rendered
- * `2,400.00` because that call passed no separators and took the C default.
- * Change the server locale and the money column changes with it.
+ * because the server happened to run `id_ID`, while stock rendered `2,400.00`
+ * because that call passed none and took the C default. Change the server
+ * locale and the money column moves with it.
  *
- * Everything is formatted through here instead, so a number looks the same in
- * every column and does not move when the server is redeployed.
+ * The grouping is done by hand rather than through `NumberFormatter`, because
+ * the hosting account did not have ext-intl installed: the first version of
+ * this class shipped assuming it, and every stock page 500'd in production
+ * while passing locally. A formatter that the interface depends on cannot be
+ * allowed to depend on something the host may not have.
  */
 final class Number
 {
@@ -27,37 +28,31 @@ final class Number
      */
     public static function format(float|int|string|null $value, int $decimals = 0): string
     {
-        $formatter = self::formatter();
-        $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $decimals);
-
-        // The symbols are pinned per locale below, but a fallback keeps the
-        // output sane if the intl data for a locale is missing.
-        return $formatter->format((float) ($value ?? 0))
-            ?: self::plain((float) ($value ?? 0), $decimals);
+        return self::render((float) ($value ?? 0), $decimals);
     }
 
     /**
      * Format, dropping the decimals when the value is whole.
      *
      * Stock is stored as a decimal so a half bag is possible, but printing
-     * "2,400.00" for two thousand four hundred kilos adds nothing — and a column
-     * of trailing zeroes makes real values like 380 harder to pick out.
+     * "2.400,00" for two thousand four hundred kilos adds nothing — and a column
+     * of trailing zeroes makes a real value like 380 harder to pick out.
      */
     public static function compact(float|int|string|null $value, int $maxDecimals = 2): string
     {
         $number = (float) ($value ?? 0);
 
         if ($number === floor($number)) {
-            return self::format($number, 0);
+            return self::render($number, 0);
         }
 
-        // Two decimals is enough to tell 1.25 from 1.256, and more than that is
-        // noise on a quantity.
-        $formatter = self::formatter();
-        $formatter->setAttribute(NumberFormatter::FRACTION_DIGITS, $maxDecimals);
-        $formatter->setAttribute(NumberFormatter::MAX_FRACTION_DIGITS, $maxDecimals);
+        $rendered = self::render($number, $maxDecimals);
 
-        return $formatter->format($number) ?: self::plain($number, $maxDecimals);
+        // `render` rounds, so 1.9999 can come back as "2" with a stray comma
+        // behind it. Anything with no significant decimals drops them.
+        return str_ends_with($rendered, '0') && str_contains($rendered, self::decimalSeparator())
+            ? rtrim(rtrim($rendered, '0'), self::decimalSeparator())
+            : $rendered;
     }
 
     /**
@@ -70,8 +65,7 @@ final class Number
     public static function quantity(float|int|string|null $value, string $unit): string
     {
         // One decimal is enough to tell a half bag from a whole one, and two
-        // places false precision on a stock figure: "12,50 kg" of feed reads as
-        // more exact than the ledger actually is.
+        // places false precision on a stock figure.
         return trim(self::compact($value, 1).' '.self::unit($unit));
     }
 
@@ -93,23 +87,55 @@ final class Number
         };
     }
 
-    private static function formatter(): NumberFormatter
+    /**
+     * Group the digits and join the parts, without touching the process locale.
+     */
+    private static function render(float $number, int $decimals): string
     {
-        $locale = self::locale();
+        $negative = $number < 0;
+        $rounded = round(abs($number), $decimals);
 
-        return new NumberFormatter($locale, NumberFormatter::DECIMAL);
-    }
+        $fixed = number_format($rounded, $decimals, '.', '');
+        [$whole, $fraction] = array_pad(explode('.', $fixed, 2), 2, '');
 
-    private static function plain(float $value, int $decimals): string
-    {
-        return number_format($value, $decimals, '.', ',');
+        $grouped = self::group($whole);
+        $joined = $decimals > 0 && $fraction !== ''
+            ? $grouped.self::decimalSeparator().$fraction
+            : $grouped;
+
+        return $negative && (float) $fixed !== 0.0 ? '-'.$joined : $joined;
     }
 
     /**
-     * The locale the interface is currently in, as an ICU identifier.
+     * Insert thousands separators into a run of digits, right to left.
      */
-    private static function locale(): string
+    private static function group(string $digits): string
     {
-        return app()->getLocale() === 'id' ? 'id_ID' : 'en_US';
+        $separator = self::thousandsSeparator();
+        $length = strlen($digits);
+
+        if ($length <= 3) {
+            return $digits;
+        }
+
+        $chunks = [];
+
+        for ($end = $length; $end > 3; $end -= 3) {
+            array_unshift($chunks, substr($digits, $end - 3, 3));
+        }
+
+        array_unshift($chunks, substr($digits, 0, $end));
+
+        return implode($separator, $chunks);
+    }
+
+    private static function thousandsSeparator(): string
+    {
+        return app()->getLocale() === 'id' ? '.' : ',';
+    }
+
+    private static function decimalSeparator(): string
+    {
+        return app()->getLocale() === 'id' ? ',' : '.';
     }
 }
