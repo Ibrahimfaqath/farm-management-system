@@ -51,7 +51,6 @@
                         <tr>
                             <th>{{ __('Item') }}</th>
                             <th>{{ __('Category') }}</th>
-                            <th>{{ __('Unit') }}</th>
                             <th class="num">{{ __('Price') }}</th>
                             <th class="num">{{ __('Stock') }}</th>
                             <th class="num">{{ __('Reorder point') }}</th>
@@ -67,10 +66,13 @@
                                     <p class="text-meta font-mono text-base-content/45">{{ $item->code }}</p>
                                 </td>
                                 <td class="text-base-content/70">{{ $item->category->label() }}</td>
-                                <td>{{ $item->unit->shortLabel() }}</td>
                                 <td class="num"><x-money :amount="$item->price_per_unit" /></td>
-                                <td class="num">{{ number_format((float) ($item->current_stock ?? 0), 2) }}</td>
-                                <td class="num text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
+                                <td class="num font-medium">
+                                    <x-qty :value="$item->currentStock()" :unit="$item->unit->shortLabel()" />
+                                </td>
+                                <td class="num text-base-content/65">
+                                    <x-qty :value="$item->reorder_point" :unit="$item->unit->shortLabel()" />
+                                </td>
                                 <td class="text-base-content/65">{{ $item->storage_location ?? '—' }}</td>
                                 <td class="row-actions">
                                     @if (auth()->user()->hasAbility('feed.purchase'))

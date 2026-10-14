@@ -34,10 +34,10 @@
                 <x-alert-row tone="warning"
                              :title="__('Feed stock low: :name', ['name' => $item->name])"
                              :description="__('Remaining :remaining :unit against a reorder point of :point. Average daily use: :daily :unit.', [
-                                 'remaining' => number_format((float) $item->current_stock, 1),
+                                 'remaining' => \App\Support\Number::compact($item->current_stock),
                                  'unit' => $item->unit->shortLabel(),
-                                 'point' => number_format((float) $item->reorder_point, 1),
-                                 'daily' => number_format((float) $item->daily_consumption, 1),
+                                 'point' => \App\Support\Number::compact($item->reorder_point),
+                                 'daily' => \App\Support\Number::compact($item->daily_consumption, 1),
                              ]).($item->days_remaining ? ' '.__('About :days days left.', ['days' => $item->days_remaining]) : '')"
                              :url="route('purchase-orders.create')" :url-label="__('Create PO')" />
             @endforeach
@@ -89,8 +89,12 @@
                                 <td class="num font-medium {{ (float) $item->current_stock <= 0 ? 'text-tone-error' : '' }}">
                                     <x-qty :value="$item->current_stock" :unit="$item->unit->shortLabel()" />
                                 </td>
-                                <td class="num text-base-content/65">{{ number_format((float) $item->reorder_point, 2) }}</td>
-                                <td class="num text-base-content/65">{{ number_format((float) $item->daily_consumption, 2) }}</td>
+                                <td class="num text-base-content/65">
+                                    <x-qty :value="$item->reorder_point" :unit="$item->unit->shortLabel()" />
+                                </td>
+                                <td class="num text-base-content/65">
+                                    <x-qty :value="$item->daily_consumption" :unit="$item->unit->shortLabel()" />
+                                </td>
                                 <td class="num">
                                     @if ($item->days_remaining === null)
                                         <span class="text-base-content/45">—</span>

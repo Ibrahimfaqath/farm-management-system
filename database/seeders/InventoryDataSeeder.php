@@ -107,7 +107,7 @@ class InventoryDataSeeder extends Seeder
             ['FD-KED01', 'Bungkil Kedelai', 'concentrate', 'kg', 16_500, 350, 1_000, 'Gudang Pakan C', 120],
 
             // Suplemen
-            ['FD-MIN01', 'Mineral Blok Sapi Perah', 'supplement', 'bag', 185_000, 20, 50, 'Gudang Pakan C', 720],
+            ['FD-MIN01', 'Mineral Blok Sapi Perah', 'supplement', 'sack', 185_000, 20, 50, 'Gudang Pakan C', 720],
             ['FD-GRM01', 'Garam Dapur', 'supplement', 'kg', 4_500, 40, 100, 'Gudang Pakan C', 720],
             ['FD-VIT01', 'Vitamin ADE 1L', 'supplement', 'liter', 320_000, 5, 12, 'Kantor', 365],
         ];

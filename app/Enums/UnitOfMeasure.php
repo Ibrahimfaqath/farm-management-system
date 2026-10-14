@@ -11,7 +11,6 @@ enum UnitOfMeasure: string
     case Kilogram = 'kg';
     case Ton = 'ton';
     case Liter = 'liter';
-    case Bag = 'bag';
     case Sack = 'sack';
     case Box = 'box';
     case Cup = 'cup';
@@ -25,7 +24,6 @@ enum UnitOfMeasure: string
             self::Kilogram => __('Kilogram'),
             self::Ton => __('Ton'),
             self::Liter => __('Liter'),
-            self::Bag => __('Sack'),
             self::Sack => __('Sack'),
             self::Box => __('Box'),
             self::Cup => __('Cup'),
@@ -35,19 +33,26 @@ enum UnitOfMeasure: string
         };
     }
 
+    /**
+     * The unit as it is written beside a number in this interface.
+     *
+     * These read as English plurals — "38,80 bag", "5 head", "12 bundles" —
+     * in an otherwise Indonesian interface. Livestock are counted in "ekor",
+     * which happens to be invariant, so "1 ekor" and "2 ekor" both read
+     * correctly, which "head" never did.
+     */
     public function shortLabel(): string
     {
         return match ($this) {
             self::Kilogram => 'kg',
             self::Ton => 'ton',
             self::Liter => 'L',
-            self::Bag => 'bag',
-            self::Sack => 'sack',
-            self::Box => 'box',
-            self::Bundle => 'bundles',
-            self::Head => 'head',
+            self::Sack => 'sak',
+            self::Box => 'kotak',
+            self::Bundle => 'ikatan',
+            self::Head => 'ekor',
             self::Cup => 'cup',
-            self::Pouch => 'pouch',
+            self::Pouch => 'kemasan',
         };
     }
 
@@ -57,7 +62,6 @@ enum UnitOfMeasure: string
         return match ($this) {
             self::Kilogram => 1.0,
             self::Ton => 1000.0,
-            self::Bag => 50.0,
             self::Sack => 50.0,
             self::Head => 50.0,
             self::Box, self::Bundle, self::Liter, self::Cup, self::Pouch => null,
