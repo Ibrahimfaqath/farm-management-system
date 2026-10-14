@@ -59,7 +59,7 @@
                             <th>{{ __('Notes') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($rows->reverse() as $row)
                             <tr>
                                 <td class="whitespace-nowrap">{{ $row->production_date->translatedFormat('d M Y') }}</td>

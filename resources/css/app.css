@@ -93,6 +93,42 @@
     }
 
     /*
+     * Motion.
+     *
+     * The application had no animation at all, which reads as heavy rather
+     * than calm. These four values are the only ones anything may use.
+     *
+     * The rules that shaped them: nothing moves further than 8px, nothing
+     * overshoots or bounces — that is what makes an interface feel like a toy —
+     * and everything settles faster than anyone can follow deliberately,
+     * because motion that draws attention to itself is worse than none.
+     * Entrances fade and rise together, since opacity on its own reads as a
+     * flash on a slow connection.
+     *
+     * The reduced-motion block at the end of this file neutralises all of it by
+     * forcing every animation and transition duration to nothing.
+     */
+    :root {
+        --motion-fast: 120ms;
+        --motion-base: 180ms;
+        --motion-slow: 280ms;
+
+        /*
+         * Decelerating: quick at first, then settling.
+         *
+         * This was originally the far more aggressive
+         * `cubic-bezier(0.22, 1, 0.36, 1)`, and sampling the running animation
+         * showed the opacity reach 1 within about a fifth of the duration — the
+         * fade happened too early to read as anything. The curve below spends
+         * far more of its time in the visible middle of the range, so a 280ms
+         * entrance is actually perceived as one.
+         */
+        --ease-soft-out: cubic-bezier(0.2, 0, 0, 1);
+        /* Accelerating, for leaving. */
+        --ease-soft-in: cubic-bezier(0.55, 0, 1, 0.45);
+    }
+
+    /*
      * The filter dropdown ships a native <select> and a themed trigger; the
      * script swaps which one is visible. Tailwind's preflight does not make the
      * `hidden` attribute authoritative, so without this a DaisyUI component
@@ -112,6 +148,165 @@
 }
 
 @layer components {
+    /* ---------------------------------------------------------------------
+     * Motion
+     *
+     * Everything below is CSS-only and one-shot: it plays once when an element
+     * appears and never loops, so nothing on screen is permanently in motion.
+     * Distances are small and easing decelerates, which is what separates
+     * "considered" from "bouncy".
+     * ------------------------------------------------------------------- */
+
+    /*
+     * A page settling in after navigation.
+     *
+     * 6px and 280ms. Any further and the whole viewport appears to slide, which
+     * reads as the page being pushed rather than arriving.
+     */
+    @keyframes motion-page-in {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /*
+     * Table rows arriving one after another.
+     *
+     * The delay is capped at twelve rows and stops there: a list of fifty would
+     * otherwise take a second to finish appearing, and the last row would still
+     * be fading in when the reader had already scrolled past it.
+     */
+    @keyframes motion-row-in {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /* A menu opening: a hair of scale so it reads as coming toward you. */
+    @keyframes motion-pop-in {
+        from {
+            opacity: 0;
+            transform: scale(0.97);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* An alert or flash arriving, sliding down rather than appearing. */
+    @keyframes motion-drop-in {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .motion-page {
+        animation: motion-page-in var(--motion-slow) var(--ease-soft-out) both;
+    }
+
+    .motion-drop {
+        animation: motion-drop-in var(--motion-base) var(--ease-soft-out) both;
+    }
+
+    /*
+     * Staggered rows.
+     *
+     * Written as `nth-child` delays rather than an inline index on every row,
+     * so no view has to change and nothing is computed per row in the markup.
+     */
+    .motion-rows > * {
+        animation: motion-row-in var(--motion-base) var(--ease-soft-out) both;
+    }
+
+    .motion-rows > *:nth-child(1) { animation-delay: 0ms; }
+    .motion-rows > *:nth-child(2) { animation-delay: 20ms; }
+    .motion-rows > *:nth-child(3) { animation-delay: 40ms; }
+    .motion-rows > *:nth-child(4) { animation-delay: 60ms; }
+    .motion-rows > *:nth-child(5) { animation-delay: 80ms; }
+    .motion-rows > *:nth-child(6) { animation-delay: 100ms; }
+    .motion-rows > *:nth-child(7) { animation-delay: 120ms; }
+    .motion-rows > *:nth-child(8) { animation-delay: 140ms; }
+    .motion-rows > *:nth-child(9) { animation-delay: 160ms; }
+    .motion-rows > *:nth-child(10) { animation-delay: 180ms; }
+    .motion-rows > *:nth-child(11) { animation-delay: 195ms; }
+    .motion-rows > *:nth-child(n + 12) { animation-delay: 210ms; }
+
+    /*
+     * A dialog. DaisyUI centres it, so it grows from the middle rather than
+     * sliding in from an edge it has no relationship to.
+     */
+    dialog[open] {
+        animation: motion-pop-in var(--motion-base) var(--ease-soft-out) both;
+    }
+
+    /*
+     * Pressing.
+     *
+     * Without this a tap on a button gives no confirmation at all on a touch
+     * screen, where there is no cursor to watch. 0.97 is the smallest change
+     * that registers; anything more makes the control look like it breaks.
+     */
+    .btn:active,
+    .row-single-action :is(a, button):active,
+    .row-menu-trigger:active {
+        transform: scale(0.97);
+    }
+
+    .btn,
+    .row-single-action :is(a, button),
+    .row-menu-trigger {
+        transition-property: background-color, border-color, color, box-shadow, transform;
+        transition-duration: var(--motion-fast);
+        transition-timing-function: var(--ease-soft-out);
+    }
+
+    /*
+     * Skeleton loading.
+     *
+     * A shimmer rather than a spinner: it holds the layout the reader is about
+     * to get, so nothing jumps when the real content replaces it.
+     */
+    @keyframes motion-shimmer {
+        from {
+            background-position: 200% 0;
+        }
+
+        to {
+            background-position: -200% 0;
+        }
+    }
+
+    .skeleton {
+        background-image: linear-gradient(
+            90deg,
+            var(--color-base-200) 0%,
+            var(--color-base-300) 40%,
+            var(--color-base-200) 80%
+        );
+        background-size: 200% 100%;
+        animation: motion-shimmer 1.6s linear infinite;
+    }
+
     .page-title {
         @apply text-2xl font-semibold tracking-tight;
     }
@@ -242,6 +437,33 @@
 
 @layer utilities {
     /*
+     * Menus opening.
+     *
+     * DaisyUI gives `.dropdown-content` a `dropdown` animation that is a plain
+     * opacity fade, declared from a layer nested inside `components` — which
+     * beats anything written in the parent layer, however specific. An earlier
+     * version of this rule sat next to it and silently did nothing.
+     *
+     * A small scale reads as the menu arriving toward the reader rather than
+     * simply appearing, which is the difference between a panel that feels
+     * attached to its trigger and one that does not. `utilities` is the last
+     * layer, so this lands after DaisyUI and sticks.
+     *
+     * The origin follows the menu: right-aligned row actions grow from their
+     * right edge, and the filter listbox, which the script positions under a
+     * full-width trigger, grows from the top centre.
+     */
+    .dropdown:focus-within > .dropdown-content,
+    .dropdown-content[aria-expanded='true']:not([hidden]) {
+        animation: motion-pop-in var(--motion-fast) var(--ease-soft-out) both;
+        transform-origin: top right;
+    }
+
+    .filter-select:focus-within > .dropdown-content {
+        transform-origin: top center;
+    }
+
+    /*
      * Cell padding, again.
      *
      * These two properties are the only ones in the block above that the
@@ -366,14 +588,28 @@
 }
 
 @layer utilities {
-    /* Respect the OS reduced-motion setting for the handful of transitions we do use. */
+    /*
+     * Respect the OS reduced-motion setting.
+     *
+     * The delay matters as much as the duration, and getting that wrong is not
+     * a cosmetic problem. Every entrance animation here uses
+     * `animation-fill-mode: both`, which holds the element at its `from` state
+     * — `opacity: 0` — until the animation is allowed to start. Neutralising
+     * only the duration left the staggered delays intact, so a reader who had
+     * asked for reduced motion was served twelve rows stuck at zero opacity
+     * for up to 210ms, and content that flashed in late. Missing content
+     * arriving after a delay is worse than the motion being removed would
+     * have been.
+     */
     @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
         *::after {
             animation-duration: 0.01ms !important;
+            animation-delay: 0s !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
+            transition-delay: 0s !important;
             scroll-behavior: auto !important;
         }
     }
@@ -384,6 +620,27 @@
     .print\:hidden,
     [data-print='hide'] {
         display: none !important;
+    }
+
+    /*
+     * Print snapshots whatever state an element happens to be in.
+     *
+     * Every entrance animation holds its element at `opacity: 0` until it is
+     * allowed to run, so a table that was still fading in when the print
+     * dialog opened would come out with blank rows — invisible on screen,
+     * faithfully reproduced on paper. Printing is not a medium with motion, so
+     * all of it is ended here.
+     *
+     * Only the animation is removed. With none applied, the `opacity` and
+     * `transform` declarations that were holding the element in place go back
+     * to whatever the stylesheet normally says, which is the element's real
+     * resting state. Forcing those properties instead would flatten anything
+     * that is meant to look faded.
+     */
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
     }
 
     body {

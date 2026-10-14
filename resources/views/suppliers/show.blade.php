@@ -40,7 +40,7 @@
                                     <th class="num">{{ __('Value') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($purchaseOrders as $order)
                                     <tr>
                                         <td>
@@ -74,7 +74,7 @@
                                     <th class="num">{{ __('Value') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($goodsReceipts as $receipt)
                                     <tr>
                                         <td>

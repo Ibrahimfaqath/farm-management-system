@@ -291,7 +291,7 @@
                             <th class="row-actions">{{ __('Action') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($decliningAnimals as $row)
                             <tr>
                                 <td>

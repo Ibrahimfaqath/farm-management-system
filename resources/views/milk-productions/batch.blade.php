@@ -52,7 +52,7 @@
                                 <th class="w-32">{{ __('Fat %') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($lactating as $index => $animal)
                                 <tr>
                                     <td>

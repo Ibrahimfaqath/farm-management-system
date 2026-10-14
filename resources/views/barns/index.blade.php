@@ -48,7 +48,7 @@
                             <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($barns as $barn)
                             @php $percentage = $barn->occupancyPercentage(); @endphp
                             <tr>

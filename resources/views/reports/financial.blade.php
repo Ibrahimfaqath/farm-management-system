@@ -92,7 +92,7 @@
                                 <th class="num">{{ __('Share') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($expensesByCategory as $row)
                                 <tr>
                                     <td>{{ $expenseCategories[$row['category']] ?? $row['category'] }}</td>
@@ -126,7 +126,7 @@
                             <th class="num">{{ __('Collection rate') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($revenueByCustomer as $row)
                             @php $unpaid = (float) $row['total'] - (float) $row['paid']; @endphp
                             <tr>

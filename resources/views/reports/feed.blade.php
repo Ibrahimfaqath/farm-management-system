@@ -47,7 +47,7 @@
                         <th>{{ __('Status') }}</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="motion-rows">
                     @foreach ($rows as $row)
                         <tr>
                             <td>

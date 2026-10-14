@@ -43,20 +43,20 @@
 
         <main class="flex-1 px-3 py-4 sm:px-5 sm:py-6">
             @if (session('status'))
-                <div role="status" class="alert alert-success alert-soft mb-4 py-2 text-sm">
+                <div role="status" class="alert alert-success alert-soft motion-drop mb-4 py-2 text-sm">
                     <x-icon name="success" :size="16" />
                     <span>{{ session('status') }}</span>
                 </div>
             @endif
 
             @if ($errors->any() && ! $errors->has('_form'))
-                <div role="alert" class="alert alert-error alert-soft mb-4 py-2 text-sm">
+                <div role="alert" class="alert alert-error alert-soft motion-drop mb-4 py-2 text-sm">
                     <x-icon name="error" :size="16" />
                     <span>{{ $errors->first() }}</span>
                 </div>
             @endif
 
-            <div class="mx-auto w-full max-w-[1400px]">
+            <div class="motion-page mx-auto w-full max-w-[1400px]">
                 @yield('content')
             </div>
         </main>

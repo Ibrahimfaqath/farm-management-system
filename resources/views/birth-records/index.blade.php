@@ -62,7 +62,7 @@
                             <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($births as $birth)
                             <tr>
                                 <td class="whitespace-nowrap">{{ $birth->birth_date->translatedFormat('d M Y') }}</td>

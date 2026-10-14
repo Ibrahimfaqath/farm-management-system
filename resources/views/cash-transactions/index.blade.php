@@ -69,7 +69,7 @@
                             <th class="num">{{ __('Cash out') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($transactions as $transaction)
                             <tr>
                                 <td class="text-meta font-mono">{{ $transaction->transaction_number }}</td>

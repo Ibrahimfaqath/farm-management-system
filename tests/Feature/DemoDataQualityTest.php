@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Animal;
 use App\Models\Breed;
 use App\Models\Customer;
 use App\Models\Farm;
@@ -150,6 +151,42 @@ class DemoDataQualityTest extends TestCase
 
         foreach ($accounts as $role => $email) {
             $this->assertDatabaseHas('users', ['email' => $email, 'role' => $role]);
+        }
+    }
+
+    public function test_every_animal_carries_a_distinct_name(): void
+    {
+        // The name is how a keeper refers to an animal across the yard, the
+        // milk book and the treatment record. A blank column rendered the whole
+        // livestock index as a wall of dashes, which reads like unfinished data.
+        $unnamed = Animal::where(fn ($query) => $query->whereNull('name')->orWhere('name', ''))->count();
+
+        $this->assertSame(0, $unnamed, "{$unnamed} animals have no name.");
+
+        // Two animals under one name would leave a keeper with no way to say
+        // which one they meant.
+        $repeated = Animal::whereNotNull('name')
+            ->select('name')
+            ->groupBy('name')
+            ->havingRaw('count(*) > 1')
+            ->pluck('name');
+
+        $this->assertTrue($repeated->isEmpty(), 'Animals share a name: '.$repeated->implode(', '));
+    }
+
+    public function test_animal_names_are_drawn_from_the_pool_not_generated(): void
+    {
+        $names = Animal::pluck('name')->filter()->unique();
+
+        $this->assertGreaterThan(20, $names->count(), 'The herd has fewer names than expected.');
+
+        // Nothing machine-made: no digits, no separators, no faker output.
+        foreach ($names as $name) {
+            $this->assertMatchesRegularExpression(
+                '/^[A-Z][a-z]+( \d+)?$/',
+                $name,
+                "The name \"{$name}\" does not look like something a keeper would call an animal.",
+            );
         }
     }
 }

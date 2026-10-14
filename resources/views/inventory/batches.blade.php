@@ -40,7 +40,7 @@
                             <th>{{ __('Status') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($batches as $batch)
                             @php
                                 $used = (float) $batch->original_quantity - (float) $batch->quantity_remaining;

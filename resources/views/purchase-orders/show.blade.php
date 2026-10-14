@@ -76,7 +76,7 @@
                                 <th>{{ __('Progress') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($lines as $line)
                                 <tr>
                                     <td>
@@ -142,7 +142,7 @@
                                     <th class="row-actions"></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($purchaseOrder->goodsReceipts as $receipt)
                                     <tr>
                                         <td class="font-mono text-xs">{{ $receipt->receipt_number }}</td>

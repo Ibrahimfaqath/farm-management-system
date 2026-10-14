@@ -48,7 +48,7 @@
                                     <th>{{ __('Status') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($farm->barns as $barn)
                                     <tr>
                                         <td class="font-mono text-xs">{{ $barn->code }}</td>

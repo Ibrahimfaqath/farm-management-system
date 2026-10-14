@@ -74,7 +74,7 @@
                             <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($invoices as $invoice)
                             <tr>
                                 <td>

@@ -64,7 +64,7 @@
                                     <th class="num">{{ __('Cost') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($record->treatments as $treatment)
                                     <tr>
                                         <td class="font-medium">{{ $treatment->medication_name }}</td>

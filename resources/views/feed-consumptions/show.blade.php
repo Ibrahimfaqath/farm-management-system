@@ -49,7 +49,7 @@
                                 <th class="num">{{ __('Value') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($consumption->items as $item)
                                 <tr>
                                     <td class="font-medium">{{ $item->feedItem?->name }}</td>
@@ -83,7 +83,7 @@
                                     <th class="num">{{ __('Estimate') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($groupedByAnimal as $animalId => $allocations)
                                     @foreach ($allocations as $allocation)
                                         <tr>
@@ -121,7 +121,7 @@
                                     <th>{{ __('Batch') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($movements as $movement)
                                     <tr>
                                         <td>{{ $movement->feedItem?->name }}</td>

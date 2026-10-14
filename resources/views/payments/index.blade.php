@@ -54,7 +54,7 @@
                             <th class="num">{{ __('Amount') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($payments as $payment)
                             <tr>
                                 <td class="font-mono text-xs">{{ $payment->payment_number }}</td>

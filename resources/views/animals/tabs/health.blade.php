@@ -24,7 +24,7 @@
                             <th class="num">{{ __('Cost') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($animal->healthRecords as $record)
                             <tr>
                                 <td class="whitespace-nowrap">{{ $record->record_date->translatedFormat('d M Y') }}</td>
@@ -55,7 +55,7 @@
                             <th>{{ __('Next due') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($animal->vaccinations as $vaccination)
                             <tr>
                                 <td>{{ $vaccination->vaccine_name }}</td>

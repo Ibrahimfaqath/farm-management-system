@@ -46,7 +46,7 @@
                             <th>{{ __('Reference') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($logs as $log)
                             <tr>
                                 <td class="whitespace-nowrap text-base-content/70">{{ $log->created_at->translatedFormat('d M Y H:i') }}</td>

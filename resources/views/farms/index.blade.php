@@ -36,7 +36,7 @@
                             <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($farms as $farm)
                             <tr>
                                 <td class="font-mono text-xs">{{ $farm->code }}</td>

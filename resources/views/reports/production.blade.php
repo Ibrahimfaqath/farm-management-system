@@ -91,7 +91,7 @@
                                     <th class="num">{{ __('Average') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($topAnimals as $row)
                                     <tr>
                                         <td>

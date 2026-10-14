@@ -78,7 +78,7 @@
                                     <th>{{ __('Veterinarian / officer') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($record->pregnancyChecks as $check)
                                     <tr>
                                         <td class="whitespace-nowrap">{{ $check->check_date->translatedFormat('d M Y') }}</td>

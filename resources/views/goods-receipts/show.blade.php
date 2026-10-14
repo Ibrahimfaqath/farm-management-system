@@ -64,7 +64,7 @@
                                 <th>{{ __('Expiry') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($receipt->items as $item)
                                 <tr>
                                     <td>
@@ -111,7 +111,7 @@
                                     <th>{{ __('Date') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($movements as $movement)
                                     <tr>
                                         <td>{{ $movement->feedItem?->name }}</td>

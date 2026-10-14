@@ -44,7 +44,7 @@
                             <th class="row-actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($customers as $customer)
                             <tr>
                                 <td class="font-mono text-xs">{{ $customer->code }}</td>

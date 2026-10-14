@@ -69,7 +69,7 @@
                                 <th class="row-actions">{{ __('Actions') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($users as $user)
                                 <tr>
                                     <td class="font-medium">{{ $user->name }}</td>

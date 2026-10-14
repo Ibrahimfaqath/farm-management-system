@@ -45,7 +45,7 @@
                             <th>{{ __('By') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($movements as $movement)
                             <tr>
                                 <td class="whitespace-nowrap">{{ $movement->movement_date->translatedFormat('d M Y') }}</td>

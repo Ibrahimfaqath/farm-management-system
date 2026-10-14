@@ -56,7 +56,7 @@
                                     <th class="num">{{ __('Line total') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($invoice->salesOrder->items as $item)
                                     <tr>
                                         <td>{{ $item->description }}</td>
@@ -115,7 +115,7 @@
                                     <th class="num">{{ __('Amount') }}</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="motion-rows">
                                 @foreach ($invoice->payments as $payment)
                                     <tr>
                                         <td class="text-meta font-mono">{{ $payment->payment_number }}</td>

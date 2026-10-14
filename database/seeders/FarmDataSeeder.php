@@ -311,6 +311,66 @@ class FarmDataSeeder extends Seeder
             'exit_notes' => 'Mati setelah sakit selama empat hari. Alasan: diperiksa dokter hewan, riwayat tetap tersimpan.',
         ]);
 
+        $this->nameTheHerd($animals);
+
         return $animals;
+    }
+
+    /**
+     * Give every animal a name.
+     *
+     * A working dairy names its cattle — the name is how the keeper refers to an
+     * animal across the yard, the milk book and the treatment record. Leaving
+     * the column blank made the livestock list read like unfinished data, and a
+     * column of dashes down an entire index page is not something a reviewer
+     * should have to see.
+     *
+     * Names are drawn in code order rather than at random, so re-seeding
+     * produces the same herd: a demo that reshuffles itself on every run cannot
+     * be talked about, screenshotted or compared. Animals that already carry a
+     * name are left alone.
+     *
+     * @param  array<string, Animal>  $animals
+     */
+    private function nameTheHerd(array $animals): void
+    {
+        $femaleNames = [
+            'Melati', 'Mawar', 'Kenanga', 'Cendana', 'Anggrek', 'Dahlia', 'Melur', 'Flamboyan',
+            'Pala', 'Jambu', 'Salak', 'Rambutan', 'Markisa', 'Sirsak', 'Belimbing', 'Sawo',
+            'Mangga', 'Jeruk', 'Kamboja', 'Cempaka', 'Teratai', 'Lotus', 'Krisna', 'Sekar',
+            'Wulandari', 'Retno', 'Endah', 'Nirmala', 'Sasmi', 'Wulan',
+        ];
+
+        $maleNames = [
+            'Jaka', 'Satria', 'Panji', 'Surya', 'Bayu', 'Bimo',
+            'Rajawali', 'Elang', 'Merak', 'Kancil', 'Kijang', 'Cendrawasih',
+        ];
+
+        $next = ['female' => 0, 'male' => 0];
+        $pools = ['female' => $femaleNames, 'male' => $maleNames];
+        $taken = [];
+
+        foreach (collect($animals)->sortBy(fn (Animal $a) => $a->animal_code) as $animal) {
+            if ($animal->name !== null && $animal->name !== '') {
+                $taken[$animal->name] = ($taken[$animal->name] ?? 0) + 1;
+
+                continue;
+            }
+
+            $sex = $animal->sex === Sex::Male ? 'male' : 'female';
+            $pool = $pools[$sex];
+            $name = $pool[$next[$sex] % count($pool)];
+
+            // A yard does not run two animals under one name, so a repeat gets
+            // a number — which is what a keeper actually calls the second one.
+            while (isset($taken[$name])) {
+                $name = $pool[$next[$sex] % count($pool)].' '.($taken[$pool[$next[$sex] % count($pool)]] + 1);
+                $next[$sex]++;
+            }
+
+            $animal->forceFill(['name' => $name])->save();
+            $taken[$name] = 1;
+            $next[$sex]++;
+        }
     }
 }

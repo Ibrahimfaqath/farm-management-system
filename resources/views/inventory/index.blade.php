@@ -75,7 +75,7 @@
                             <th>{{ __('Status') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($items as $item)
                             @php
                                 $isLow = (float) $item->reorder_point > 0 && (float) $item->current_stock <= (float) $item->reorder_point;

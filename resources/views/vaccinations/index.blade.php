@@ -76,7 +76,7 @@
                             <th class="num">{{ __('Cost') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($vaccinations as $vaccination)
                             <tr>
                                 <td>

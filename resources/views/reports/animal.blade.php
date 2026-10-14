@@ -102,7 +102,7 @@
                             <th class="num">{{ __('Avg. milk') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($byBreed as $breed)
                             <tr>
                                 <td class="font-medium">{{ $breed->name }}</td>
@@ -126,7 +126,7 @@
                             <th class="num">{{ __('Capacity') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($byBarn as $barn)
                             <tr>
                                 <td>
@@ -166,7 +166,7 @@
                                 <th class="num">{{ __('Daily average') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($topProducers as $row)
                                 <tr>
                                     <td>

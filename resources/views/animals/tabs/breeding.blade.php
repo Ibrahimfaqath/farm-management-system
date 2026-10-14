@@ -24,7 +24,7 @@
                             <th>{{ __('Expected birth') }}</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="motion-rows">
                         @foreach ($animal->breedingRecords as $record)
                             @php $check = $record->pregnancyChecks->last(); @endphp
                             <tr>

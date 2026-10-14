@@ -55,7 +55,7 @@
                                 <th class="num">{{ __('Line total') }}</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="motion-rows">
                             @foreach ($salesOrder->items as $item)
                                 <tr>
                                     <td class="font-medium">{{ $item->description }}</td>
