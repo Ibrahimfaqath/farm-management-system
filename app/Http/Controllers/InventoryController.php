@@ -10,6 +10,7 @@ use App\Models\InventoryBatch;
 use App\Models\StockMovement;
 use App\Services\FeedConsumptionService;
 use App\Services\InventoryService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -124,8 +125,8 @@ class InventoryController extends Controller
             reference: 'ADJ-'.now()->format('YmdHis'),
         );
 
-        $message = "Penyesuaian stok {$feedItem->name} dicatat. Stok ".number_format($result['stock_before'], 2)
-            .' → '.number_format($result['stock_after'], 2).' '.$feedItem->unit->shortLabel().'.';
+        $message = "Penyesuaian stok {$feedItem->name} dicatat. Stok ".Number::format($result['stock_before'], 2)
+            .' → '.Number::format($result['stock_after'], 2).' '.$feedItem->unit->shortLabel().'.';
 
         return redirect()->route('inventory.movements')->with('status', $message);
     }

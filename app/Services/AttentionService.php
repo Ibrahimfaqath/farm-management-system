@@ -12,6 +12,7 @@ use App\Models\PurchaseOrder;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Models\Vaccination;
+use App\Support\Number;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -117,8 +118,8 @@ class AttentionService
         return $this->inventory->lowStockItems()->take(3)->map(fn ($item) => [
             'tone' => ((float) $item->current_stock <= 0) ? 'error' : 'warning',
             'title' => "Stok {$item->name} menipis",
-            'description' => 'Tersisa '.number_format((float) $item->current_stock, 1).' '.$item->unit->shortLabel()
-                .', batas pemesanan ulang '.number_format((float) $item->reorder_point, 1).'.',
+            'description' => 'Tersisa '.Number::compact($item->current_stock, 1).' '.$item->unit->shortLabel()
+                .', batas pemesanan ulang '.Number::compact($item->reorder_point, 1).'.',
             'url' => route('inventory.index'),
         ])->all();
     }
@@ -135,7 +136,7 @@ class AttentionService
         return [[
             'tone' => 'error',
             'title' => $count.' faktur lewat jatuh tempo',
-            'description' => 'Total piutang terlambat Rp'.number_format($this->finance->overdueReceivable(), 0).'.',
+            'description' => 'Total piutang terlambat Rp'.Number::format($this->finance->overdueReceivable()).'.',
             'url' => route('invoices.index', ['overdue' => 1]),
         ]];
     }
@@ -164,7 +165,7 @@ class AttentionService
             $items[] = [
                 'tone' => 'warning',
                 'title' => "{$order->po_number} belum diterima penuh",
-                'description' => 'Sisa '.number_format($outstanding, 2).' unit dari '.$order->supplier->name.'.',
+                'description' => 'Sisa '.Number::compact($outstanding, 2).' unit dari '.$order->supplier->name.'.',
                 'url' => route('purchase-orders.show', $order),
             ];
         }
@@ -287,7 +288,7 @@ class AttentionService
 
         return [[
             'tone' => 'warning',
-            'title' => 'Utang ke pemasok Rp'.number_format($total, 0),
+            'title' => 'Utang ke pemasok Rp'.Number::format($total),
             'description' => 'Dari penerimaan barang terkonfirmasi yang belum dibayar.',
             'url' => route('supplier-payments.index'),
         ]];

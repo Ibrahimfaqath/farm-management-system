@@ -6,6 +6,7 @@ use App\Enums\ProductionStatus;
 use App\Models\Animal;
 use App\Models\MilkProduction;
 use App\Models\User;
+use App\Support\Number;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -48,7 +49,7 @@ class MilkProductionService
             $this->audit->log(
                 'production.recorded',
                 $production,
-                'Produksi susu dicatat: '.number_format((float) $data['liters'], 2).' L',
+                'Produksi susu dicatat: '.Number::format((float) $data['liters'], 2).' L',
                 $production->subjectLabel(),
             );
 

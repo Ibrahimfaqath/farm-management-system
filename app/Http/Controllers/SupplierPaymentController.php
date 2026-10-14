@@ -8,6 +8,7 @@ use App\Models\GoodsReceipt;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class SupplierPaymentController extends Controller
                 ->withSum('payments', 'amount')
                 ->get()
                 ->filter(fn ($receipt) => (float) $receipt->total_amount - (float) $receipt->payments_sum_amount > 0)
-                ->mapWithKeys(fn ($r) => [$r->id => $r->receipt_number.' · '.$r->supplier->name.' (sisa Rp'.number_format(max(0, (float) $r->total_amount - (float) $r->payments_sum_amount), 0).')']),
+                ->mapWithKeys(fn ($r) => [$r->id => $r->receipt_number.' · '.$r->supplier->name.' (sisa Rp'.Number::format(max(0, (float) $r->total_amount - (float) $r->payments_sum_amount), 0).')']),
             'methods' => $this->enumOptions(PaymentMethod::class),
         ]);
     }
@@ -59,11 +60,11 @@ class SupplierPaymentController extends Controller
 
         $result = $finance->recordSupplierPayment($data, $request->user());
 
-        $message = 'Kas keluar Rp'.number_format($result['cash_out'], 0);
+        $message = 'Kas keluar Rp'.Number::format($result['cash_out'], 0);
 
         if ($result['ap_before'] > 0) {
-            $message .= '. Utang penerimaan: Rp'.number_format($result['ap_before'], 0)
-                .' → Rp'.number_format($result['ap_after'], 0);
+            $message .= '. Utang penerimaan: Rp'.Number::format($result['ap_before'], 0)
+                .' → Rp'.Number::format($result['ap_after'], 0);
         }
 
         return redirect()->route('supplier-payments.index')->with('status', $message.'.');

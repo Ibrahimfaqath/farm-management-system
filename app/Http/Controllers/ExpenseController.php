@@ -8,6 +8,7 @@ use App\Http\Requests\ExpenseRequest;
 use App\Models\Expense;
 use App\Models\Supplier;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class ExpenseController extends Controller
         $result = $finance->recordExpense($data, $request->user());
 
         return redirect()->route('expenses.index')
-            ->with('status', 'Biaya tercatat dan kas keluar Rp'.number_format($result['cash_out'], 0).'.');
+            ->with('status', 'Biaya tercatat dan kas keluar Rp'.Number::format($result['cash_out'], 0).'.');
     }
 
     /** @return array<string, mixed> */

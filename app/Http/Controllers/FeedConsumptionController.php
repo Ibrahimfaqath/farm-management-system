@@ -10,6 +10,7 @@ use App\Models\FeedConsumption;
 use App\Models\FeedItem;
 use App\Services\FeedConsumptionService;
 use App\Services\InventoryService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,7 +70,7 @@ class FeedConsumptionController extends Controller
             'batchesByItem' => $feedItems->mapWithKeys(fn (FeedItem $item) => [
                 $item->getKey() => $inventory->usableBatches($item)->map(fn ($batch) => [
                     'id' => $batch->getKey(),
-                    'label' => $batch->batch_code.' · sisa '.number_format((float) $batch->quantity_remaining, 2).' '.$item->unit->shortLabel(),
+                    'label' => $batch->batch_code.' · sisa '.Number::format((float) $batch->quantity_remaining, 2).' '.$item->unit->shortLabel(),
                 ])->values(),
             ]),
             'animalsByBarn' => Barn::query()
@@ -101,7 +102,7 @@ class FeedConsumptionController extends Controller
         return redirect()
             ->route('feed-consumptions.show', $result['consumption'])
             ->with([
-                'status' => 'Tercatat: '.number_format($result['total_quantity'], 2).' unit / Rp'.number_format($result['total_amount'], 0).'.',
+                'status' => 'Tercatat: '.Number::format($result['total_quantity'], 2).' unit / Rp'.Number::format($result['total_amount'], 0).'.',
                 'impact' => $result['lines'],
             ]);
     }
@@ -131,6 +132,6 @@ class FeedConsumptionController extends Controller
         $result = $service->reverse($consumption, $data['reason'], $request->user());
 
         return redirect()->route('feed-consumptions.show', $consumption)
-            ->with('status', 'Pemakaian dikoreksi. Stok dikembalikan '.number_format($result['quantity'], 2).' unit.');
+            ->with('status', 'Pemakaian dikoreksi. Stok dikembalikan '.Number::format($result['quantity'], 2).' unit.');
     }
 }

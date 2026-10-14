@@ -15,6 +15,7 @@ use App\Models\Payment;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
 use App\Models\User;
+use App\Support\Number;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -149,7 +150,7 @@ class FinanceService
             $this->audit->log(
                 'sales.payment_received',
                 $payment,
-                'Pembayaran diterima Rp'.number_format((float) $payment->amount, 0).($invoice ? ' untuk '.$invoice->invoice_number : ''),
+                'Pembayaran diterima Rp'.Number::format((float) $payment->amount, 0).($invoice ? ' untuk '.$invoice->invoice_number : ''),
                 $payment->payment_number,
                 ['ar_before' => $arBefore, 'ar_after' => $arAfter],
             );
@@ -219,7 +220,7 @@ class FinanceService
             $this->audit->log(
                 'finance.supplier_paid',
                 $payment,
-                'Pembayaran pemasok Rp'.number_format((float) $payment->amount, 0),
+                'Pembayaran pemasok Rp'.Number::format((float) $payment->amount, 0),
                 $payment->payment_number,
                 ['ap_before' => $apBefore, 'ap_after' => $apAfter],
             );

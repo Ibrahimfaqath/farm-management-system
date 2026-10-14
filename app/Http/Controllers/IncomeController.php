@@ -7,6 +7,7 @@ use App\Enums\PaymentMethod;
 use App\Http\Requests\IncomeRequest;
 use App\Models\Income;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,7 +47,7 @@ class IncomeController extends Controller
         $result = $finance->recordIncome($data, $request->user());
 
         return redirect()->route('incomes.index')
-            ->with('status', 'Pendapatan tercatat dan kas masuk Rp'.number_format($result['cash_in'], 0).'.');
+            ->with('status', 'Pendapatan tercatat dan kas masuk Rp'.Number::format($result['cash_in'], 0).'.');
     }
 
     /** @return array<string, mixed> */

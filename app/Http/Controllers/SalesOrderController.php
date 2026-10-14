@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\SalesOrder;
 use App\Services\AuditLogger;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,7 +111,7 @@ class SalesOrderController extends Controller
         $invoice = $result['invoice'];
 
         return redirect()->route('invoices.show', $invoice)->with([
-            'status' => "Faktur {$invoice->invoice_number} dibuat. Piutang bertambah Rp".number_format($result['receivable_added'], 0).'; kas belum berubah.',
+            'status' => "Faktur {$invoice->invoice_number} dibuat. Piutang bertambah Rp".Number::format($result['receivable_added'], 0).'; kas belum berubah.',
         ]);
     }
 

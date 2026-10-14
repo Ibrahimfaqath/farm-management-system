@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class PaymentController extends Controller
                 ->with('customer')
                 ->orderBy('due_date')
                 ->get()
-                ->mapWithKeys(fn ($i) => [$i->id => $i->invoice_number.' · '.$i->customer->name.' (sisa Rp'.number_format($i->balance(), 0).')']),
+                ->mapWithKeys(fn ($i) => [$i->id => $i->invoice_number.' · '.$i->customer->name.' (sisa Rp'.Number::format($i->balance(), 0).')']),
             'methods' => $this->enumOptions(PaymentMethod::class),
         ]);
     }
@@ -69,12 +70,12 @@ class PaymentController extends Controller
             'notes' => $data['notes'] ?? null,
         ], $request->user());
 
-        $message = 'Kas masuk Rp'.number_format($result['cash_in'], 0);
+        $message = 'Kas masuk Rp'.Number::format($result['cash_in'], 0);
 
         if ($result['invoice']) {
             $invoice = $result['invoice'];
-            $message .= '. Piutang faktur '.$invoice->invoice_number.': Rp'.number_format($result['ar_before'], 0)
-                .' → Rp'.number_format($result['ar_after'], 0).' ('.$invoice->status->label().')';
+            $message .= '. Piutang faktur '.$invoice->invoice_number.': Rp'.Number::format($result['ar_before'], 0)
+                .' → Rp'.Number::format($result['ar_after'], 0).' ('.$invoice->status->label().')';
         } else {
             $message .= ' (tanpa faktur)';
         }

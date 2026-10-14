@@ -10,6 +10,7 @@ use App\Models\Farm;
 use App\Models\MilkProduction;
 use App\Services\MilkProductionService;
 use App\Services\ProductionAnalyticsService;
+use App\Support\Number;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class MilkProductionController extends Controller
         $production = $service->record($data, $request->user());
 
         return redirect()->route('milk-productions.index')
-            ->with('status', 'Produksi '.number_format((float) $data['liters'], 1).' L tercatat pada '.$production->production_date->translatedFormat('d M Y').'.');
+            ->with('status', 'Produksi '.Number::format((float) $data['liters'], 1).' L tercatat pada '.$production->production_date->translatedFormat('d M Y').'.');
     }
 
     /**
