@@ -158,17 +158,61 @@
         </section>
     @endif
 
+    @if ($operatingSeries !== null)
+        {{--
+            The month tiles above say what this month looks like in isolation.
+            This says whether the shape is improving, which is the question
+            someone opening a dashboard at the start of a day actually has.
+
+            Revenue and expense are drawn as two lines on one axis because the
+            comparison between them *is* the information: a revenue line alone
+            looks good while the farm quietly loses money on what it buys.
+        --}}
+        <section class="mb-6">
+            <x-panel :title="__('Revenue and expense, last 6 months')"
+                     :description="__('Issued invoices against recorded expenses.')"
+                     padding="p-4">
+                <x-chart type="line"
+                         :labels="$operatingSeries['labels']"
+                         :series="[
+                             ['label' => __('Revenue'), 'data' => $operatingSeries['revenue'], 'tone' => 'primary'],
+                             ['label' => __('Expense'), 'data' => $operatingSeries['expense'], 'tone' => 'warning'],
+                         ]"
+                         :label="__('Revenue and expense, last 6 months')"
+                         :height="240"
+                         :showLegend="true" />
+            </x-panel>
+        </section>
+    @endif
+
     @if ($showProduction || $showFarm)
         <div @class(['mb-6 grid items-start gap-4', 'lg:grid-cols-2' => $showProduction && $showFarm])>
             @if ($showProduction)
-                <x-panel :title="__('Milk production, last 7 days')" padding="p-0">
-                    @if ($productionSeries === [])
-                        <p class="p-4 text-sm text-base-content/55">{{ __('No production in the last 7 days.') }}</p>
-                    @else
-                        <x-bar-chart :series="$productionSeries"
-                                     :label="__('Liters')"
-                                     :valueFormatter="fn (float $v) => number_format($v, 1).' L'" />
-                    @endif
+                <x-panel :title="__('Milk production, last 7 days')"
+                         :description="__('Daily total recorded across the herd.')"
+                         padding="p-4">
+                    {{--
+                        Drawn by Chart.js rather than the CSS bar chart.
+
+                        The bar chart had no vertical axis, so the only thing a
+                        reader could take from it was "higher or lower than
+                        yesterday" — and the reader had to do the comparison
+                        themselves, by eye, against a bar with no number on it.
+                        Here the grid gives the scale and the tooltip gives the
+                        exact litres without leaving the chart.
+                    --}}
+                    {{-- `collect()` first rather than `array_column()`: the series
+                         arrives as a plain array, which `array_column` reads but
+                         which has no `pluck()`, and as an empty array on some
+                         paths. Wrapping handles both. Skipping this drew a
+                         chart whose axis ran 0 to 1 with no bars in it, because
+                         the data came back empty. --}}
+                    <x-chart type="bar"
+                             :labels="collect($productionSeries)->pluck('label')->all()"
+                             :series="[['label' => __('Liters'), 'data' => collect($productionSeries)->pluck('value')->all(), 'tone' => 'primary']]"
+                             :label="__('Milk production, last 7 days')"
+                             :height="220"
+                             :valueFormatter="true" />
                 </x-panel>
             @endif
 

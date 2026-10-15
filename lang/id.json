@@ -1217,5 +1217,10 @@
     "No actions available for your role yet.": "Belum ada aksi yang tersedia untuk peran Anda.",
     "Forage": "Pakan Serat",
     "Supplement": "Suplemen",
-    "Filters": "Filter"
+    "Filters": "Filter",
+    "Expense": "Biaya",
+    "Revenue and expense, last 6 months": "Pendapatan dan biaya, 6 bulan terakhir",
+    "Issued invoices against recorded expenses.": "Faktur terbit dibandingkan biaya tercatat.",
+    "Daily total recorded across the herd.": "Total harian yang tercatat di kawanan.",
+    "Nothing recorded for this period yet.": "Belum ada catatan untuk periode ini."
 }

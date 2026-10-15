@@ -122,6 +122,14 @@ class DashboardController extends Controller
                 ? $finance->periodSummary($monthStart, $today)
                 : null,
 
+            // Six months of revenue against expense. The month tiles say what
+            // this month looks like; this says whether the shape is getting
+            // better, which is the question a manager actually opens a
+            // dashboard to answer.
+            'operatingSeries' => $canFinance
+                ? $finance->monthlyOperatingSeries(6)
+                : null,
+
             'decliningAnimals' => $canProduction ? $production->decliningAnimals($farmId) : [],
 
             'recentExpenses' => $canFinance

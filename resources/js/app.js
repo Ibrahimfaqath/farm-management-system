@@ -7,6 +7,8 @@
  * be re-initialised when a partial view swaps content in.
  */
 
+import { initCharts } from './charts.js';
+
 (() => {
     'use strict';
 
@@ -686,6 +688,7 @@
     }
 
     initDialogs();
+    initCharts();
     initSubmitGuards();
     initDropdowns();
     initScrollableDropdowns();

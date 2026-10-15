@@ -401,6 +401,81 @@ class FinanceService
      *     net_cash: float
      * }
      */
+    /**
+     * Revenue and expense per month, for the dashboard trend.
+     *
+     * Months with no activity are filled with zero rather than skipped. A gap in
+     * a chart says "nothing to show"; a zero says "nothing happened", and for a
+     * farm the second is a real and different thing — a month with no invoice
+     * raised is worth noticing, and a silently missing point would hide it.
+     *
+     * Revenue counts issued invoices only, matching `periodSummary`, so the
+     * trend and the tile above it cannot disagree about the same month.
+     *
+     * @return array{labels: list<string>, revenue: list<float>, expense: list<float>, profit: list<float>}
+     */
+    public function monthlyOperatingSeries(int $months = 6): array
+    {
+        $months = max(1, $months);
+        $start = now()->subMonths($months - 1)->startOfMonth();
+
+        /*
+         * Grouped in PHP, not in SQL.
+         *
+         * `DATE_FORMAT(invoice_date, '%Y-%m')` is MySQL-only, and the test
+         * suite runs on SQLite — so the obvious query works in production and
+         * fails in every test. The portable option the framework offers here is
+         * grouping in PHP, which also keeps the two databases genuinely
+         * equivalent rather than only approximately so.
+         *
+         * Two columns are read per row rather than whole models: a farm six
+         * months of invoices runs to hundreds of rows, not millions, and this
+         * stays comfortably cheaper than any alternative portable grouping.
+         */
+        $revenueBy = [];
+        $expenseBy = [];
+
+        foreach (Invoice::query()
+            ->whereDate('invoice_date', '>=', $start)
+            ->where('status', '!=', InvoiceStatus::Cancelled->value)
+            ->get(['invoice_date', 'total']) as $invoice) {
+            $revenueBy[$invoice->invoice_date->format('Y-m')] =
+                ($revenueBy[$invoice->invoice_date->format('Y-m')] ?? 0) + (float) $invoice->total;
+        }
+
+        foreach (Expense::query()
+            ->whereDate('expense_date', '>=', $start)
+            ->get(['expense_date', 'amount']) as $expense) {
+            $expenseBy[$expense->expense_date->format('Y-m')] =
+                ($expenseBy[$expense->expense_date->format('Y-m')] ?? 0) + (float) $expense->amount;
+        }
+
+        $labels = [];
+        $revenueSeries = [];
+        $expenseSeries = [];
+        $profitSeries = [];
+
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $key = $month->format('Y-m');
+
+            $monthRevenue = round($revenueBy[$key] ?? 0, 2);
+            $monthExpense = round($expenseBy[$key] ?? 0, 2);
+
+            $labels[] = $month->translatedFormat('M Y');
+            $revenueSeries[] = $monthRevenue;
+            $expenseSeries[] = $monthExpense;
+            $profitSeries[] = round($monthRevenue - $monthExpense, 2);
+        }
+
+        return [
+            'labels' => $labels,
+            'revenue' => $revenueSeries,
+            'expense' => $expenseSeries,
+            'profit' => $profitSeries,
+        ];
+    }
+
     public function periodSummary(string $from, string $to): array
     {
         $revenue = (float) Invoice::query()

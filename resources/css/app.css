@@ -26,6 +26,13 @@
         --color-tone-error: oklch(50% 0.17 25);
         --color-tone-info: oklch(48% 0.13 245);
 
+        --chart-label: oklch(48% 0.01 75);
+        --chart-grid: oklch(91% 0.008 75);
+        --chart-axis: oklch(85% 0.01 75);
+        --chart-tooltip-bg: oklch(23% 0.012 75);
+        --chart-tooltip-text: oklch(98% 0.006 75);
+        --chart-tooltip-border: oklch(33% 0.012 75);
+
         --radius-selector: 0.25rem;
         --radius-field: 0.375rem;
         --radius-box: 0.5rem;
@@ -44,6 +51,13 @@
         --color-tone-warning: oklch(82% 0.14 78);
         --color-tone-error: oklch(70% 0.17 25);
         --color-tone-info: oklch(75% 0.11 245);
+
+        --chart-label: oklch(68% 0.008 78);
+        --chart-grid: oklch(26% 0.008 78);
+        --chart-axis: oklch(33% 0.008 78);
+        --chart-tooltip-bg: oklch(96% 0.006 78);
+        --chart-tooltip-text: oklch(22% 0.01 75);
+        --chart-tooltip-border: oklch(82% 0.008 78);
 
         --radius-selector: 0.25rem;
         --radius-field: 0.375rem;
@@ -331,6 +345,35 @@
         );
         background-size: 200% 100%;
         animation: motion-shimmer 1.6s linear infinite;
+    }
+
+    /*
+     * Chart colours and frame.
+     *
+     * Chart.js is configured from JS, which is normally where a palette gets
+     * hard-coded. These tokens exist so it does not have to be: the script reads
+     * them off the theme at paint time, so a chart is correct in both themes and
+     * follows the palette if it ever changes, with no second set of values to
+     * keep in step with the first.
+     *
+     * The grid is deliberately the faintest thing on the chart. It answers "how
+     * much" and should never be the first thing seen — the line is the data, the
+     * labels are the context.
+     *
+     * The canvas is sized by its parent rather than by its own attributes:
+     * Chart.js reads the box and drives it, and a fixed height on the element
+     * itself fights that and leaves the drawing stretched.
+     */
+    .chart-figure {
+        position: relative;
+        height: var(--chart-height, 260px);
+        margin: 0;
+    }
+
+    .chart-figure canvas {
+        display: block;
+        height: 100%;
+        width: 100%;
     }
 
     .page-title {

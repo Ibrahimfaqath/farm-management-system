@@ -98,6 +98,15 @@
                             label.textContent = text;
                         }
                     });
+
+                    // Anything that reads a colour out of the theme has to be
+                    // told. The charts resolve their palette from CSS custom
+                    // properties when they are drawn, so a theme swap would
+                    // otherwise leave them holding the colours of the old one
+                    // until the next full page load.
+                    document.dispatchEvent(new CustomEvent('farm:themechange', {
+                        detail: { theme: theme },
+                    }));
                 }
 
                 document.addEventListener('click', function (event) {
