@@ -86,18 +86,7 @@
                 </button>
             </div>
 
-            {{--
-                The navigation scrolls, and it always has more below the fold
-                than fits: the group list ran past the bottom of the viewport and
-                the last heading was cut mid-word ("PRODUKT"), with nothing to
-                say so. A cut-off label reads as a broken panel rather than as
-                more content this way, so the scroll area fades out at its edge.
-                Pure CSS — the gradient is a mask, not an overlay, so it never
-                covers a row a pointer is over.
-            --}}
-            <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3
-                        [mask-image:linear-gradient(to_bottom,#000_calc(100%-24px),transparent)]"
-                 data-drawer-nav
+            <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3" data-drawer-nav
                  aria-label="{{ __('Main navigation') }}">
                 <ul class="menu menu-md w-full gap-0.5 p-0 text-nav">
                     @foreach (\App\Support\Navigation::forUser(auth()->user()) as $group)
