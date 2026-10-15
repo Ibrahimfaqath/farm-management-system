@@ -158,6 +158,32 @@
      * ------------------------------------------------------------------- */
 
     /*
+     * Fill mode is `backwards`, never `both`.
+     *
+     * `both` is `backwards` plus `forwards`, and the `forwards` half is what
+     * broke every dropdown in the application.
+     *
+     * Each keyframe ends on `transform: none`, but a keyframe value is
+     * interpolated as a matrix, so once the animation finishes the element keeps
+     * `transform: matrix(1, 0, 0, 1, 0, 0)` written on it permanently. That is
+     * an identity matrix — it moves nothing — except that any element with a
+     * transform at all becomes the containing block for its `position: fixed`
+     * descendants.
+     *
+     * The dropdown panels inside a table row are positioned by script in
+     * viewport coordinates, and the row sits inside an animated container, so
+     * `left: 1205px` was applied relative to the row at x=277 and the panel
+     * rendered at 1482 — off the right edge of a 1440px screen, with the menu
+     * invisible rather than merely misaligned.
+     *
+     * `backwards` is what the stagger actually needs: it holds the opening
+     * frame through the `animation-delay`, so a row waiting its turn is not
+     * already visible. The closing frame needs no holding, because an
+     * element's ordinary state is already opacity 1 and no transform. The
+     * animation looks identical and leaves nothing behind.
+     */
+
+    /*
      * A page settling in after navigation.
      *
      * 6px and 280ms. Any further and the whole viewport appears to slide, which
@@ -221,11 +247,11 @@
     }
 
     .motion-page {
-        animation: motion-page-in var(--motion-slow) var(--ease-soft-out) both;
+        animation: motion-page-in var(--motion-slow) var(--ease-soft-out) backwards;
     }
 
     .motion-drop {
-        animation: motion-drop-in var(--motion-base) var(--ease-soft-out) both;
+        animation: motion-drop-in var(--motion-base) var(--ease-soft-out) backwards;
     }
 
     /*
@@ -235,7 +261,7 @@
      * so no view has to change and nothing is computed per row in the markup.
      */
     .motion-rows > * {
-        animation: motion-row-in var(--motion-base) var(--ease-soft-out) both;
+        animation: motion-row-in var(--motion-base) var(--ease-soft-out) backwards;
     }
 
     .motion-rows > *:nth-child(1) { animation-delay: 0ms; }
@@ -256,7 +282,7 @@
      * sliding in from an edge it has no relationship to.
      */
     dialog[open] {
-        animation: motion-pop-in var(--motion-base) var(--ease-soft-out) both;
+        animation: motion-pop-in var(--motion-base) var(--ease-soft-out) backwards;
     }
 
     /*
@@ -455,7 +481,7 @@
      */
     .dropdown:focus-within > .dropdown-content,
     .dropdown-content[aria-expanded='true']:not([hidden]) {
-        animation: motion-pop-in var(--motion-fast) var(--ease-soft-out) both;
+        animation: motion-pop-in var(--motion-fast) var(--ease-soft-out) backwards;
         transform-origin: top right;
     }
 
