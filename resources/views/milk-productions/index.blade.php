@@ -99,7 +99,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$productions" />
+            <div class="border-t border-base-300 p-3">{{ $productions->links() }}</div>
         @endif
     </x-panel>
 @endsection

@@ -5,28 +5,10 @@
                    :subtitle="__('Live figures from livestock, production, stock and finance records.')"
                    icon="dashboard" />
 
-    {{--
-    The two blocks below are reordered by viewport, and that order is the single
-    most important layout decision on this page.
-
-    On a desktop the alerts come first, which is what an operations screen
-    should do: the thing that needs a decision today is above the summary.
-
-    On a phone that order is wrong. Ten alert rows at roughly 150px each filled
-    the entire first screen, and the operational summary — today's milk, the
-    active herd, what is low on stock — landed 1024px to 1245px down the page
-    depending on the device. A manager opening the application on a phone saw
-    no figures at all.
-
-    So the summary is first on a phone and the alerts follow it. Nothing is
-    hidden and nothing is dropped: both blocks are always rendered, and only
-    their order changes.
---}}
-<div class="flex flex-col">
     @if ($attentionItems !== [])
-        <section class="order-2 mb-6 lg:order-1">
+        <section class="mb-6">
             <x-section-title :title="__('Needs attention')" :count="count($attentionItems)" icon="bell" />
-            <div class="grid items-start gap-2 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                 @foreach ($attentionItems as $item)
                     <x-alert-row :tone="$item['tone']" :title="$item['title']"
                                  :description="$item['description'] ?? null" :url="$item['url']" />
@@ -34,7 +16,7 @@
             </div>
         </section>
     @else
-        <section class="order-2 mb-6 lg:order-1">
+        <section class="mb-6">
             <x-alert-row tone="success" :title="__('Nothing requires immediate action')"
                          :description="__('Stock, receivables and schedule are within normal range.')" />
         </section>
@@ -67,9 +49,9 @@
     @endphp
 
     @if ($positionStats !== [])
-        <section class="order-1 mb-6 lg:order-2">
-            <x-section-title :title="__('Today’s position')" icon="chart" class="lg:hidden" />
-            <div class="grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-3">
+        <section class="mb-6">
+            <x-section-title :title="__('Today’s position')" icon="chart" />
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 @foreach ($positionStats as $stat)
                     <x-stat :label="$stat['label']" :value="$stat['value']"
                            :hint="$stat['hint'] ?? null" :tone="$stat['tone'] ?? null">
@@ -81,7 +63,6 @@
             </div>
         </section>
     @endif
-</div>
 
     {{--
         The receivables panel and the quick-action panel are independent: a

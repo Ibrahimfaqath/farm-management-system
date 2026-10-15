@@ -96,7 +96,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$births" />
+            <div class="border-t border-base-300 p-3">{{ $births->links() }}</div>
         @endif
     </x-panel>
 @endsection

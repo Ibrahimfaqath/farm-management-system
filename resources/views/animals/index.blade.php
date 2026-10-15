@@ -67,71 +67,7 @@
                               :submit-label="__('Add animal')" />
             </div>
         @else
-            {{--
-                Below `lg` the nine columns are replaced by a list of cards.
-                Ten columns across a 375px screen meant "Holstein Friesian" wrapped
-                over two lines, rows ran to about 100px each, and the barn and
-                status the reader came for sat off-screen with no hint that they
-                existed. The card shows the animal, its state, its breed, sex and
-                age, and where it is — the whole row, not a summary of it.
-
-                The table stays in the document for `lg` and above, so the desktop
-                layout is untouched and nothing is hidden at either size.
-            --}}
-            <x-record-cards :label="__('Livestock list')">
-                @foreach ($animals as $animal)
-                    <x-record-card :href="route('animals.show', $animal)"
-                                   :title="$animal->animal_code.' '.__('Details')">
-                        {{-- Identity, then the facts that describe it, then
-                             where it is and what state it is in. Three lines,
-                             so a phone shows four or five animals at a time
-                             instead of one and a half. --}}
-                        <p class="truncate font-medium leading-tight">
-                            <span class="text-primary">{{ $animal->animal_code }}</span>
-                            @if ($animal->name)
-                                <span class="text-base-content">· {{ $animal->name }}</span>
-                            @endif
-                        </p>
-
-                        <p class="text-meta mt-0.5 truncate text-base-content/55">
-                            {{ $animal->breed?->name ?? '—' }} ·
-                            {{ $animal->sex->shortLabel() }} ·
-                            {{ $animal->age_label }}
-                        </p>
-
-                        <p class="mt-1.5 flex flex-wrap items-center gap-1.5 text-meta">
-                            <x-badge :label="$animal->status->label()" :class="$animal->status->badgeClass()" />
-                            @if ($animal->open_health_records_count > 0)
-                                <x-badge :label="__('In care')" class="badge-soft badge-error" />
-                            @endif
-                            <span class="min-w-0 truncate text-base-content/55">
-                                {{ $animal->barn?->name ?? '—' }}
-                            </span>
-                        </p>
-
-                        <x-slot:actions>
-                            <x-actions-menu :label="__('Actions for :code', ['code' => $animal->animal_code])">
-                                <li>
-                                    <a href="{{ route('animals.show', $animal) }}">
-                                        <x-icon name="eye" :size="15" />
-                                        {{ __('Details') }}
-                                    </a>
-                                </li>
-                                @if ($animal->status->isOpen() && auth()->user()->hasAbility('animal.manage'))
-                                    <li>
-                                        <a href="{{ route('animals.edit', $animal) }}">
-                                            <x-icon name="edit" :size="15" />
-                                            {{ __('Edit animal') }}
-                                        </a>
-                                    </li>
-                                @endif
-                            </x-actions-menu>
-                        </x-slot:actions>
-                    </x-record-card>
-                @endforeach
-            </x-record-cards>
-
-            <div class="table-scroll hidden lg:block">
+            <div class="table-scroll">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -159,13 +95,7 @@
                                 <td class="text-base-content/75">{{ $animal->breed?->name ?? '—' }}</td>
                                 <td>{{ $animal->sex->shortLabel() }}</td>
                                 <td class="whitespace-nowrap text-base-content/70">{{ $animal->age_label }}</td>
-                                {{-- Capped at 8rem rather than 10. Ten columns share the panel, and at a
-                                     1280px viewport the whole table came to 999px
-                                     against 982px of room, so the last 17px — and
-                                     with it the row's action button — sat in the
-                                     scroll container rather than on the page.
-                                     "Kandang Laktasi B" fits comfortably. --}}
-                                <td class="max-w-[8rem] truncate text-base-content/70"
+                                <td class="max-w-[10rem] truncate text-base-content/70"
                                     title="{{ $animal->barn?->name ?? '—' }}">{{ $animal->barn?->name ?? '—' }}</td>
                                 <td class="whitespace-nowrap"><x-badge :label="$animal->production_status->label()" :class="$animal->production_status->badgeClass()" /></td>
                                 <td class="whitespace-nowrap"><x-badge :label="$animal->breeding_status->label()" :class="$animal->breeding_status->badgeClass()" /></td>
@@ -200,7 +130,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$animals" />
+            <div class="border-t border-base-300 p-3">{{ $animals->links() }}</div>
         @endif
     </x-panel>
 @endsection

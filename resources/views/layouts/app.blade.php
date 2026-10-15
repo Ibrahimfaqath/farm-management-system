@@ -66,7 +66,7 @@
         </footer>
     </div>
 
-    <aside class="drawer-side z-40 max-w-[86vw] lg:max-w-none">
+    <aside class="drawer-side z-40">
         <label for="app-drawer" aria-label="{{ __('Close menu') }}" class="drawer-overlay"></label>
 
         <div class="flex h-dvh w-64 flex-col overflow-hidden border-r border-base-300 bg-base-100 lg:w-64">

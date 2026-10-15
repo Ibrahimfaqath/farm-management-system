@@ -13,18 +13,12 @@ class InvoiceFactory extends Factory
     protected $model = Invoice::class;
 
     /** @return array<string, mixed> */
-    /*
-     * Prefixed `T`, for the same reason as the other factories: the demo
-     * seeder writes real invoice numbers in the same date-and-sequence shape,
-     * and `fake()->unique()` restarts per Faker instance, so a test that seeds
-     * and then builds an invoice lands on a number the seeder already used.
-     */
     public function definition(): array
     {
         $total = fake()->randomFloat(0, 2_000_000, 25_000_000);
 
         return [
-            'invoice_number' => 'TINV-'.now()->format('Ymd').'-'.fake()->unique()->numerify('####'),
+            'invoice_number' => 'INV-'.now()->format('Ymd').'-'.fake()->unique()->numerify('####'),
             'customer_id' => Customer::factory(),
             'sales_order_id' => null,
             'invoice_date' => now()->subDays(fake()->numberBetween(1, 45))->toDateString(),

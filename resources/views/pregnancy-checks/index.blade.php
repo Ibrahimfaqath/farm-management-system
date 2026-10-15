@@ -94,7 +94,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$checks" />
+            <div class="border-t border-base-300 p-3">{{ $checks->links() }}</div>
         @endif
     </x-panel>
 @endsection

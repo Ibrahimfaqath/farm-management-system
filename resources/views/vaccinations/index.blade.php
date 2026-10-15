@@ -107,7 +107,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$vaccinations" />
+            <div class="border-t border-base-300 p-3">{{ $vaccinations->links() }}</div>
         @endif
     </x-panel>
 @endsection

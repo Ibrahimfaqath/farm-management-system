@@ -77,7 +77,7 @@
                     </tbody>
                 </table>
             </div>
-            <x-pagination :paginator="$batches" />
+            <div class="border-t border-base-300 p-3">{{ $batches->links() }}</div>
         @endif
     </x-panel>
 @endsection
