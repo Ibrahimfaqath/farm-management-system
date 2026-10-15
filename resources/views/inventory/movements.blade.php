@@ -64,7 +64,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $movements->links() }}</div>
+            <x-pagination :paginator="$movements" />
         @endif
     </x-panel>
 @endsection

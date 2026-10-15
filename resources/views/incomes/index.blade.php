@@ -74,7 +74,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $incomes->links() }}</div>
+            <x-pagination :paginator="$incomes" />
         @endif
     </x-panel>
 @endsection

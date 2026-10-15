@@ -34,7 +34,60 @@
                               :url="route('barns.create')" :submit-label="__('Add barn')" />
             </div>
         @else
-            <div class="table-scroll">
+            {{-- The phone presentation, for the same reason as the livestock and
+                 invoice lists: eight columns including two numeric ones do not
+                 fit a 375px screen, and the action menu ended up inside the
+                 scroll container rather than on the page. Occupancy is the one
+                 thing a barn is read for, so it leads. --}}
+            <x-record-cards :label="__('Barn list')">
+                @foreach ($barns as $barn)
+                    @php $percentage = $barn->occupancyPercentage(); @endphp
+                    <x-record-card :href="route('barns.show', $barn)" :title="$barn->name">
+                        <p class="truncate font-medium leading-tight">
+                            <span class="text-primary">{{ $barn->name }}</span>
+                            <span class="text-meta font-normal text-base-content/45">· {{ $barn->code }}</span>
+                        </p>
+                        <p class="text-meta mt-0.5 truncate text-base-content/55">
+                            {{ $barn->farm->name }} · {{ $barn->type->label() }}
+                        </p>
+
+                        <p class="mt-1.5 flex items-center gap-2 text-meta">
+                            {{-- A barn has no status column: it carries an
+                                 `is_active` flag, which is what the table shows.
+                                 Reaching for an enum that does not exist on the
+                                 model threw on every barn page. --}}
+                            <x-badge :label="$barn->is_active ? __('Active') : __('Inactive')"
+                                     :class="$barn->is_active ? 'badge-soft badge-success' : 'badge-ghost'" />
+                            <span class="tabular-nums">
+                                <span class="font-semibold">{{ $barn->animals_count }}</span>
+                                <span class="text-base-content/45">/ {{ $barn->capacity ?? '—' }}</span>
+                                @if ($percentage !== null)
+                                    <span class="ms-1" @class([
+                                        'text-tone-error' => $percentage > 100,
+                                        'text-tone-warning' => $percentage >= 85 && $percentage <= 100,
+                                        'text-base-content/55' => $percentage < 85,
+                                    ])>{{ $percentage }} %</span>
+                                @endif
+                            </span>
+                        </p>
+
+                        <x-slot:actions>
+                            <x-actions-menu :label="__('Actions for :name', ['name' => $barn->name])">
+                                <x-menu-link :href="route('barns.show', $barn)" icon="eye">
+                                    {{ __('Details') }}
+                                </x-menu-link>
+                                @if (auth()->user()->hasAbility('barn.manage'))
+                                    <x-menu-link :href="route('barns.edit', $barn)" icon="edit">
+                                        {{ __('Edit barn') }}
+                                    </x-menu-link>
+                                @endif
+                            </x-actions-menu>
+                        </x-slot:actions>
+                    </x-record-card>
+                @endforeach
+            </x-record-cards>
+
+            <div class="table-scroll hidden lg:block">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -96,7 +149,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $barns->links() }}</div>
+            <x-pagination :paginator="$barns" />
         @endif
     </x-panel>
 @endsection

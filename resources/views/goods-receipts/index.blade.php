@@ -85,7 +85,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $receipts->links() }}</div>
+            <x-pagination :paginator="$receipts" />
         @endif
     </x-panel>
 @endsection

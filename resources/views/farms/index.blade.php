@@ -66,7 +66,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $farms->links() }}</div>
+            <x-pagination :paginator="$farms" />
         @endif
     </x-panel>
 @endsection

@@ -72,7 +72,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $orders->links() }}</div>
+            <x-pagination :paginator="$orders" />
         @endif
     </x-panel>
 @endsection

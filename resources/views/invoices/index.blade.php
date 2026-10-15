@@ -59,7 +59,52 @@
                               :url="route('sales-orders.create')" :submit-label="__('Create sales order')" />
             </div>
         @else
-            <div class="table-scroll">
+            {{-- Below `lg` the nine columns become a list of cards. The invoice
+                 number was the worst of it: at 375px "INV-20261015-0005" broke
+                 across three lines as "INV-", "20261015-", "0005", so the one
+                 thing you identify an invoice by was the hardest thing to read.
+                 The card gives the number its own line, keeps the customer with
+                 it, and puts the balance — the figure this list exists to show —
+                 where it can be compared at a glance. --}}
+            <x-record-cards :label="__('Invoice list')">
+                @foreach ($invoices as $invoice)
+                    <x-record-card :href="route('invoices.show', $invoice)"
+                                   :title="$invoice->invoice_number.' '.__('Details')">
+                        <p class="truncate font-mono text-sm font-medium text-primary">
+                            {{ $invoice->invoice_number }}
+                        </p>
+                        <p class="mt-0.5 truncate text-meta text-base-content/60">
+                            {{ $invoice->customer->name }} ·
+                            {{ $invoice->invoice_date->translatedFormat('d M Y') }}
+                        </p>
+
+                        <p class="mt-1.5 flex flex-wrap items-center gap-1.5 text-meta">
+                            <x-badge :label="$invoice->status->label()" :class="$invoice->status->badgeClass()" />
+                            @if ($invoice->isOverdue())
+                                <x-badge :label="$invoice->daysOverdue().' '.__('days late')" class="badge-soft badge-error" />
+                            @endif
+                            <span class="ml-auto shrink-0 font-semibold tabular-nums {{ $invoice->balance() > 0 ? 'text-tone-warning' : 'text-tone-success' }}">
+                                <x-money :amount="$invoice->balance()" />
+                            </span>
+                        </p>
+
+                        <x-slot:actions>
+                            <x-actions-menu :label="__('Actions for :number', ['number' => $invoice->invoice_number])">
+                                @if ($invoice->balance() > 0 && auth()->user()->hasAbility('payment.record'))
+                                    <x-menu-link :href="route('payments.create', ['invoice_id' => $invoice->id])" icon="cash">
+                                        {{ __('Pay') }}
+                                    </x-menu-link>
+                                @endif
+                                <x-menu-link :href="route('invoices.show', $invoice)" icon="eye">
+                                    {{ __('Details') }}
+                                </x-menu-link>
+                            </x-actions-menu>
+                        </x-slot:actions>
+                    </x-record-card>
+                @endforeach
+            </x-record-cards>
+
+            <div class="table-scroll hidden lg:block">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -77,15 +122,24 @@
                     <tbody class="motion-rows">
                         @foreach ($invoices as $invoice)
                             <tr>
-                                <td>
+                                <td class="whitespace-nowrap">
                                     <a href="{{ route('invoices.show', $invoice) }}" class="link link-hover font-mono text-xs text-primary">
                                         {{ $invoice->invoice_number }}
                                     </a>
                                 </td>
                                 <td>{{ $invoice->customer->name }}</td>
                                 <td class="whitespace-nowrap">{{ $invoice->invoice_date->translatedFormat('d M Y') }}</td>
-                                <td class="whitespace-nowrap">
-                                    {{ $invoice->due_date->translatedFormat('d M Y') }}
+                                <td>
+                                    {{-- The date itself must not break, but the
+                                         overdue badge below it may. Holding the
+                                         whole cell to one line made the badge
+                                         set the width of the column: this
+                                         column measured 225px for the sake of a
+                                         "2 days late" tag, against 103px for a
+                                         plain date, which at a 1280px viewport
+                                         was the difference between the table
+                                         fitting its panel and not. --}}
+                                    <span class="whitespace-nowrap">{{ $invoice->due_date->translatedFormat('d M Y') }}</span>
                                     @if ($invoice->isOverdue())
                                         <x-badge :label="$invoice->daysOverdue().' '.__('days late')" class="badge-soft badge-error" />
                                     @endif
@@ -113,7 +167,7 @@
                     </tbody>
                 </table>
             </div>
-            <div class="border-t border-base-300 p-3">{{ $invoices->links() }}</div>
+            <x-pagination :paginator="$invoices" />
         @endif
     </x-panel>
 @endsection
