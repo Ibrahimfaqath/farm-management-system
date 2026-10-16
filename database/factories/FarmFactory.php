@@ -14,7 +14,19 @@ class FarmFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => 'FRM-'.fake()->unique()->numerify('###'),
+            /*
+             * Prefixed `T` so a code built here can never collide with one the
+             * seeders write.
+             *
+             * `fake()->unique()` only guarantees uniqueness within a single
+             * Faker instance, which is rebuilt for every test — it knows nothing
+             * about the rows the seeder already inserted. Both draw from the same
+             * 000-999 space, so a run would fail on a UNIQUE constraint about
+             * one time in a hundred and for no reason connected to what it was
+             * testing. `fake()` also has no memory of earlier `numerify` calls
+             * made outside its own `unique()` chain.
+             */
+            'code' => 'TFRM-'.fake()->unique()->numerify('####'),
             'name' => fake()->company().' Farm',
             'address' => fake()->streetAddress(),
             'village' => fake()->word(),

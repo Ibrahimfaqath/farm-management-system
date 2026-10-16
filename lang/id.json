@@ -739,7 +739,7 @@
     "Receipt value": "Nilai Penerimaan",
     "Outstanding payable": "Sisa Utang",
     "Received items": "Rincian Barang",
-    "Line total": "Nilai",
+    "Line total": "Total baris",
     "remaining :qty": "sisa :qty",
     "Information": "Informasi",
     "No purchase order": "Tanpa pesanan",
@@ -1222,5 +1222,7 @@
     "Revenue and expense, last 6 months": "Pendapatan dan biaya, 6 bulan terakhir",
     "Issued invoices against recorded expenses.": "Faktur terbit dibandingkan biaya tercatat.",
     "Daily total recorded across the herd.": "Total harian yang tercatat di kawanan.",
-    "Nothing recorded for this period yet.": "Belum ada catatan untuk periode ini."
+    "Nothing recorded for this period yet.": "Belum ada catatan untuk periode ini.",
+    "Order total": "Total pesanan",
+    "Receipt total": "Total penerimaan"
 }

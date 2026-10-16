@@ -22,8 +22,8 @@
             </div>
         </x-panel>
 
-        <x-panel :title="__('Order lines')" :description="__('Add at least one feed item.')" padding="p-0">
-            <div class="table-scroll" data-line-editor>
+        <x-panel :title="__('Order lines')" :description="__('Add at least one feed item.')" padding="p-0" data-line-editor data-line-currency="Rp">
+            <div class="table-scroll">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -32,6 +32,7 @@
                             <th class="w-24">{{ __('Unit') }}</th>
                             <th class="w-36">{{ __('Unit price') }}</th>
                             <th class="w-40">{{ __('Batch number') }}</th>
+                            <th class="w-36 text-right tabular-nums">{{ __('Line total') }}</th>
                             <th class="w-10 text-center"><span class="sr-only">{{ __('Remove') }}</span></th>
                         </tr>
                     </thead>
@@ -55,7 +56,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <input name="items[{{ $loop->index }}][quantity]" type="number" step="0.01" min="0.01" required
+                                    <input name="items[{{ $loop->index }}][quantity]" type="number" step="0.01" min="0.01" required data-line-amount
                                            value="{{ $row ? (float) $row->quantity : '' }}"
                                            class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
                                 </td>
@@ -74,6 +75,7 @@
                                            value="{{ $row?->batch_hint }}" class="input input-sm w-full bg-base-100"
                                            aria-label="{{ __('Batch number') }}">
                                 </td>
+                                <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
                                             aria-label="{{ __('Remove line') }}">&times;</button>
@@ -89,7 +91,10 @@
                     <x-icon name="plus" :size="16" />
                     {{ __('Add line') }}
                 </button>
-                <p class="text-xs text-base-content/50">{{ __('The subtotal is calculated from quantity × unit price.') }}</p>
+                <p class="text-xs text-base-content/50">
+                    {{ __('Order total') }}
+                    <span class="ml-1 font-semibold text-base-content tabular-nums" data-line-grand-total>—</span>
+                </p>
             </div>
 
             @error('items')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
@@ -122,7 +127,7 @@
                 </select>
             </td>
             <td>
-                <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required
+                <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required data-line-amount
                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
             </td>
             <td>
@@ -137,6 +142,7 @@
                 <input name="items[__INDEX__][batch_hint]" type="text" class="input input-sm w-full bg-base-100"
                        aria-label="{{ __('Batch number') }}">
             </td>
+            <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
             <td class="text-center">
                 <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
                         aria-label="{{ __('Remove line') }}">&times;</button>

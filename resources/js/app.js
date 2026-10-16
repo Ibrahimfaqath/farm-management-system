@@ -585,6 +585,82 @@ import { initCharts } from './charts.js';
             }
         };
 
+        /*
+         * Money, rendered the way `<x-money>` renders it.
+         *
+         * Both the thousands separator and the currency prefix come from the
+         * document rather than from literals here. The separator follows the
+         * active locale — `1.250.000` in Indonesian, `1,250,000` in English —
+         * and the prefix is read from the form, so the figure on screen is the
+         * same one the server will store and print.
+         */
+        const money = (value, editor) => {
+            const locale = document.documentElement.lang || 'id';
+            const prefix = editor?.dataset.lineCurrency ?? '';
+
+            return prefix + new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
+        };
+
+        /**
+         * Recompute one editor: every line's figure, then the order total.
+         *
+         * Which inputs take part is declared by the markup rather than assumed
+         * from field names. A name convention would have been simpler and
+         * wrong: the goods receipt stores its quantity as `quantity_received`
+         * and the sales order as `quantity`, and a lookup keyed on either one
+         * silently misses the other.
+         */
+        const recalculate = (editor) => {
+            if (!editor) {
+                return;
+            }
+
+            let total = 0;
+            let anyEntered = false;
+
+            editor.querySelectorAll('[data-line-row]').forEach((row) => {
+                const quantity = Number(row.querySelector('[data-line-amount]')?.value);
+                const price = Number(row.querySelector('[data-line-price]')?.value);
+                const output = row.querySelector('[data-line-total]');
+
+                const q = Number.isFinite(quantity) ? quantity : 0;
+                const p = Number.isFinite(price) ? price : 0;
+                const line = q * p;
+
+                /*
+                 * A line counts only when it is finished, which means both
+                 * figures are present and positive.
+                 *
+                 * Requiring the price as well is what stops a half-typed row
+                 * from asserting a total of zero. Someone who has entered twelve
+                 * sacks but not yet the price is looking at an unfinished row,
+                 * not at a free one, and "Rp0" says otherwise — and it does so
+                 * while quietly leaving that line out of the order total below,
+                 * behind a confident number. A dash keeps the question open.
+                 */
+                const entered = q > 0 && p > 0;
+
+                if (entered) {
+                    anyEntered = true;
+                    total += line;
+                }
+
+                if (output) {
+                    output.textContent = entered ? money(line, editor) : '—';
+                }
+            });
+
+            const grand = editor.querySelector('[data-line-grand-total]');
+
+            if (grand) {
+                grand.textContent = money(total, editor);
+            }
+        };
+
+        const recalculateAll = () => {
+            document.querySelectorAll('[data-line-editor]').forEach(recalculate);
+        };
+
         const renumber = (body) => {
             body.querySelectorAll('[data-line-row]').forEach((row, position) => {
                 row.querySelectorAll('[name]').forEach((input) => {
@@ -600,6 +676,27 @@ import { initCharts } from './charts.js';
 
             if (select) {
                 fillFromOption(select);
+
+                // Picking an item fills the price, which moves the line's figure
+                // before the user has touched anything else.
+                recalculate(select.closest('[data-line-editor]'));
+            }
+        });
+
+        /*
+         * `input`, not `change`: a line total that only updates when the field
+         * loses focus reads as broken — the figure sits there disagreeing with
+         * the numbers on screen for as long as the caret is still in the box.
+         */
+        document.addEventListener('input', (event) => {
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+
+            const field = event.target.closest('[data-line-row] [data-line-amount], [data-line-row] [data-line-price]');
+
+            if (field) {
+                recalculate(field.closest('[data-line-editor]'));
             }
         });
 
@@ -623,6 +720,7 @@ import { initCharts } from './charts.js';
 
                 body.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__INDEX__', index));
                 renumber(body);
+                recalculate(body.closest('[data-line-editor]'));
 
                 return;
             }
@@ -631,7 +729,8 @@ import { initCharts } from './charts.js';
 
             if (remover) {
                 event.preventDefault();
-                const body = remover.closest('[data-line-editor]')?.querySelector('tbody');
+                const editor = remover.closest('[data-line-editor]');
+                const body = editor?.querySelector('tbody');
 
                 if (!body || body.querySelectorAll('[data-line-row]').length <= 1) {
                     return;
@@ -639,8 +738,16 @@ import { initCharts } from './charts.js';
 
                 remover.closest('[data-line-row]').remove();
                 renumber(body);
+                recalculate(editor);
             }
         });
+
+        /*
+         * Once on load, for the editing case: a purchase order being amended
+         * arrives with its lines already filled, and the totals have to be
+         * there when the page appears rather than after the first keystroke.
+         */
+        recalculateAll();
     }
 
     /**

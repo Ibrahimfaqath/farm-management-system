@@ -18,8 +18,8 @@
             </div>
         </x-panel>
 
-        <x-panel :title="__('Items')" :description="__('Add at least one line of goods being sold.')" padding="p-0">
-            <div class="table-scroll" data-line-editor>
+        <x-panel :title="__('Items')" :description="__('Add at least one line of goods being sold.')" padding="p-0" data-line-editor data-line-currency="Rp">
+            <div class="table-scroll">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -28,6 +28,7 @@
                             <th class="w-24">{{ __('Quantity') }}</th>
                             <th class="w-24">{{ __('Unit') }}</th>
                             <th class="w-36">{{ __('Unit price') }}</th>
+                            <th class="w-36 text-right tabular-nums">{{ __('Line total') }}</th>
                             <th class="w-10 text-center"><span class="sr-only">{{ __('Remove') }}</span></th>
                         </tr>
                     </thead>
@@ -49,7 +50,7 @@
                                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Description') }}">
                             </td>
                             <td>
-                                <input name="items[0][quantity]" type="number" step="0.01" min="0.01" required
+                                <input name="items[0][quantity]" type="number" step="0.01" min="0.01" required data-line-amount
                                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
                             </td>
                             <td>
@@ -60,17 +61,22 @@
                                 <input name="items[0][unit_price]" type="number" step="1000" min="0" required data-line-price
                                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Unit price') }}">
                             </td>
+                            <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
                             <td class="text-center"></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="border-t border-base-300 p-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 p-3">
                 <button type="button" class="btn btn-ghost btn-sm" data-line-add="so-items" data-line-template="so-line-template">
                     <x-icon name="plus" :size="16" />
                     {{ __('Add line') }}
                 </button>
+                <p class="text-xs text-base-content/50">
+                    {{ __('Order total') }}
+                    <span class="ml-1 font-semibold text-base-content tabular-nums" data-line-grand-total>—</span>
+                </p>
             </div>
 
             @error('items')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
@@ -108,7 +114,7 @@
                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Description') }}">
             </td>
             <td>
-                <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required
+                <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required data-line-amount
                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Quantity') }}">
             </td>
             <td>
@@ -119,6 +125,7 @@
                 <input name="items[__INDEX__][unit_price]" type="number" step="1000" min="0" required data-line-price
                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Unit price') }}">
             </td>
+            <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
             <td class="text-center">
                 <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
                         aria-label="{{ __('Remove line') }}">&times;</button>

@@ -69,9 +69,9 @@
             @endif
         </x-panel>
 
-        <x-panel :title="__('Received items')" padding="p-0"
+        <x-panel :title="__('Received items')" padding="p-0" data-line-editor data-line-currency="Rp"
                  :description="__('Fill in a smaller quantity when the supplier delivers partly.')">
-            <div class="table-scroll" data-line-editor>
+            <div class="table-scroll">
                 <table class="table app-table">
                     <thead>
                         <tr>
@@ -81,6 +81,7 @@
                             <th class="w-36">{{ __('Price') }}</th>
                             <th class="w-36">{{ __('Batch number') }}</th>
                             <th class="w-32">{{ __('Expiry') }}</th>
+                            <th class="w-36 text-right tabular-nums">{{ __('Line total') }}</th>
                             <th class="w-10 text-center"><span class="sr-only">{{ __('Remove') }}</span></th>
                         </tr>
                     </thead>
@@ -103,7 +104,7 @@
                                         </p>
                                     </td>
                                     <td>
-                                        <input name="items[{{ $loop->index }}][quantity_received]" type="number" step="0.01" min="0.01" required
+                                        <input name="items[{{ $loop->index }}][quantity_received]" type="number" step="0.01" min="0.01" required data-line-amount
                                                value="{{ $line['outstanding'] > 0 ? $line['outstanding'] : '' }}"
                                                max="{{ $line['outstanding'] }}"
                                                class="input input-sm w-full bg-base-100" aria-label="{{ __('Received quantity') }}">
@@ -112,6 +113,7 @@
                                     <td><input name="items[{{ $loop->index }}][unit_price]" type="number" step="1" min="0" required value="{{ $line['unit_price'] }}" data-line-price class="input input-sm input w-full bg-base-100"></td>
                                     <td><input name="items[{{ $loop->index }}][batch_number]" type="text" class="input input-sm input w-full bg-base-100" placeholder="{{ __('optional') }}" aria-label="{{ __('Batch number') }}"></td>
                                     <td><input name="items[{{ $loop->index }}][expiry_date]" type="date" class="input input-sm input w-full bg-base-100"></td>
+                                    <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
                                     <td class="text-center"><button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove>&times;</button></td>
                                 </tr>
                             @endif
@@ -128,11 +130,12 @@
                                         @endforeach
                                     </select>
                                 </td>
-                                <td><input name="items[0][quantity_received]" type="number" step="0.01" min="0.01" required class="input input-sm w-full bg-base-100" aria-label="{{ __('Received quantity') }}"></td>
+                                <td><input name="items[0][quantity_received]" type="number" step="0.01" min="0.01" required data-line-amount class="input input-sm w-full bg-base-100" aria-label="{{ __('Received quantity') }}"></td>
                                 <td><input name="items[0][unit_display]" type="text" readonly data-line-unit tabindex="-1" class="input input-sm w-full bg-base-200 text-base-content/60" aria-label="{{ __('Unit') }}"></td>
                                 <td><input name="items[0][unit_price]" type="number" step="1" min="0" required data-line-price class="input input-sm w-full bg-base-100" aria-label="{{ __('Unit price') }}"></td>
                                 <td><input name="items[0][batch_number]" type="text" class="input input-sm input w-full bg-base-100" placeholder="{{ __('optional') }}" aria-label="{{ __('Batch number') }}"></td>
                                 <td><input name="items[0][expiry_date]" type="date" class="input input-sm input w-full bg-base-100"></td>
+                                <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
                                 <td class="text-center"></td>
                             </tr>
                         @endif
@@ -140,11 +143,15 @@
                 </table>
             </div>
 
-            <div class="border-t border-base-300 p-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 p-3">
                 <button type="button" class="btn btn-ghost btn-sm" data-line-add="gr-items" data-line-template="gr-line-template">
                     <x-icon name="plus" :size="16" />
                     {{ __('Add line') }}
                 </button>
+                <p class="text-xs text-base-content/50">
+                    {{ __('Receipt total') }}
+                    <span class="ml-1 font-semibold text-base-content tabular-nums" data-line-grand-total>—</span>
+                </p>
             </div>
 
             @error('items')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
@@ -187,7 +194,7 @@
                 </select>
             </td>
             <td>
-                <input name="items[__INDEX__][quantity_received]" type="number" step="0.01" min="0.01" required
+                <input name="items[__INDEX__][quantity_received]" type="number" step="0.01" min="0.01" required data-line-amount
                        class="input input-sm w-full bg-base-100" aria-label="{{ __('Received quantity') }}">
             </td>
             <td>
@@ -206,6 +213,7 @@
                 <input name="items[__INDEX__][expiry_date]" type="date" class="input input-sm w-full bg-base-100"
                        aria-label="{{ __('Expiry date') }}">
             </td>
+            <td class="text-right text-sm tabular-nums text-base-content/70" data-line-total>—</td>
             <td class="text-center">
                 <button type="button" class="btn btn-ghost btn-xs text-tone-error" data-line-remove
                         aria-label="{{ __('Remove line') }}">&times;</button>
