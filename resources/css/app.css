@@ -592,10 +592,29 @@
         grid-column: 1 / -1;
     }
 
-    .peer:checked ~ .filter-fields,
-    .peer:focus-visible ~ .filter-fields {
-        display: grid;
-        gap: 0.5rem;
+    /*
+     * The disclosure is a phone affordance, so its rule is scoped to the range
+     * where the toggle exists.
+     *
+     * This was previously unconditional and the desktop override came after it.
+     * That looked right and was not: a media query adds no specificity, so
+     * `.peer:checked ~ .filter-fields` at (0,3,0) beat `.filter-fields` at
+     * (0,1,0) at every width. The checkbox is ticked automatically once a filter
+     * is active, so the moment someone chose one, the wrapper stopped being
+     * `display: contents` and became a single grid item spanning `1 / -1` —
+     * taking each dropdown from a 274px column to the full 1118px of the bar.
+     * The filters were only "a row and a half tall" before a filter was chosen.
+     *
+     * Scoping the rule to below the breakpoint says what is true — there is no
+     * toggle to open on a desktop — rather than leaving the desktop layout to
+     * win an argument about which selector counts for more.
+     */
+    @media (width < 64rem) {
+        .peer:checked ~ .filter-fields,
+        .peer:focus-visible ~ .filter-fields {
+            display: grid;
+            gap: 0.5rem;
+        }
     }
 
     @media (width >= 64rem) {
