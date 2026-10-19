@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <title>{{ $title ?? __('Log in') }} &middot; FARM</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-mark.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-mark.png') }}">
     <x-theme-head />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -12,7 +14,7 @@
 <div class="flex min-h-dvh items-center justify-center px-4 py-10">
     <div class="w-full max-w-sm">
         <div class="mb-6 flex items-center gap-3">
-            <span class="grid size-10 shrink-0 place-items-center rounded-field bg-primary text-base font-bold text-primary-content">F</span>
+            <span class="logo-mark size-10 shrink-0" role="img" aria-label="FARM"></span>
             <span class="min-w-0 leading-tight">
                 <span class="block text-lg font-bold tracking-wide">FARM</span>
                 <span class="text-label block truncate text-base-content/50">{{ __('Farm Management System') }}</span>

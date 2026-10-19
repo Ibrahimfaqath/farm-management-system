@@ -572,6 +572,37 @@
     :root[data-theme='black'] [data-theme-icon='moon'] {
         display: inline-block;
     }
+
+    /*
+     * The FARM mark.
+     *
+     * The logo file is black on a transparent ground. That is invisible on the
+     * dark theme's near-black surfaces, so a white copy ships beside it and the
+     * two are swapped from `data-theme` — the same arrangement the theme glyph
+     * above uses, which means the correct one is on screen at first paint and
+     * before any script runs.
+     *
+     * The image is swapped through a pseudo-element rather than two `<img>`
+     * elements: one hidden by `display: none` is still fetched, so a page would
+     * always pay for both variants. `background-size: contain` does the fitting
+     * — `content: url()` renders at the image's intrinsic size and ignores the
+     * box, which put a 128px mark through a 32px slot and over the text beside
+     * it.
+     */
+    .logo-mark::after {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-image: url('/images/logo-mark.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    :root[data-theme='black'] .logo-mark::after {
+        background-image: url('/images/logo-mark-light.png');
+    }
 }
 
 @layer utilities {

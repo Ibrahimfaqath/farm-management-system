@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="color-scheme" content="light dark">
     <title>{{ $title ?? __('Dashboard') }} &middot; FARM</title>
+    {{-- There was no icon link at all, so every page requested a /favicon.ico
+         that does not exist and got a 404 in return. --}}
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-mark.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-mark.png') }}">
     <x-theme-head />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -90,7 +94,12 @@
 
         <div class="flex h-dvh w-64 flex-col overflow-hidden border-r border-base-300 bg-base-100 lg:w-64">
             <div class="flex h-14 shrink-0 items-center gap-2.5 border-b border-base-300 px-4">
-                <span class="grid size-8 shrink-0 place-items-center rounded-field bg-primary text-sm font-bold text-primary-content">F</span>
+                {{-- The mark, not the wordmark. The bottle and drop carry the brand at 32px;
+                     "FARM" is already set beside it in the interface's own
+                     typeface, and a second wordmark inside a 32px image would
+                     be unreadable and would fight the text. The colour is
+                     swapped by `data-theme` in `app.css`. --}}
+                <span class="logo-mark size-8 shrink-0" role="img" aria-label="FARM"></span>
                 <span class="min-w-0 flex-1 leading-tight">
                     <span class="block truncate text-sm font-bold tracking-wide">FARM</span>
                     <span class="text-meta block truncate text-base-content/50">{{ __('Farm Management System') }}</span>

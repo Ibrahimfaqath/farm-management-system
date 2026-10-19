@@ -5,22 +5,11 @@
                    :subtitle="__('Live figures from livestock, production, stock and finance records.')"
                    icon="dashboard" />
 
-    @if ($attentionItems !== [])
-        <section class="mb-6">
-            <x-section-title :title="__('Needs attention')" :count="count($attentionItems)" icon="bell" />
-            <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                @foreach ($attentionItems as $item)
-                    <x-alert-row :tone="$item['tone']" :title="$item['title']"
-                                 :description="$item['description'] ?? null" :url="$item['url']" />
-                @endforeach
-            </div>
-        </section>
-    @else
-        <section class="mb-6">
-            <x-alert-row tone="success" :title="__('Nothing requires immediate action')"
-                         :description="__('Stock, receivables and schedule are within normal range.')" />
-        </section>
-    @endif
+    {{--
+    One row, not ten cards. See `x-attention-strip` for why the full list was
+    removed and why it is not removed outright.
+--}}
+    <x-attention-strip :attention-items="$attentionItems" />
 
     {{--
         "Today's position" only lists the figures this role may see. A Farm

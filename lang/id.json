@@ -1226,5 +1226,8 @@
     "Order total": "Total pesanan",
     "Receipt total": "Total penerimaan",
     "All clear": "Semua beres",
-    "No items need attention": "Tidak ada hal yang perlu diperhatikan"
+    "No items need attention": "Tidak ada hal yang perlu diperhatikan",
+    "1 item needs attention|*:count items need attention": ":count hal perlu perhatian",
+    "and :count more": "dan :count lainnya",
+    "See all": "Lihat semua"
 }
