@@ -576,6 +576,34 @@
 
 @layer utilities {
     /*
+     * Header control panels on a narrow screen.
+     *
+     * `dropdown-content` is `position: absolute; right: 0`, so a panel hangs off
+     * the right edge of its own trigger. The header controls sit hard against
+     * the right of a 375px phone — the notification bell's right edge is around
+     * x=237 — which put a 320px panel at x=-83: a third of the list, oldest
+     * items included, was off-screen with no way to scroll to it.
+     *
+     * The header is sticky, so on a phone the trigger is always in view and
+     * there is nothing worth anchoring the panel to it. Pinning the panel to the
+     * viewport instead gives it the full width a list of notifications actually
+     * wants on a small screen.
+     *
+     * `top` is left alone on purpose: a fixed element with no `top` keeps its
+     * static position, so the panel still opens directly beneath the control
+     * that opened it rather than at the top of the document.
+     */
+    @media (width < 64rem) {
+        .header-controls .dropdown-content {
+            position: fixed;
+            right: 0.75rem;
+            left: 0.75rem;
+            width: auto;
+            max-width: none;
+        }
+    }
+
+    /*
      * Filter bar on a phone.
      *
      * The controls are collapsed behind a toggle below the desktop breakpoint,

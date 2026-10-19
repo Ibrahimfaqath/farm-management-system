@@ -32,9 +32,28 @@
                     <p class="truncate text-sm font-semibold leading-tight">{{ $title ?? __('Dashboard') }}</p>
                 </div>
 
-                <div class="flex flex-none items-center gap-1">
-                    <x-global-alerts />
+                {{-- The three controls used to float loose with `gap-1`, so the bar ended in
+                     what looked like two unrelated icons and a name. A bounded
+                     cluster says "these belong together", and the rule inside it
+                     separates the things you act on from the thing you are. --}}
+                <div class="header-controls flex flex-none items-center gap-0.5 rounded-field border border-base-300 bg-base-100 p-0.5">
+                    {{--
+                        The items are passed explicitly.
+
+                        This component reached into the surrounding view for them,
+                        and nothing in the markup said so. It is rendered from the
+                        layout, and `@extends('layouts.app', ['title' => ...])`
+                        hands the layout that array rather than the child view's
+                        data — so the variable was absent and the `?? collect()`
+                        fallback made the bell report "all clear" on every page
+                        in the application, including the dashboard. A silent
+                        fallback is what let a dead notification survive for so
+                        long: it looked healthy the whole time.
+                    --}}
+                    <x-global-alerts :attention-items="$attentionItems ?? collect()" />
                     <x-theme-switcher />
+
+                    <span class="mx-0.5 h-6 w-px shrink-0 bg-base-300" aria-hidden="true"></span>
 
                     <x-account-menu />
                 </div>

@@ -19,10 +19,19 @@
 --}}
 
 <div {{ $attributes->class(['dropdown dropdown-end']) }}>
-    <button type="button" tabindex="0" class="btn btn-ghost btn-sm gap-2 px-2"
-            aria-label="{{ __('Account menu') }}" aria-haspopup="true">
-        <span class="avatar avatar-placeholder">
-            <span class="text-meta w-7 rounded-full bg-primary/15 font-semibold text-primary">
+    <button type="button" tabindex="0" class="btn btn-ghost btn-sm h-10 gap-2 px-2"
+            aria-label="{{ __('Account menu') }}" aria-haspopup="true" aria-expanded="false">
+        {{--
+            The square is set explicitly rather than left to DaisyUI.
+
+            `.avatar > div { aspect-ratio: 1 }` is what makes the disc round, and
+            a `<span>` child never received it — so the badge rendered 28×16, a
+            stretched oval, and only `w-7` was applying. Declaring `size-8` with
+            a grid centring it does not depend on that internals rule, and the
+            shape cannot quietly regress if it changes.
+        --}}
+        <span class="avatar avatar-placeholder shrink-0">
+            <span class="text-meta grid size-8 place-items-center rounded-full bg-primary/15 font-semibold text-primary">
                 {{ $user->initials }}
             </span>
         </span>
@@ -30,6 +39,9 @@
             <span class="block max-w-32 truncate text-xs font-medium">{{ $user->name }}</span>
             <span class="text-meta block text-base-content/55">{{ $user->role_label }}</span>
         </span>
+        {{-- The row opens a panel, and a ghost button carrying a name does not say so.
+             The caret is what makes that legible without opening it first. --}}
+        <x-icon name="chevron-down" :size="14" class="hidden shrink-0 text-base-content/40 sm:block" />
     </button>
 
     <ul tabindex="0" class="menu dropdown-content z-50 mt-2 w-72 flex-nowrap rounded-box border border-base-300 bg-base-100 p-1 shadow-lg">

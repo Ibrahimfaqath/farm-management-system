@@ -33,14 +33,18 @@
                aria-label="{{ __('Dark theme') }}" data-theme-toggle>
     </label>
 @else
-    <button type="button" class="btn btn-ghost btn-sm btn-square"
+    {{-- `size-10` rather than whatever `btn-square` resolves to, so this
+         control matches the notification bell beside it. At 32px both were
+         short of the 44px this stylesheet already aims for on a coarse
+         pointer, and two different heights in one group read as an accident. --}}
+    <button type="button" class="btn btn-ghost btn-sm btn-square size-10"
             data-theme-toggle-click
             data-label-dark="{{ $toDark }}"
             data-label-light="{{ $toLight }}"
             aria-pressed="false"
             title="{{ $toDark }}">
-        <x-icon name="sun" :size="18" data-theme-icon="sun" />
-        <x-icon name="moon" :size="18" data-theme-icon="moon" />
+        <x-icon name="sun" :size="19" data-theme-icon="sun" />
+        <x-icon name="moon" :size="19" data-theme-icon="moon" />
         <span class="sr-only" data-theme-toggle-label>{{ $toDark }}</span>
     </button>
 @endif

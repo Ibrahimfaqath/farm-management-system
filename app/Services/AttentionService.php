@@ -30,6 +30,18 @@ class AttentionService
     ) {}
 
     /**
+     * Built once per request.
+     *
+     * The list is assembled from eight separate queries. It is now asked for in
+     * two places — the dashboard section and the header bell, which renders on
+     * every page — and the service is a singleton for the life of the request,
+     * so caching here keeps the dashboard at one set of queries rather than two.
+     *
+     * @var list<array{tone: string, title: string, description?: string, url: string}>|null
+     */
+    private ?array $itemsCache = null;
+
+    /**
      * Every entry carries the module its link is guarded by, so the dashboard
      * can drop the ones this role may not open. A Farm Worker has no finance or
      * feed module, and was being shown overdue invoices and unpaid supplier
@@ -40,7 +52,7 @@ class AttentionService
      */
     public function items(): array
     {
-        return [
+        return $this->itemsCache ??= [
             ...$this->lowStockItems(),
             ...$this->overdueInvoices(),
             ...$this->outstandingPurchaseOrders(),

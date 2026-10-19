@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\View\Composers\AttentionComposer;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,5 +27,10 @@ class AppServiceProvider extends ServiceProvider
         // DaisyUI view instead.
         Paginator::defaultView('pagination::farm');
         Paginator::defaultSimpleView('pagination::farm');
+
+        // The notification bell is part of the header, so it has to be fed on
+        // every page rather than on whichever ones remember to pass the list
+        // down. See the composer for what went wrong before this.
+        View::composer('layouts.app', AttentionComposer::class);
     }
 }
