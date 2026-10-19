@@ -46,8 +46,19 @@
         @endif
     </button>
 
+    {{--
+        `dropdown-content` carries no display utility of its own.
+
+        DaisyUI hides a closed panel with `display: none` on this element. A
+        `flex` utility here sits in the utilities layer, which is emitted after
+        the component layer, so it won: the panel stayed laid out at
+        `opacity: 0` and went on covering the page. Clicking anywhere inside its
+        invisible box opened it — the bell looked like the whole header was a
+        trigger. The layout that was wanted now lives on an inner element.
+    --}}
     <div tabindex="0" role="menu"
-         class="dropdown-content z-50 mt-2 flex max-h-[70vh] w-80 max-w-[calc(100vw-1.5rem)] flex-col rounded-box border border-base-300 bg-base-100 shadow-lg">
+         class="dropdown-content z-50 mt-2 w-80 max-w-[calc(100vw-1.5rem)] rounded-box border border-base-300 bg-base-100 shadow-lg">
+        <div class="flex max-h-[70vh] flex-col overflow-hidden rounded-box">
 
         <div class="flex flex-none items-center justify-between gap-2 border-b border-base-300 px-3 py-2">
             <span class="text-xs font-semibold">{{ __('Needs attention') }}</span>
@@ -89,5 +100,6 @@
                 @endforeach
             </ul>
         @endif
+        </div>
     </div>
 </div>

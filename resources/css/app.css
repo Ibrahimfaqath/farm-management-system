@@ -460,7 +460,23 @@
 
     /* Actions column never wraps, so row height stays stable. */
     .app-table .row-actions {
-        @apply text-right whitespace-nowrap;
+        @apply whitespace-nowrap text-center;
+
+        /*
+         * Centred, and a width of its own.
+         *
+         * This was right-aligned in a table that runs flush to the card's
+         * rounded edge — the panel uses `padding="p-0"` so tables sit edge to
+         * edge — which left the "Aksi" heading and the ⋮ button pressed into the
+         * corner with a pixel to spare. Right alignment assumes room to the
+         * right of the content, and there is none.
+         *
+         * A fixed width also stops the column from changing size between
+         * tables: it was 52px on the livestock list and 100px on the feed list,
+         * so the same heading sat at a different distance from the edge on every
+         * page.
+         */
+        width: 4.5rem;
     }
 
     /* Match the compact row rhythm so the menu lines up with the table. */
