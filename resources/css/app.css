@@ -314,6 +314,56 @@
     .motion-rows > *:nth-child(n + 12) { animation-delay: 210ms; }
 
     /*
+     * A live filter is a request, not a page load.
+     *
+     * The old rows stay on screen until the new ones arrive, so the only thing
+     * that has to say "working" is a two-pixel line at the edge of the viewport.
+     * The script shows it only after 140ms, which keeps it out of the way of the
+     * common fast response, and the fill runs once rather than looping: a data
+     * page must not be permanently in motion.
+     */
+    .live-filter-progress {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 80;
+        height: 2px;
+        overflow: hidden;
+        pointer-events: none;
+        background: transparent;
+    }
+
+    .live-filter-progress::before {
+        content: '';
+        position: absolute;
+        inset-block: 0;
+        left: 0;
+        width: 100%;
+        background: var(--color-primary);
+        transform: scaleX(0);
+        transform-origin: left center;
+    }
+
+    .live-filter-progress.is-active::before {
+        animation: live-filter-fill 1.2s var(--ease-soft-out) forwards;
+    }
+
+    @keyframes live-filter-fill {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(0.9); }
+    }
+
+    /*
+     * The replacement is not a page arriving.
+     *
+     * The reader is looking at these rows when the filter changes. Replaying
+     * the stagger would make the list look like it had been rebuilt from
+     * scratch, and would put the last rows 210ms behind the click.
+     */
+    #page-content[data-live-filtered] .motion-rows > * {
+        animation: none;
+    }
+
+    /*
      * A dialog. DaisyUI centres it, so it grows from the middle rather than
      * sliding in from an edge it has no relationship to.
      */

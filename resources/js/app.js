@@ -3,8 +3,8 @@
  *
  * Deliberately small and framework-free: the app is server-rendered Blade with
  * DaisyUI, so everything here is behaviour that markup cannot express on its
- * own. Kept to three concerns, delegated from the document so nothing has to
- * be re-initialised when a partial view swaps content in.
+ * own. Delegated from the document wherever possible, so the one partial swap
+ * (live filters) does not have to re-bind the page's listeners.
  */
 
 import { initCharts } from './charts.js';
@@ -60,6 +60,17 @@ import { initCounters } from './counters.js';
             const form = event.target;
 
             if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            /*
+             * A GET form is a query, not a write.
+             *
+             * A live filter never reloads the document, so disabling its Apply
+             * button here would leave the button disabled forever. A repeated
+             * GET also cannot duplicate anything.
+             */
+            if (form.method.toLowerCase() === 'get') {
                 return;
             }
 
@@ -320,6 +331,13 @@ import { initCounters } from './counters.js';
      */
     function initDropdownState() {
         const sync = (dropdown) => {
+            // A filter listbox keeps focus on its trigger while the panel is
+            // closed, so `:focus-within` does not mean the list is open. Its
+            // own open/close code owns `aria-expanded`.
+            if (dropdown.hasAttribute('data-filter-select')) {
+                return;
+            }
+
             const trigger = dropdown.querySelector(':scope > button, :scope > label');
 
             if (trigger instanceof HTMLElement && trigger.hasAttribute('aria-expanded')) {
@@ -373,7 +391,37 @@ import { initCounters } from './counters.js';
      * focus and points at the highlighted option with `aria-activedescendant`,
      * arrows move, Enter/Space choose, Escape closes and returns focus.
      */
+    const filterSelectClosers = new WeakMap();
+    let filterOutsideClickBound = false;
+
     function initFilterSelects() {
+        if (!filterOutsideClickBound) {
+            filterOutsideClickBound = true;
+
+            /*
+             * One outside-click listener for every filter list on the page,
+             * not one per list.
+             *
+             * A live filter replaces the content and re-runs this function.
+             * Listeners bound per dropdown would keep the old, detached forms
+             * alive for the rest of the visit; this listener only reaches the
+             * lists that are actually in the document.
+             */
+            document.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) {
+                    return;
+                }
+
+                document.querySelectorAll('[data-filter-select]').forEach((dropdown) => {
+                    if (dropdown.contains(event.target)) {
+                        return;
+                    }
+
+                    filterSelectClosers.get(dropdown)?.();
+                });
+            });
+        }
+
         const dropdowns = document.querySelectorAll('[data-filter-select]:not([data-filter-ready])');
 
         dropdowns.forEach((dropdown) => {
@@ -446,6 +494,8 @@ import { initCounters } from './counters.js';
                 trigger.removeAttribute('aria-activedescendant');
             };
 
+            filterSelectClosers.set(dropdown, close);
+
             const choose = (index) => {
                 const option = options[index];
 
@@ -457,6 +507,12 @@ import { initCounters } from './counters.js';
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 syncFromSelect();
                 close();
+
+                // Clicking a row is a mouse action on a non-focusable <li>; the
+                // browser would otherwise drop focus to <body>. Keep the
+                // listbox pattern intact and give the live swap a control to
+                // return to.
+                trigger.focus({ preventScroll: true });
 
                 select.form?.requestSubmit();
             };
@@ -525,14 +581,6 @@ import { initCounters } from './counters.js';
                     event.preventDefault();
                     close();
                 }
-            });
-
-            document.addEventListener('click', (event) => {
-                if (list.hidden || !(event.target instanceof Node) || dropdown.contains(event.target)) {
-                    return;
-                }
-
-                close();
             });
 
             // Outside code may still change the select (for example after the
@@ -795,6 +843,459 @@ import { initCounters } from './counters.js';
         });
     }
 
+    /**
+     * Live filters.
+     *
+     * A filter bar is a GET form. Submitting it used to replace the document,
+     * which tears down the shell the reader is already looking at, re-runs the
+     * page entrance and hands the change to the 160ms cross-document fade.
+     * Only the content below the header actually changes, so this fetches the
+     * same URL and replaces `#page-content` in place.
+     *
+     * The server keeps deciding what a filter means: the script only builds
+     * the query a normal submit would and uses the rendered page it gets back.
+     * The filter form lives inside the replaced content, so it arrives with the
+     * new values already selected; `initFilterSelects` is run again before
+     * focus is returned to the control the reader used.
+     */
+    function initLiveFilters() {
+        const content = document.getElementById('page-content');
+
+        if (!(content instanceof HTMLElement)) {
+            return;
+        }
+
+        const liveStatus = document.getElementById('live-filter-status');
+        const progress = document.getElementById('live-filter-progress');
+        const SEARCH_DELAY = 200;
+        const PROGRESS_DELAY = 140;
+
+        let controller = null;
+        let debounce = null;
+        let progressTimer = null;
+        let requestId = 0;
+        let inFlightUrl = null;
+        let renderedUrl = window.location.href;
+
+        const urlFor = (form) => {
+            const url = new URL(form.action, window.location.href);
+            const params = new URLSearchParams();
+
+            new FormData(form).forEach((value, name) => {
+                // Empty fields mean the same as absent ones to every index
+                // controller. Dropping them keeps a filtered URL down to
+                // `?status=unpaid` instead of a trail of empty keys.
+                if (typeof value === 'string' && value !== '') {
+                    params.append(name, value);
+                }
+            });
+
+            url.search = params.toString();
+            url.hash = '';
+
+            return url;
+        };
+
+        const hideProgress = () => {
+            window.clearTimeout(progressTimer);
+            progressTimer = null;
+
+            if (progress instanceof HTMLElement) {
+                progress.classList.remove('is-active');
+                progress.setAttribute('hidden', '');
+            }
+        };
+
+        const showProgress = () => {
+            window.clearTimeout(progressTimer);
+
+            if (!(progress instanceof HTMLElement)) {
+                return;
+            }
+
+            progressTimer = window.setTimeout(() => {
+                // Restart the one-shot fill when a second request starts before
+                // the first has finished.
+                progress.classList.remove('is-active');
+                progress.removeAttribute('hidden');
+                void progress.offsetWidth;
+                progress.classList.add('is-active');
+            }, PROGRESS_DELAY);
+        };
+
+        const cancel = () => {
+            requestId += 1;
+
+            if (controller) {
+                controller.abort();
+                controller = null;
+            }
+
+            inFlightUrl = null;
+            window.clearTimeout(debounce);
+            debounce = null;
+            hideProgress();
+            content.removeAttribute('aria-busy');
+        };
+
+        const focusSnapshot = (form) => {
+            const active = document.activeElement;
+
+            if (!(active instanceof HTMLElement) || !form.contains(active)) {
+                return null;
+            }
+
+            const wrapper = active.closest('[data-filter-select]');
+
+            if (wrapper) {
+                const native = wrapper.querySelector('[data-filter-select-native]');
+
+                return native instanceof HTMLSelectElement
+                    ? { source: active, kind: 'filter', name: native.name }
+                    : null;
+            }
+
+            if (active instanceof HTMLInputElement && active.type === 'search') {
+                return {
+                    source: active,
+                    kind: 'search',
+                    start: active.selectionStart,
+                    end: active.selectionEnd,
+                };
+            }
+
+            if (active.matches('button[type="submit"], input[type="submit"]')) {
+                return { source: active, kind: 'submit' };
+            }
+
+            if (active.name) {
+                return {
+                    source: active,
+                    kind: 'control',
+                    name: active.name,
+                    value: active instanceof HTMLInputElement || active instanceof HTMLSelectElement
+                        ? active.value
+                        : '',
+                    type: active instanceof HTMLInputElement ? active.type : '',
+                };
+            }
+
+            return null;
+        };
+
+        const restoreFocus = (snapshot) => {
+            if (!snapshot) {
+                return;
+            }
+
+            const form = content.querySelector('form[data-live-filter]');
+
+            if (!form) {
+                return;
+            }
+
+            const focus = (target) => {
+                if (target instanceof HTMLElement && target.getClientRects().length > 0) {
+                    target.focus({ preventScroll: true });
+                    return;
+                }
+
+                // The mobile panel collapses when the last filter is cleared,
+                // taking the control that was just used with it. The search
+                // field stays visible and is the natural next stop.
+                const search = form.querySelector('input[type="search"]');
+
+                if (search instanceof HTMLInputElement) {
+                    search.focus({ preventScroll: true });
+                }
+            };
+
+            if (snapshot.kind === 'search') {
+                const input = form.querySelector('input[type="search"]');
+
+                if (input instanceof HTMLInputElement) {
+                    input.focus({ preventScroll: true });
+                    const length = input.value.length;
+                    const start = Math.min(snapshot.start ?? length, length);
+                    const end = Math.min(snapshot.end ?? start, length);
+                    input.setSelectionRange(start, end);
+                }
+
+                return;
+            }
+
+            if (snapshot.kind === 'filter') {
+                const native = form.querySelector(`select[name="${CSS.escape(snapshot.name)}"]`);
+                const wrapper = native instanceof HTMLSelectElement
+                    ? native.closest('[data-filter-select]')
+                    : null;
+                const trigger = wrapper?.querySelector('[data-filter-select-trigger]');
+                const target = trigger instanceof HTMLButtonElement && !trigger.hidden
+                    ? trigger
+                    : native;
+
+                focus(target);
+
+                return;
+            }
+
+            if (snapshot.kind === 'submit') {
+                focus(form.querySelector('button[type="submit"], input[type="submit"]'));
+
+                return;
+            }
+
+            if (snapshot.kind === 'control' && snapshot.name) {
+                const value = snapshot.type === 'checkbox' || snapshot.type === 'radio'
+                    ? `[value="${CSS.escape(snapshot.value)}"]`
+                    : '';
+                const control = form.querySelector(`[name="${CSS.escape(snapshot.name)}"]${value}`);
+
+                focus(control);
+            }
+        };
+
+        const swap = (page) => {
+            const incoming = page.getElementById('page-content');
+
+            if (!(incoming instanceof HTMLElement)) {
+                return false;
+            }
+
+            const form = content.querySelector('form[data-live-filter]');
+            const snapshot = form ? focusSnapshot(form) : null;
+            const stillFocused = snapshot && snapshot.source === document.activeElement;
+
+            // The stagger is a page entrance. These rows are a correction to
+            // something the reader is already looking at, so it must not replay.
+            content.dataset.liveFiltered = '1';
+            content.innerHTML = incoming.innerHTML;
+            document.title = page.title;
+
+            // New filter dropdowns need their listbox behaviour before focus
+            // can land on their triggers. Everything else in this file is
+            // delegated from the document and keeps working on the new markup.
+            initFilterSelects();
+
+            if (content.querySelector('canvas[data-chart]')) {
+                initCharts();
+            }
+
+            if (stillFocused) {
+                restoreFocus(snapshot);
+            }
+
+            if (liveStatus) {
+                liveStatus.textContent = '';
+                window.setTimeout(() => {
+                    liveStatus.textContent = content.dataset.liveFilterMessage ?? '';
+                }, 40);
+            }
+
+            return true;
+        };
+
+        const load = (url, mode) => {
+            if (url.origin !== window.location.origin) {
+                return;
+            }
+
+            if (url.href === renderedUrl || url.href === inFlightUrl) {
+                return;
+            }
+
+            cancel();
+
+            const id = ++requestId;
+
+            controller = new AbortController();
+            inFlightUrl = url.href;
+            content.setAttribute('aria-busy', 'true');
+            showProgress();
+
+            if (mode === 'push' && url.href !== window.location.href) {
+                window.history.pushState({ liveFilter: true }, '', url.href);
+            } else if (mode === 'replace' && url.href !== window.location.href) {
+                window.history.replaceState({ liveFilter: true }, '', url.href);
+            }
+
+            fetch(url.href, {
+                signal: controller.signal,
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: {
+                    Accept: 'text/html',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error(`Filter request failed with ${response.status}.`);
+                    }
+
+                    return response.text().then((html) => ({ html, response }));
+                })
+                .then(({ html, response }) => {
+                    if (id !== requestId) {
+                        return;
+                    }
+
+                    const page = new DOMParser().parseFromString(html, 'text/html');
+                    const finalUrl = new URL(response.url);
+
+                    // A redirect to another page (the login screen after an
+                    // expired session, for example) cannot be represented by
+                    // swapping the content: the shell would be stale.
+                    if (finalUrl.pathname !== window.location.pathname || !swap(page)) {
+                        throw new Error('The filter did not return this page.');
+                    }
+
+                    if (window.location.href !== finalUrl.href) {
+                        window.history.replaceState({ liveFilter: true }, '', finalUrl.href);
+                    }
+
+                    renderedUrl = finalUrl.href;
+                })
+                .catch((error) => {
+                    if (error.name === 'AbortError' || id !== requestId) {
+                        return;
+                    }
+
+                    // A failed fetch must not leave the reader on content they
+                    // cannot trust. The normal navigation is slower but honest.
+                    window.location.assign(url.href);
+                })
+                .finally(() => {
+                    if (id !== requestId) {
+                        return;
+                    }
+
+                    controller = null;
+                    inFlightUrl = null;
+                    hideProgress();
+                    content.removeAttribute('aria-busy');
+                });
+        };
+
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement)
+                || !form.hasAttribute('data-live-filter')
+                || event.defaultPrevented
+                || form.method.toLowerCase() !== 'get'
+                || (form.target && form.target !== '_self')) {
+                return;
+            }
+
+            const url = urlFor(form);
+
+            if (url.origin !== window.location.origin) {
+                return;
+            }
+
+            event.preventDefault();
+            load(url, 'push');
+        });
+
+        document.addEventListener('change', (event) => {
+            const control = event.target;
+
+            if (!(control instanceof HTMLElement) || !control.name) {
+                return;
+            }
+
+            const form = control.closest('form[data-live-filter]');
+
+            if (!form) {
+                return;
+            }
+
+            // A filter select submits through the listbox's own `choose()`;
+            // listening here too would send every choice twice.
+            if (control.matches('select[data-filter-select-native]')) {
+                return;
+            }
+
+            // The search field is debounced on `input`; its `change` only says
+            // the field lost focus.
+            if (control instanceof HTMLInputElement && control.type === 'search') {
+                return;
+            }
+
+            if (control instanceof HTMLInputElement
+                && ['button', 'file', 'submit'].includes(control.type)) {
+                return;
+            }
+
+            load(urlFor(form), 'push');
+        });
+
+        document.addEventListener('input', (event) => {
+            const input = event.target;
+
+            if (!(input instanceof HTMLInputElement)
+                || input.type !== 'search'
+                || event.isComposing) {
+                return;
+            }
+
+            const form = input.closest('form[data-live-filter]');
+
+            if (!form) {
+                return;
+            }
+
+            // A keystroke makes any answer in flight obsolete. Aborting now
+            // keeps an older, shorter query from painting over the new one.
+            cancel();
+
+            debounce = window.setTimeout(() => {
+                debounce = null;
+                load(urlFor(form), 'replace');
+            }, SEARCH_DELAY);
+        });
+
+        document.addEventListener('click', (event) => {
+            const link = event.target instanceof Element
+                ? event.target.closest('a[data-live-filter-reset]')
+                : null;
+
+            if (!link) {
+                return;
+            }
+
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                return;
+            }
+
+            const url = new URL(link.href, window.location.href);
+
+            if (url.origin !== window.location.origin || url.pathname !== window.location.pathname) {
+                return;
+            }
+
+            event.preventDefault();
+
+            // A reset is the one filter action whose control disappears. Move
+            // focus to the search field before the swap so the normal restore
+            // carries it into the clean form, instead of dropping it on <body>.
+            link.closest('form')?.querySelector('input[type="search"]')?.focus({ preventScroll: true });
+
+            load(url, 'push');
+        });
+
+        window.addEventListener('popstate', () => {
+            const url = new URL(window.location.href);
+
+            if (url.pathname !== window.location.pathname) {
+                return;
+            }
+
+            load(url, 'none');
+        });
+    }
+
     initDialogs();
     initCharts();
     initCounters();
@@ -805,4 +1306,5 @@ import { initCounters } from './counters.js';
     initDropdownState();
     initLineEditors();
     initDrawer();
+    initLiveFilters();
 })();

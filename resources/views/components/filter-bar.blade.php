@@ -35,7 +35,7 @@
     controls back as direct grid items with no extra box at all.
 --}}
 
-<form method="GET" action="{{ url()->current() }}" role="search"
+<form method="GET" action="{{ url()->current() }}" role="search" data-live-filter
       {{ $attributes->class(['grid items-center gap-2 border-b border-base-300 p-3', $columns]) }}>
     @if ($withSearch)
         <label class="input input-sm w-full bg-base-100">
@@ -69,7 +69,7 @@
         <div class="flex items-center gap-2">
             <button type="submit" class="btn btn-primary btn-sm">{{ $applyLabel ?? __('Apply') }}</button>
             @if ($hasFilters)
-                <a href="{{ $resetUrl }}" class="btn btn-ghost btn-sm">{{ __('Clear filters') }}</a>
+                <a href="{{ $resetUrl }}" class="btn btn-ghost btn-sm" data-live-filter-reset>{{ __('Clear filters') }}</a>
             @endif
         </div>
     </div>
