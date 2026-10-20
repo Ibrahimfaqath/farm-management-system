@@ -121,6 +121,41 @@ class HeaderAndTableTest extends TestCase
         );
     }
 
+    public function test_a_header_control_shows_the_same_hover_on_both_themes(): void
+    {
+        $css = $this->withoutComments(file_get_contents(resource_path('css/app.css')));
+
+        // DaisyUI's ghost hover is `base-300`: a clear grey block on white, and
+        // a near-invisible step on the black theme's 0% panel. The tint comes
+        // from the theme's own text colour instead, so it scales with the
+        // ground, and the dark theme takes the larger share.
+        $light = $this->cssRule($css, '\.header-controls \.btn-ghost:hover');
+        $dark = $this->cssRule($css, ':root\[data-theme=[\'"]black[\'"]\] \.header-controls \.btn-ghost:hover');
+
+        foreach (['light' => $light, 'dark' => $dark] as $theme => $rule) {
+            $this->assertMatchesRegularExpression(
+                '/background-color:\s*color-mix\(in oklab, var\(--color-base-content\) \d+%, transparent\)/',
+                $rule,
+                "The {$theme} hover is not a tint of the theme's own text colour.",
+            );
+
+            $this->assertStringNotContainsString(
+                'base-300',
+                $rule,
+                "The {$theme} hover still falls back to base-300, which only reads on one ground.",
+            );
+        }
+
+        preg_match('/var\(--color-base-content\) (\d+)%/', $light, $lightShare);
+        preg_match('/var\(--color-base-content\) (\d+)%/', $dark, $darkShare);
+
+        $this->assertGreaterThan(
+            (int) $lightShare[1],
+            (int) $darkShare[1],
+            'The black theme starts from a 0% panel, so it needs the larger share to reach a comparable step.',
+        );
+    }
+
     public function test_the_action_column_is_centred_and_sized(): void
     {
         $css = $this->withoutComments(file_get_contents(resource_path('css/app.css')));
@@ -164,6 +199,14 @@ class HeaderAndTableTest extends TestCase
         }
 
         $this->assertGreaterThan(10, $marked, 'Far fewer action columns were found than expected.');
+    }
+
+    /**
+     * The body of one rule, by selector pattern.
+     */
+    private function cssRule(string $css, string $selectorPattern): string
+    {
+        return preg_match("/{$selectorPattern}[^{]*\{([^}]*)\}/s", $css, $m) === 1 ? $m[1] : '';
     }
 
     /**

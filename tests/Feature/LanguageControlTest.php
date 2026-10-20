@@ -158,6 +158,28 @@ class LanguageControlTest extends TestCase
         $this->assertNull(session('locale'));
     }
 
+    public function test_the_inactive_segment_answers_the_pointer(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', file_get_contents(resource_path('css/app.css')));
+
+        // `tabs-box` styles the current segment and leaves the other flat, so a
+        // hover only raised its text alpha — a change the black theme cannot
+        // show, because both of its states are already near-white. The inactive
+        // segment now takes the same tint as the header's buttons.
+        $this->assertMatchesRegularExpression(
+            '/\.account-menu \.tab:not\(\[aria-current=\'true\'\]\):hover[^{]*\{[^}]*background-color:\s*color-mix\(/s',
+            $css,
+            'Hovering the inactive language segment gives no visible surface.',
+        );
+
+        // And it fades in at the header's pace rather than snapping.
+        $this->assertMatchesRegularExpression(
+            '/\.account-menu \.tab \{[^}]*transition:[^}]*var\(--motion-fast\)/s',
+            $css,
+            'The segment should fade at the same pace as the buttons beside it.',
+        );
+    }
+
     public function test_every_page_keeps_a_reachable_language_control(): void
     {
         $html = $this->actingAs($this->owner())->get(route('animals.index'))->assertOk()->getContent();

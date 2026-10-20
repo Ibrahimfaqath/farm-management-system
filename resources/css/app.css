@@ -574,6 +574,61 @@
 
 @layer utilities {
     /*
+     * One hover step for the header controls and the language segments.
+     *
+     * Two problems, one cause: each control let DaisyUI pick a surface colour
+     * that only works on one theme. The ghost buttons took `base-300` — a clear
+     * grey block on white, a near-invisible one on the black theme's 0% panel.
+     * The unselected language segment took nothing at all: hovering only raised
+     * its text from 50% to full opacity, which the black theme cannot show
+     * because both states are already near-white.
+     *
+     * Tinting the theme's own text colour scales with the ground instead of
+     * against it. The dark theme needs the larger share: its content starts at
+     * 88% lightness over a 0% panel, not 21% over 100%, so the same percentage
+     * lands much darker.
+     *
+     * Guarded by `hover: hover`: a touch screen emulates a hover on tap and
+     * leaves it there until the next tap, so the theme button would keep a grey
+     * square after switching and read as pressed. A device without a pointer
+     * gets the press feedback that already exists instead.
+     */
+    @media (hover: hover) {
+        .header-controls .btn-ghost:hover,
+        .account-menu .tab:not([aria-current='true']):hover {
+            background-color: color-mix(in oklab, var(--color-base-content) 7%, transparent);
+            color: var(--color-base-content);
+        }
+
+        :root[data-theme='black'] .header-controls .btn-ghost:hover,
+        :root[data-theme='black'] .account-menu .tab:not([aria-current='true']):hover {
+            background-color: color-mix(in oklab, var(--color-base-content) 16%, transparent);
+        }
+    }
+
+    /*
+     * Guarding our rule is not enough on a touch screen: DaisyUI's own
+     * `.btn-ghost:hover` is unguarded, so the tap still leaves `base-300` on the
+     * theme button after the theme has changed. A device without a pointer has
+     * no hover to answer, so the fill is removed rather than merely replaced.
+     */
+    @media (hover: none) {
+        .header-controls .btn-ghost:hover {
+            background-color: transparent;
+        }
+    }
+
+    /*
+     * The segment answers the pointer at the same speed as the buttons beside
+     * it. DaisyUI gives `.tab` no background transition, so the tint would snap
+     * while every other control in the header fades.
+     */
+    .account-menu .tab {
+        transition: background-color var(--motion-fast) var(--ease-soft-out),
+            color var(--motion-fast) var(--ease-soft-out);
+    }
+
+    /*
      * The open/hover state of the row menu trigger, for the same reason as the
      * table padding above: `.btn-ghost` ships `background-color: transparent`
      * from a layer nested inside `components`, which wins over anything written
