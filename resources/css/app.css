@@ -865,3 +865,40 @@
         @apply bg-white text-black;
     }
 }
+
+/*
+ * Cross-document view transitions.
+ *
+ * Every page here is a full document load: the previous page stays on screen
+ * while the next one is fetched, and then at commit it is replaced in a single
+ * frame. That cut is the one part of the wait the browser lets this stylesheet
+ * soften, and this rule does it — the two documents cross-fade instead of
+ * snapping.
+ *
+ * Scoped to `no-preference` because the instant swap *is* what a reader who
+ * asked for less motion wants; handing them a slower fade would be the
+ * opposite of the request.
+ *
+ * Browsers without support ignore the rule and navigate exactly as before, so
+ * there is nothing to feature-detect and nothing to fall back to.
+ */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    /*
+     * Shorter than the 250ms default, deliberately.
+     *
+     * A cross-fade between two list pages is not two photographs of the same
+     * room; it is two dense tables occupying the same pixels. At the default
+     * length the midpoint is legibly a ghost of both, which reads as the screen
+     * failing rather than as one page becoming another. 160ms is long enough to
+     * be seen as a transition and short enough that the eye never resolves the
+     * overlap.
+     */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 160ms;
+    }
+}

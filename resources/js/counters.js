@@ -17,15 +17,19 @@
  *
  * - Small values are left alone. "1" counting up to "1" is noise, and several
  *   tiles exist only to say that there is one.
- * - The run is 420ms and never blocks. Longer than that and it stops being a
- *   signal and becomes something to wait for.
+ * - The run is 700ms and never blocks. Long enough to read as counting, short
+ *   enough that the figure is settled before the eye starts waiting for it.
+ *   It was 420ms with an ease-out, which put 58% of the count into the first
+ *   105ms: the number snapped and then a tail hung off it. An ease-in-out puts
+ *   the halfway point at 350ms, so the movement is visible for its whole length
+ *   instead of only in the first fifth of it.
  * - It runs once. A tile that re-counts on every scroll pass is worse than one
  *   that never counted at all.
  * - `prefers-reduced-motion` skips it entirely, which is a whole audience
  *   rather than a preference to be second-guessed.
  */
 
-const DURATION = 420;
+const DURATION = 700;
 
 /**
  * The leading number in a rendered value.
@@ -162,12 +166,39 @@ export function initCounters() {
 
         const start = performance.now();
 
+        /*
+         * The zero is written before the next frame, not inside it.
+         *
+         * Scheduling only a frame callback leaves the browser free to paint the
+         * server's finished figure first and start counting on the frame after
+         * — so the number arrives correct, drops to zero and climbs back, which
+         * is worse than never having animated at all. Measured in the recorded
+         * frames of a real navigation: `Rp8.978.000` settled, then
+         * `Rp8.609.331` climbing toward it.
+         *
+         * A frame callback runs before paint, so this write is what gets
+         * painted, and the first thing the eye sees is the count beginning.
+         */
+        write(0);
+
         const step = (now) => {
             const elapsed = Math.min(1, (now - start) / DURATION);
 
-            // Eased out: quick off the mark, settling onto the value. Linear
-            // reads as a machine printing, which is the feeling to avoid.
-            write(parsed.value * (1 - Math.pow(1 - elapsed, 3)));
+            /*
+             * Eased in and out, not out.
+             *
+             * An ease-out starts at full speed, so most of the count is over
+             * before the eye has registered that it began — measured at 58% in
+             * the first 105ms of a 420ms run. Easing in as well gives the
+             * movement a beginning, a middle and an end, which is what makes it
+             * read as counting rather than as a number snapping into place with
+             * a tail attached.
+             */
+            const eased = elapsed < 0.5
+                ? 2 * elapsed * elapsed
+                : 1 - Math.pow(-2 * elapsed + 2, 2) / 2;
+
+            write(parsed.value * eased);
 
             if (elapsed < 1) {
                 requestAnimationFrame(step);

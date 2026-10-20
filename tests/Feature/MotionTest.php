@@ -312,6 +312,72 @@ class MotionTest extends TestCase
         $this->assertStringContainsString('notification-badge', $html);
     }
 
+    public function test_cross_document_navigation_cross_fades_and_can_be_turned_off(): void
+    {
+        // Every page here is a full document load, so the only part of the wait
+        // a stylesheet can soften is the instant at which one document replaces
+        // another. This rule is the whole of that.
+        $this->assertStringContainsString('@view-transition', $this->css);
+        $this->assertMatchesRegularExpression(
+            '/@view-transition\s*\{\s*navigation:\s*auto;/s',
+            $this->css,
+            'The cross-document transition has to be asked for explicitly.',
+        );
+
+        // And it has to be inside the no-preference query, not merely present.
+        // A reader who asked for less motion wants the instant swap they asked
+        // for; a slower fade would be the opposite of the request. Checked by
+        // position, because the media query is what scopes the rule.
+        $scoped = preg_match(
+            '/@media\s*\(prefers-reduced-motion:\s*no-preference\)\s*\{(?:[^{}]|\{[^{}]*\})*@view-transition/s',
+            $this->css,
+        );
+
+        $this->assertSame(1, $scoped, 'The transition must be scoped to prefers-reduced-motion: no-preference.');
+    }
+
+    public function test_the_cross_fade_is_shorter_than_the_default(): void
+    {
+        // The default is 250ms. Between two dense tables, the midpoint at that
+        // length is legibly a ghost of both, which reads as the screen failing
+        // rather than as one page becoming another.
+        foreach (['::view-transition-old(root)', '::view-transition-new(root)'] as $pseudo) {
+            $rule = $this->rule($pseudo);
+
+            $this->assertMatchesRegularExpression(
+                '/animation-duration:\s*(\d+)ms/',
+                $rule,
+                "{$pseudo} has no shortened duration.",
+            );
+
+            preg_match('/animation-duration:\s*(\d+)ms/', $rule, $m);
+
+            $this->assertLessThan(250, (int) $m[1], "{$pseudo} still runs for the default 250ms.");
+        }
+    }
+
+    public function test_the_count_starts_before_the_first_paint(): void
+    {
+        // Measured in recorded frames of a real navigation: the settled figure
+        // appeared, then dropped to near zero and climbed back, because only a
+        // frame callback was scheduled and the browser was free to paint the
+        // server's value in between. The zero has to be written outside the
+        // callback so it is what gets painted.
+        $script = $this->code(file_get_contents(resource_path('js/counters.js')));
+
+        $zero = strpos($script, 'write(0);');
+        $loop = strpos($script, 'requestAnimationFrame(step);');
+
+        $this->assertNotFalse($zero, 'The zero write is gone; the settled figure will flash before counting.');
+        $this->assertNotFalse($loop);
+
+        $this->assertLessThan(
+            $loop,
+            $zero,
+            'The zero must be written before the animation loop is scheduled, or the browser can paint the final value first.',
+        );
+    }
+
     /**
      * The body of one CSS rule, by selector.
      */
