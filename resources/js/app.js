@@ -410,7 +410,7 @@ import { initCounters } from './counters.js';
                     const isSelected = option.dataset.value === value;
 
                     option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
-                    option.querySelector('[data-filter-select-check]')?.classList.toggle('opacity-0', !isSelected);
+                    option.classList.toggle('text-primary', isSelected);
                 });
 
                 activeIndex = Math.max(0, options.findIndex((option) => option.dataset.value === value));

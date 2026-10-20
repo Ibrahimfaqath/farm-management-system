@@ -60,12 +60,37 @@ class FilterSelectTest extends TestCase
         $this->assertMatchesRegularExpression('/data-value="sold"\s+aria-selected="true"/', $html);
         $this->assertMatchesRegularExpression('/data-value="active"\s+aria-selected="false"/', $html);
 
+        // The choice is a colour, not a tick. No glyph column is reserved, so
+        // the labels run to the same edge in every row.
+        $this->assertStringNotContainsString('data-filter-select-check', $html);
+        $this->assertMatchesRegularExpression(
+            '/data-value="sold"\s+aria-selected="true"\s+class="[^"]*text-primary/',
+            $html,
+            'The selected row should be the one wearing the accent colour.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-value="active"\s+aria-selected="false"\s+class="(?![^"]*text-primary)/',
+            $html,
+            'An unselected row should not wear the accent colour.',
+        );
+
         // The trigger mirrors the current choice, and the list can always be
         // reset back to "all".
         $this->assertStringContainsString('data-filter-select-value', $html);
         $this->assertStringContainsString('Sold', $html);
         $this->assertStringContainsString('data-value=""', $html);
         $this->assertStringContainsString('All statuses', $html);
+    }
+
+    public function test_the_chosen_row_is_marked_by_colour_in_the_script(): void
+    {
+        $script = file_get_contents(resource_path('js/app.js'));
+
+        // The server marks the first render; the script has to keep that in
+        // step when the select changes. A tick element used to carry this
+        // state and is gone, so neither side may still look for it.
+        $this->assertStringNotContainsString('data-filter-select-check', $script);
+        $this->assertStringContainsString("option.classList.toggle('text-primary', isSelected)", $script);
     }
 
     public function test_no_filter_bar_keeps_a_bare_native_select(): void

@@ -74,14 +74,19 @@
         class="dropdown-content z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 text-nav shadow-lg"
         data-filter-select-list>
         @php
-            $row = 'flex cursor-pointer items-center justify-between py-1.5 pl-2.5 pr-2 leading-5 rounded-field';
+            // The chosen row is marked by its colour alone. A tick beside it was
+            // a second, redundant signal, and the column reserved for it left
+            // every label short of the panel's right edge.
+            $row = 'flex cursor-pointer items-center py-1.5 px-2.5 leading-5 rounded-field';
+            $chosen = $row.' text-primary';
         @endphp
 
         {{-- The "no filter" choice has to live in the list, otherwise an active
              filter could never be cleared from here. --}}
-        <li role="option" data-value="" aria-selected="{{ $selectedLabel === null ? 'true' : 'false' }}" class="{{ $row }}"><span class="truncate">{{ $placeholder ?? __('All') }}</span><x-icon name="success" :size="14" class="opacity-0" data-filter-select-check /></li>
+        <li role="option" data-value="" aria-selected="{{ $selectedLabel === null ? 'true' : 'false' }}" class="{{ $selectedLabel === null ? $chosen : $row }}"><span class="truncate">{{ $placeholder ?? __('All') }}</span></li>
         @foreach ($options as $optionValue => $optionLabel)
-            <li role="option" data-value="{{ $optionValue }}" aria-selected="{{ (string) $optionValue === (string) $current ? 'true' : 'false' }}" class="{{ $row }}"><span class="truncate">{{ $optionLabel }}</span><x-icon name="success" :size="14" class="opacity-0" data-filter-select-check /></li>
+            @php($isSelected = (string) $optionValue === (string) $current)
+            <li role="option" data-value="{{ $optionValue }}" aria-selected="{{ $isSelected ? 'true' : 'false' }}" class="{{ $isSelected ? $chosen : $row }}"><span class="truncate">{{ $optionLabel }}</span></li>
         @endforeach
     </ul>
 </div>
