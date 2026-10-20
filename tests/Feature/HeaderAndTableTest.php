@@ -98,10 +98,26 @@ class HeaderAndTableTest extends TestCase
 
         $this->assertNotEmpty($header, 'No header was rendered.');
 
+        // Only two things in the header open a panel. The bell declares a menu
+        // with `aria-haspopup`; the account row is a disclosure holding a form,
+        // so it names the panel with `aria-controls` instead. Counting one
+        // attribute no longer describes both.
+        $this->assertSame(
+            1,
+            substr_count($header, 'aria-haspopup="true"'),
+            'The bell is the only menu trigger in the header.',
+        );
+
+        $this->assertSame(
+            1,
+            substr_count($header, 'aria-controls="account-menu-panel"'),
+            'The account row is the only disclosure in the header.',
+        );
+
         $this->assertSame(
             2,
-            substr_count($header, 'aria-haspopup="true"'),
-            'Only the bell and the account row open a panel; anything else in the header is a target.',
+            substr_count($header, 'aria-expanded='),
+            'Only the bell and the account row should report a panel state.',
         );
     }
 

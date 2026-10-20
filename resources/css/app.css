@@ -617,6 +617,23 @@
     }
 
     /*
+     * The account panel sits flush with the header's outer edge.
+     *
+     * The cluster around the header controls carries a 1px border and 2px of
+     * padding, so its trigger's right edge is 3px inside the page's content
+     * edge. Anchoring the panel to the trigger left a 3px strip of whatever sat
+     * behind it — on the invoice list the green "Catat Pembayaran" button showed
+     * as a sliver down the panel's edge. Three pixels puts the panel on the
+     * content edge, which is also where the mobile rule pins the notification
+     * panel. It lives here, not beside the rows, because DaisyUI's
+     * `.dropdown-end` sits in a layer nested inside `components` and would win
+     * over anything written there.
+     */
+    .account-menu .dropdown-content {
+        right: -3px;
+    }
+
+    /*
      * Cell padding, again.
      *
      * These two properties are the only ones in the block above that the
@@ -729,7 +746,7 @@
          */
         .header-controls .account-menu .dropdown-content {
             position: absolute;
-            right: 0;
+            right: -3px;
             left: auto;
             width: 18rem;
             max-width: calc(100vw - 1.5rem);
