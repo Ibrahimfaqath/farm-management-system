@@ -8,6 +8,7 @@
  */
 
 import { initCharts } from './charts.js';
+import { initCounters } from './counters.js';
 
 (() => {
     'use strict';
@@ -796,6 +797,7 @@ import { initCharts } from './charts.js';
 
     initDialogs();
     initCharts();
+    initCounters();
     initSubmitGuards();
     initDropdowns();
     initScrollableDropdowns();

@@ -39,7 +39,7 @@
             {{-- Anchored to the glyph rather than to the button, so a count that
                  grows to two digits pushes outward instead of clipping against
                  the button's own edge. --}}
-            <span class="text-meta badge badge-error badge-xs absolute -right-0.5 -top-0.5 border-2 border-base-100 px-1 leading-4">
+            <span class="text-meta badge badge-error badge-xs notification-badge absolute -right-0.5 -top-0.5 border-2 border-base-100 px-1 leading-4">
                 {{ $attention->count() }}
             </span>
             <span class="sr-only">{{ $attention->count() }} {{ __('items need attention') }}</span>

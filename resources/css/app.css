@@ -260,6 +260,28 @@
         }
     }
 
+    @keyframes motion-tick {
+        50% {
+            scale: 1.12;
+        }
+    }
+
+    @keyframes motion-badge-in {
+        from {
+            opacity: 0;
+            scale: 0.5;
+        }
+
+        60% {
+            scale: 1.18;
+        }
+
+        to {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+
     .motion-page {
         animation: motion-page-in var(--motion-slow) var(--ease-soft-out) backwards;
     }
@@ -345,6 +367,25 @@
         );
         background-size: 200% 100%;
         animation: motion-shimmer 1.6s linear infinite;
+    }
+
+    /*
+     * A checkbox settling into its tick, so the state change is seen and not
+     * just inferred.
+     */
+    .checkbox:checked,
+    .toggle:checked {
+        animation: motion-tick var(--motion-base) var(--ease-soft-out);
+    }
+
+    /*
+     * The notification count arriving.
+     *
+     * One short swell when the page settles, and nothing after. A badge that
+     * keeps moving is a badge people learn to ignore.
+     */
+    .notification-badge {
+        animation: motion-badge-in var(--motion-slow) var(--ease-soft-out) backwards;
     }
 
     /*

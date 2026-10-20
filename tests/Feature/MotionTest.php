@@ -181,4 +181,173 @@ class MotionTest extends TestCase
 
         return substr($subject, $from, ($to === false ? strlen($subject) : $to) - $from);
     }
+
+    public function test_the_counting_rules_hold_on_every_shape_the_server_emits(): void
+    {
+        $script = <<<'JS'
+            import { readValue, format } from '__COUNTERS__';
+
+            const cases = [
+                ['254.8 L', 254.8, 1], ['9,650 L', 9650, 0], ['45', 45, 0], ['1', 1, 0],
+                ['Rp8.978.000', 8978000, 0], ['Rp5.292.000', 5292000, 0],
+                ['Rp-33.318.000', -33318000, 0], ['Rp-8.320.000', -8320000, 0],
+                ['-29.9%', -29.9, 1], ['1.234.567', 1234567, 0], ['0.5', 0.5, 1],
+                ['1,250,000', 1250000, 0], ['12,5', 12.5, 1], ['253.9', 253.9, 1],
+                ['1.000', 1000, 0], ['Rp0', 0, 0],
+            ];
+
+            const wrong = [];
+
+            for (const [text, wantValue, wantDecimals] of cases) {
+                const parsed = readValue(text);
+
+                if (! parsed) {
+                    wrong.push(`${text}: not parsed`);
+                    continue;
+                }
+
+                if (Math.abs(parsed.value - wantValue) > 1e-6) {
+                    wrong.push(`${text}: read ${parsed.value}, wanted ${wantValue}`);
+                }
+
+                if (parsed.decimals !== wantDecimals) {
+                    wrong.push(`${text}: ${parsed.decimals} decimals, wanted ${wantDecimals}`);
+                }
+
+                // Writing the parsed value back has to reproduce the digits it
+                // came from, or the figure jumps notation as it settles.
+                const token = text.match(/-?\d[\d.,]*\d|-?\d/)[0];
+
+                if (format(parsed.value, parsed) !== token) {
+                    wrong.push(`${text}: rewritten as "${format(parsed.value, parsed)}"`);
+                }
+            }
+
+            console.log(JSON.stringify(wrong));
+            JS;
+
+        // Substituted rather than interpolated: the cases contain a literal
+        // `%`, which `sprintf` would read as a placeholder.
+        $program = str_replace('__COUNTERS__', resource_path('js/counters.js'), $script);
+
+        $output = shell_exec(
+            'node --input-type=module -e '.escapeshellarg($program).' 2>&1'
+        );
+
+        $this->assertNotNull($output, 'Node is unavailable, so the counting rules could not be checked.');
+
+        $wrong = json_decode(trim((string) $output), true);
+
+        $this->assertIsArray($wrong, "The check did not return a list of failures: {$output}");
+        $this->assertSame([], $wrong, 'Counting rules failed: '.implode('; ', $wrong));
+    }
+
+    public function test_the_counters_are_wired_into_the_entry_point(): void
+    {
+        $entry = file_get_contents(resource_path('js/app.js'));
+
+        $this->assertStringContainsString("import { initCounters } from './counters.js'", $entry);
+        $this->assertMatchesRegularExpression('/initCounters\(\);/', $entry);
+
+        // Static would put the module on every page; it is small enough that
+        // this is about staying inside the existing bundle rather than a new one.
+        $this->assertStringNotContainsString("import('./counters.js')", $entry);
+    }
+
+    public function test_reduced_motion_is_honoured_before_anything_is_animated(): void
+    {
+        $script = $this->code(file_get_contents(resource_path('js/counters.js')));
+
+        // The check has to come before the elements are read, or the count-up is
+        // already scheduled by the time the preference is noticed.
+        $this->assertMatchesRegularExpression(
+            "/matchMedia\('\(prefers-reduced-motion: reduce\)'\)\.matches\) \{\s*return;/",
+            $script,
+            'Reduced motion must skip the counters outright.',
+        );
+    }
+
+    public function test_the_count_lands_on_the_servers_own_string(): void
+    {
+        $script = $this->code(file_get_contents(resource_path('js/counters.js')));
+
+        // The last write restores the original text rather than a formatted
+        // value, so an interrupted count — a navigation, a hidden tab, a dropped
+        // frame — leaves the correct figure rather than a rounded approximation.
+        $this->assertMatchesRegularExpression(
+            '/element\.textContent = text;/',
+            $script,
+            'The count-up must finish on the server\'s own string.',
+        );
+    }
+
+    public function test_the_feedback_rules_exist(): void
+    {
+        // The press rule was already here — `.btn:active { transform:
+        // scale(0.97) }` — and a second one was added beside it using the
+        // `scale` property instead. Both applied at once, so every button
+        // shrank by 0.97 twice and the tap looked heavier than intended.
+        // Only the tick and the badge are new.
+        $this->assertMatchesRegularExpression(
+            '/\.checkbox:checked[^{]*\{[^}]*animation: motion-tick/s',
+            $this->css,
+        );
+        $this->assertStringContainsString('motion-badge-in', $this->css);
+
+        // No second press rule hiding behind the other property.
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.btn:active[^{]*\{[^}]*[^a-z]scale:\s*0\./s',
+            $this->css,
+            'A second `.btn:active` rule scales the press twice.',
+        );
+
+        $this->assertStringContainsString('@keyframes motion-tick', $this->css);
+        $this->assertStringContainsString('@keyframes motion-badge-in', $this->css);
+    }
+
+    public function test_the_notification_badge_carries_the_class(): void
+    {
+        $html = $this->get(route('animals.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('notification-badge', $html);
+    }
+
+    /**
+     * The body of one CSS rule, by selector.
+     */
+    private function rule(string $selector): string
+    {
+        $escaped = preg_quote($selector, '/');
+
+        return preg_match("/{$escaped}[^{]*\{([^}]*)\}/s", $this->css, $m) === 1 ? $m[1] : '';
+    }
+
+    /**
+     * A source file with its comments removed.
+     */
+    private function code(string $source): string
+    {
+        return trim((string) preg_replace(
+            ['#/\*.*?\*/#s', '#//[^\n]*#', '#^\s*\*[^\n]*$#m'],
+            '',
+            $source,
+        ));
+    }
+
+    public function test_the_badge_swell_does_not_leave_a_transform_resident(): void
+    {
+        // This stylesheet has a bug on record where a fill-mode left `transform`
+        // on an element, which made it the containing block for every
+        // `position: fixed` descendant and threw the dropdowns across the page.
+        // `backwards` applies the from-state before the run and releases
+        // everything at the end; `both` would keep the final transform.
+        $badge = $this->rule('.notification-badge');
+
+        $this->assertStringContainsString('motion-badge-in', $badge);
+        $this->assertStringNotContainsString(
+            'both',
+            $badge,
+            'A `both` fill-mode would keep the final transform resident.',
+        );
+    }
 }
