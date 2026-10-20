@@ -526,6 +526,33 @@
     }
 
     /*
+     * One row shape for the account menu.
+     *
+     * The panel's three actions must share a left edge, a height and a hover
+     * fill; writing the same eleven utilities three times is how they drift.
+     * 40px matches the header's own targets, and the inset outline keeps the
+     * focus ring inside the panel's `overflow-hidden` corner.
+     *
+     * `px-2`, not `px-3`: the section wrapper already insets rows by 4px, so
+     * 8px here puts the icon column at 12px — the same edge as the "Language"
+     * heading and the identity avatar. At 12px the icons sat 4px to the right of
+     * every heading above them, which is exactly the kind of near-miss the eye
+     * reads as untidy without being able to name it.
+     */
+    .account-menu-row {
+        @apply flex min-h-10 w-full items-center gap-2.5 rounded-md px-2 py-2 text-sm
+        text-base-content transition-colors;
+    }
+
+    .account-menu-row:hover {
+        @apply bg-base-300;
+    }
+
+    .account-menu-row:focus-visible {
+        @apply outline-2 -outline-offset-2 outline-primary;
+    }
+
+    /*
      * A row offering one action shows it directly.
      *
      * The entry keeps its own element, so this only has to make whatever the
@@ -688,6 +715,24 @@
             left: 0.75rem;
             width: auto;
             max-width: none;
+        }
+
+        /*
+         * The account menu keeps its trigger anchor.
+         *
+         * The rule above exists for the notification list, which is pinned to
+         * the viewport because it would otherwise hang off the left edge beside
+         * the bell on a phone. The account panel is a fixed 288px of four short
+         * rows and fits beside its trigger at every width — sharing the rule
+         * turned it into a 744px-wide sheet on a tablet, with the identity on
+         * the far left and the menu on the far right.
+         */
+        .header-controls .account-menu .dropdown-content {
+            position: absolute;
+            right: 0;
+            left: auto;
+            width: 18rem;
+            max-width: calc(100vw - 1.5rem);
         }
     }
 

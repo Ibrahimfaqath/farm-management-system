@@ -129,10 +129,21 @@ class HeaderControlsTest extends TestCase
         // panel announced to assistive technology.
         $cluster = $this->headerCluster($html);
 
-        $this->assertSame(
-            2,
-            preg_match_all('/<button[^>]*aria-haspopup="true"[^>]*aria-expanded="false"/', $cluster),
-            'The bell and the account menu both open a panel and must both say so.',
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*aria-haspopup="true"[^>]*aria-expanded="false"/',
+            $cluster,
+            'The bell opens a menu and must say so.',
+        );
+
+        // The account panel is a disclosure, not a menu: it holds the language
+        // form and has no arrow-key navigation, so `aria-haspopup` would promise
+        // a menu widget that is not there. `aria-controls` points at the panel
+        // and `aria-expanded` reports its state — the correct pattern for a
+        // button that reveals a block of content.
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*aria-expanded="false"[^>]*aria-controls="account-menu-panel"/',
+            $cluster,
+            'The account row must say what it opens.',
         );
     }
 

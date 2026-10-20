@@ -86,19 +86,43 @@ class LanguageControlTest extends TestCase
         $this->assertStringContainsString('English', $html);
     }
 
+    public function test_the_panel_uses_one_row_shape(): void
+    {
+        $html = $this->menuHtml();
+
+        // `menu-none` was written on six elements and defined nowhere, so the
+        // rows it was meant to neutralise kept DaisyUI's menu padding *and* its
+        // hover fill — the identity block lit up like a button. The panel is no
+        // longer a menu widget, so there are no internals left to undo.
+        $this->assertStringNotContainsString('menu-none', $html);
+        $this->assertStringNotContainsString('<ul', $html);
+
+        // Settings and Log out share one row class: same left inset, same 40px
+        // height, same hover. Writing those utilities per row is how they
+        // drifted to 10px and 12px before.
+        $this->assertSame(2, substr_count($html, 'account-menu-row'));
+
+        // The identity answers "which account is this?" even on a phone, where
+        // the trigger hides the name and keeps only the avatar.
+        $user = auth()->user();
+        $this->assertStringContainsString($user->email, $html);
+        $this->assertStringContainsString($user->role_label, $html);
+    }
+
     public function test_the_segments_are_wide_enough_to_click(): void
     {
         $html = $this->menuHtml();
 
         // The old markup sized the button to its label; this is what makes each
-        // half of the control a target instead of a label with dead space.
-        $this->assertStringContainsString('join w-full', $html);
-        $this->assertStringContainsString('join-item', $html);
-        $this->assertMatchesRegularExpression('/class="join-item btn[^"]*\bflex-1\b/', $html);
-
-        // `basis-0` plus `flex-1` is what makes the halves equal regardless of
-        // how long each label is.
-        $this->assertMatchesRegularExpression('/class="join-item btn[^"]*\bbasis-0\b/', $html);
+        // half of the control a target instead of a label with dead space. The
+        // track fills the panel and each segment takes an equal share of it,
+        // whatever the two labels happen to be.
+        $this->assertStringContainsString('tabs tabs-box w-full', $html);
+        $this->assertSame(
+            2,
+            substr_count($html, 'class="tab flex-1 basis-0 text-xs"'),
+            'Both segments should fill a half of the control.',
+        );
     }
 
     public function test_the_active_option_is_marked_and_the_others_are_not(): void
@@ -106,7 +130,11 @@ class LanguageControlTest extends TestCase
         $html = $this->menuHtml();
 
         $this->assertSame(1, substr_count($html, 'aria-current="true"'), 'Exactly one option is current.');
-        $this->assertSame(1, substr_count($html, 'btn-active'), 'Exactly one option is highlighted.');
+
+        // `tabs-box` lifts the segment carrying `aria-current` onto base-100.
+        // The old `btn-active` fill was base-200, which on a white panel read
+        // as a disabled button rather than a selected one.
+        $this->assertStringContainsString('tabs tabs-box', $html);
 
         // The inactive option is still a real control, not a disabled remnant.
         $this->assertStringNotContainsString('disabled', $html);
