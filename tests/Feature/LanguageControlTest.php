@@ -158,6 +158,30 @@ class LanguageControlTest extends TestCase
         $this->assertNull(session('locale'));
     }
 
+    public function test_the_current_segment_is_the_strongest_state(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', file_get_contents(resource_path('css/app.css')));
+
+        // The selected pill cannot rely on `tabs-box` lifting it onto base-100:
+        // on the white panel that is the panel's own colour, so the chosen
+        // option disappears while the hovered one wears the only visible
+        // surface. Inverting the pair keeps the choice legible in both themes
+        // and lets a click visibly move the pill.
+        $rule = preg_match('/\.account-menu \.tab\[aria-current=\'true\'\]\s*\{([^}]*)\}/s', $css, $m) === 1 ? $m[1] : '';
+
+        $this->assertMatchesRegularExpression(
+            '/background-color:\s*var\(--color-base-content\)/',
+            $rule,
+            'The current segment has no fill of its own.',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/color:\s*var\(--color-base-100\)/',
+            $rule,
+            'The current segment does not use the panel colour for its text.',
+        );
+    }
+
     public function test_the_inactive_segment_answers_the_pointer(): void
     {
         $css = (string) preg_replace('#/\*.*?\*/#s', '', file_get_contents(resource_path('css/app.css')));
