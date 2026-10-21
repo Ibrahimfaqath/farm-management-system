@@ -123,6 +123,39 @@ class NumberFormatTest extends TestCase
         $this->assertSame('12.5', Number::compact(12.5, 1));
     }
 
+    public function test_a_phone_gets_a_short_rupiah_figure_without_losing_the_exact_one(): void
+    {
+        // The full figure stays on desktop; these are the forms a 320px tile
+        // can show without clipping.
+        $this->assertSame('Rp8,9 jt', Number::compactMoney(8_946_541));
+        $this->assertSame('Rp1,0 jt', Number::compactMoney(1_000_000));
+        $this->assertSame('Rp1,3 jt', Number::compactMoney(1_250_000));
+        $this->assertSame('Rp16,7 jt', Number::compactMoney(16_700_000));
+        $this->assertSame('-Rp33,2 jt', Number::compactMoney(-33_232_324));
+        $this->assertSame('Rp1,2 M', Number::compactMoney(1_200_000_000));
+        $this->assertSame('Rp1,2 T', Number::compactMoney(1_200_000_000_000));
+
+        // The unit is chosen after rounding, so a figure just below a boundary
+        // does not render as "Rp1.000,0 jt" and overflow the tile.
+        $this->assertSame('Rp1,0 M', Number::compactMoney(999_950_000));
+        $this->assertSame('Rp1,0 T', Number::compactMoney(999_950_000_000));
+
+        // Below a million the grouping is already short enough; changing the
+        // unit there would cost precision without saving meaningful width.
+        $this->assertSame('Rp999', Number::compactMoney(999));
+        $this->assertSame('Rp1.500', Number::compactMoney(1_500));
+        $this->assertSame('Rp999.000', Number::compactMoney(999_000));
+        $this->assertSame('Rp0', Number::compactMoney(0));
+    }
+
+    public function test_the_short_rupiah_figure_also_follows_the_active_locale(): void
+    {
+        $this->app->setLocale('en');
+
+        $this->assertSame('Rp8.9 jt', Number::compactMoney(8_946_541));
+        $this->assertSame('Rp1,500', Number::compactMoney(1_500));
+    }
+
     public function test_the_feed_list_shows_one_convention_throughout(): void
     {
         $this->seed(DatabaseSeeder::class);

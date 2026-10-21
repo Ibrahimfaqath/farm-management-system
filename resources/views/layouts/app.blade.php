@@ -8,8 +8,8 @@
     <title>{{ $title ?? __('Dashboard') }} &middot; FARM</title>
     {{-- There was no icon link at all, so every page requested a /favicon.ico
          that does not exist and got a 404 in return. --}}
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-mark.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo-mark.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-mark-black.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo-mark-black.png') }}">
     <x-theme-head />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

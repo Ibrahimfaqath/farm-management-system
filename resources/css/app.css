@@ -781,6 +781,143 @@
     }
 
     /*
+     * Tables become data cards on small screens.
+     *
+     * A nine-column invoice table is roughly 1,018px wide. On a 390px screen
+     * the horizontal scroll container showed the first four columns and cut the
+     * one that matters — the balance — off the right edge. Making the text
+     * smaller would not have brought nine columns into 364px; the table has to
+     * change shape.
+     *
+     * Each row becomes a card whose cells are label/value pairs. The label is
+     * copied from the table's own header by `initResponsiveTables`, so the
+     * server remains the source of the translated column name. Two columns fit
+     * at 390px; a long description, a badge or the row actions take the full
+     * width. `thead` stays in the accessibility tree (visually hidden rather
+     * than `display: none`) so a screen reader can still navigate the table as
+     * a table.
+     *
+     * The attribute is added by JavaScript. Without it, and without JavaScript,
+     * the old horizontal scroll container is a working fallback rather than a
+     * blank table.
+     */
+    @media screen and (width < 64rem) {
+        .table-scroll[data-mobile-cards] {
+            overflow-x: visible;
+        }
+
+        table[data-mobile-cards] {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table[data-mobile-cards] > thead {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        table[data-mobile-cards] > tbody {
+            display: block;
+            padding: 0.75rem;
+        }
+
+        table[data-mobile-cards] > tbody > tr {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border: 1px solid var(--color-base-300);
+            border-radius: var(--radius-box);
+            background: var(--color-base-100);
+
+            /* `.app-table tbody tr` has transition-colors so desktop row hover
+               fades. On a card that background is the whole surface, so a theme
+               switch would flash a white card on the black theme for a frame.
+               A card has no hover state to fade anyway. */
+            transition: none;
+        }
+
+        table[data-mobile-cards] > tbody > tr + tr {
+            margin-top: 0.75rem;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+            min-width: 0;
+            padding: 0.5rem 0.75rem;
+            border-top: 1px solid color-mix(in oklab, var(--color-base-300) 70%, transparent);
+            text-align: left;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td[data-label]::before {
+            content: attr(data-label);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: color-mix(in oklab, var(--color-base-content) 65%, transparent);
+        }
+
+        table[data-mobile-cards] > tbody > tr > td:first-child,
+        table[data-mobile-cards] > tbody > tr > td[data-mobile-wide] {
+            grid-column: 1 / -1;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td:first-child {
+            border-top: 0;
+            border-radius: var(--radius-box) var(--radius-box) 0 0;
+            background: color-mix(in oklab, var(--color-base-200) 55%, transparent);
+            font-weight: 500;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td.row-actions {
+            grid-column: 1 / -1;
+            width: auto;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding-block: 0.5rem;
+            text-align: right;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td.row-actions::before {
+            content: none;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td.num {
+            text-align: left;
+        }
+
+        /* A card is allowed to be tall; it is not allowed to hide its value
+           behind the desktop row's max-width/truncate pair. */
+        table[data-mobile-cards] > tbody > tr > td :is(.truncate, [class*='max-w-']) {
+            max-width: none;
+            overflow: visible;
+            white-space: normal;
+            text-overflow: clip;
+        }
+
+        table[data-mobile-cards] > tbody > tr > td .badge {
+            white-space: normal;
+            height: auto;
+        }
+    }
+
+    /*
      * Theme toggle glyphs.
      *
      * These were switched with a `hidden` class, which did nothing: the icon
@@ -810,11 +947,15 @@
     /*
      * The FARM mark.
      *
-     * The logo file is black on a transparent ground. That is invisible on the
-     * dark theme's near-black surfaces, so a white copy ships beside it and the
-     * two are swapped from `data-theme` — the same arrangement the theme glyph
-     * above uses, which means the correct one is on screen at first paint and
-     * before any script runs.
+     * The black copy is fully opaque on a transparent ground. The original
+     * `logo-mark.png` was black at only 25% alpha, which rendered as grey on the
+     * light theme's off-white surface; `logo-mark-black.png` takes the complete
+     * alpha channel from the white mark and recolours it black, so the
+     * silhouette is as solid as the one on the dark theme. The white copy is
+     * used on the dark theme's near-black surfaces, and the two are swapped from
+     * `data-theme` — the same arrangement the theme glyph above uses, which
+     * means the correct one is on screen at first paint and before any script
+     * runs.
      *
      * The image is swapped through a pseudo-element rather than two `<img>`
      * elements: one hidden by `display: none` is still fetched, so a page would
@@ -828,7 +969,7 @@
         display: block;
         width: 100%;
         height: 100%;
-        background-image: url('/images/logo-mark.png');
+        background-image: url('/images/logo-mark-black.png');
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;

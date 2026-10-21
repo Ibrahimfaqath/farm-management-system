@@ -81,7 +81,7 @@ class BrandAndAttentionTest extends TestCase
         // Two supplied files: a black mark for the light theme and a white one
         // for the dark. The black alone would be invisible on the dark theme's
         // near-black surface, so the white is not a recolour of it.
-        $this->assertStringContainsString("url('/images/logo-mark.png')", $css);
+        $this->assertStringContainsString("url('/images/logo-mark-black.png')", $css);
         $this->assertStringContainsString("url('/images/logo-mark-light.png')", $css);
 
         // The swap has to hang off `data-theme`, which is set before first paint.
@@ -101,7 +101,7 @@ class BrandAndAttentionTest extends TestCase
         // Read straight from each PNG's IHDR: no image extension is required,
         // and a missing one would otherwise make this the only test in the
         // suite that cannot run.
-        foreach (['logo-mark.png', 'logo-mark-light.png'] as $name) {
+        foreach (['logo-mark-black.png', 'logo-mark-light.png'] as $name) {
             $header = unpack('Nw/Nh', file_get_contents(public_path("images/{$name}"), false, null, 16, 8));
 
             $this->assertSame(128, $header['w'], "{$name} is not 128px wide.");
@@ -110,7 +110,7 @@ class BrandAndAttentionTest extends TestCase
 
         // Equal canvas, and both no heavier than the previous build, so the
         // swap costs one small fetch rather than two.
-        $black = filesize(public_path('images/logo-mark.png'));
+        $black = filesize(public_path('images/logo-mark-black.png'));
         $white = filesize(public_path('images/logo-mark-light.png'));
 
         $this->assertLessThan(15 * 1024, $black);
@@ -132,7 +132,7 @@ class BrandAndAttentionTest extends TestCase
 
     public function test_the_logo_files_are_small_and_have_transparency(): void
     {
-        foreach (['logo-mark.png', 'logo-mark-light.png'] as $name) {
+        foreach (['logo-mark-black.png', 'logo-mark-light.png'] as $name) {
             $path = public_path("images/{$name}");
 
             $this->assertFileExists($path);

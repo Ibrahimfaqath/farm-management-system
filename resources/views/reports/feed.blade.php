@@ -60,11 +60,11 @@
                             <td class="num text-base-content/65">{{ number_format((float) $row->reorder_point, 2) }}</td>
                             <td class="num">
                                 {{ number_format((float) $row->purchase_qty, 2) }}
-                                <span class="text-meta block tabular-nums text-base-content/45">Rp{{ number_format((float) $row->purchase_amount, 0) }}</span>
+                                <x-money :amount="$row->purchase_amount" class="text-meta block text-base-content/45" />
                             </td>
                             <td class="num">
                                 {{ number_format((float) $row->consumption_qty, 2) }}
-                                <span class="text-meta block tabular-nums text-base-content/45">Rp{{ number_format((float) $row->consumption_amount, 0) }}</span>
+                                <x-money :amount="$row->consumption_amount" class="text-meta block text-base-content/45" />
                             </td>
                             <td class="num text-base-content/65">{{ number_format((float) $row->daily_consumption, 2) }}</td>
                             <td class="num">

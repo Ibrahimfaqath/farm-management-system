@@ -79,10 +79,18 @@
                                 <td class="text-base-content/65">{{ $transaction->method->label() }}</td>
                                 <td class="text-base-content/65">{{ $transaction->creator?->name ?? '—' }}</td>
                                 <td class="num text-tone-success">
-                                    {{ $transaction->direction->value === 'in' ? number_format((float) $transaction->amount, 0) : '—' }}
+                                    @if ($transaction->direction->value === 'in')
+                                        <x-money :amount="$transaction->amount" />
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                                 <td class="num text-tone-warning">
-                                    {{ $transaction->direction->value === 'out' ? number_format((float) $transaction->amount, 0) : '—' }}
+                                    @if ($transaction->direction->value === 'out')
+                                        <x-money :amount="$transaction->amount" />
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

@@ -844,6 +844,148 @@ import { initCounters } from './counters.js';
     }
 
     /**
+     * Compact money in stat tiles.
+     *
+     * `x-stat` renders the full figure in the document and adds the short form
+     * as a data attribute when its value is rupiah. Only the displayed text is
+     * swapped, so the exact figure stays in `aria-label` and `title`, and the
+     * counter script receives one plain string rather than a pair of spans it
+     * would overwrite. Below `sm`, the tiles sit two to a row and the full
+     * figure was the thing that got clipped.
+     */
+    const compactStatQuery = window.matchMedia('(max-width: 639px)');
+
+    function applyStatValues(root = document) {
+        root.querySelectorAll('.stat-value[data-compact-value]').forEach((element) => {
+            if (!(element instanceof HTMLElement)) {
+                return;
+            }
+
+            if (!element.dataset.fullValue) {
+                element.dataset.fullValue = element.textContent.trim();
+            }
+
+            const value = compactStatQuery.matches
+                ? element.dataset.compactValue
+                : element.dataset.fullValue;
+
+            if (element.textContent !== value) {
+                element.textContent = value;
+            }
+        });
+    }
+
+    function initStatValues() {
+        applyStatValues();
+
+        compactStatQuery.addEventListener('change', () => applyStatValues());
+    }
+
+    /**
+     * Turn read-only tables into labelled data cards on a phone.
+     *
+     * The server does not know the viewport, and duplicating every index table
+     * as a separate card list would double the query and the translation work.
+     * Instead, copy the table's own translated headers onto the cells and let a
+     * narrow-screen stylesheet rearrange them. JavaScript is the enhancement:
+     * without it the table keeps its horizontal scroll container and remains
+     * usable.
+     *
+     * Editable tables are skipped. A line-item editor is a form laid out as a
+     * table; hiding its header row and stacking inputs would break the editing
+     * flow, so those keep the scroll container they have always had.
+     */
+    function initResponsiveTables(root = document) {
+        root.querySelectorAll('table.app-table').forEach((table) => {
+            if (!(table instanceof HTMLTableElement)
+                || table.hasAttribute('data-mobile-cards')
+                || table.hasAttribute('data-mobile-static')
+                || table.closest('[data-line-editor]')
+                || table.querySelector('tbody input, tbody select, tbody textarea')
+                || !table.tHead
+                || table.tHead.rows.length === 0) {
+                return;
+            }
+
+            const headers = [...table.tHead.rows[0].cells];
+            const labels = headers.map((cell) => cell.textContent.replace(/\s+/g, ' ').trim());
+
+            if (headers.length < 2) {
+                return;
+            }
+
+            let labelled = 0;
+
+            table.querySelectorAll('tbody tr').forEach((row) => {
+                const cells = [...row.cells];
+
+                // A row whose shape does not match the header cannot be
+                // labelled reliably; leave that table as a table.
+                if (cells.length !== headers.length) {
+                    return;
+                }
+
+                const wideCells = [];
+
+                cells.forEach((cell, index) => {
+                    const isActions = headers[index].classList.contains('row-actions')
+                        || cell.classList.contains('row-actions');
+
+                    if (isActions) {
+                        cell.classList.add('row-actions');
+                        cell.removeAttribute('data-label');
+                    } else if (labels[index] !== '') {
+                        cell.dataset.label = labels[index];
+                        labelled += 1;
+                    }
+
+                    const text = cell.textContent.replace(/\s+/g, ' ').trim();
+                    const wide = index === 0
+                        || isActions
+                        || text.length > 32
+                        || cell.matches('.truncate, [class*="max-w-"]')
+                        || Boolean(cell.querySelector('.truncate, [class*="max-w-"], .badge, .dropdown, button, .btn'));
+
+                    wideCells.push(wide);
+
+                    if (wide) {
+                        cell.dataset.mobileWide = '1';
+                    }
+                });
+
+                // A lone half-width cell before a full-width one would leave
+                // an empty column beside it. Promote the last cell of each odd
+                // run so every row fills both columns without changing the
+                // order of the fields.
+                let halfRun = [];
+
+                wideCells.forEach((wide, index) => {
+                    if (wide) {
+                        if (halfRun.length % 2 === 1) {
+                            cells[index - 1].dataset.mobileWide = '1';
+                        }
+
+                        halfRun = [];
+                    } else {
+                        halfRun.push(index);
+                    }
+                });
+
+                if (halfRun.length % 2 === 1) {
+                    cells[halfRun[halfRun.length - 1]].dataset.mobileWide = '1';
+                }
+            });
+
+            if (labelled === 0) {
+                return;
+            }
+
+            table.setAttribute('data-mobile-cards', '');
+            table.closest('.table-scroll')?.setAttribute('data-mobile-cards', '');
+        });
+    }
+
+    /**
      * Live filters.
      *
      * A filter bar is a GET form. Submitting it used to replace the document,
@@ -1072,6 +1214,13 @@ import { initCounters } from './counters.js';
             content.innerHTML = incoming.innerHTML;
             document.title = page.title;
 
+            // The swapped content is a fresh copy of the page's cards and
+            // tables. Apply the presentation enhancements before focus returns
+            // to a control inside it. The counters deliberately do not rerun:
+            // this is a correction, not a new page load.
+            applyStatValues(content);
+            initResponsiveTables(content);
+
             // New filter dropdowns need their listbox behaviour before focus
             // can land on their triggers. Everything else in this file is
             // delegated from the document and keeps working on the new markup.
@@ -1298,6 +1447,8 @@ import { initCounters } from './counters.js';
 
     initDialogs();
     initCharts();
+    initStatValues();
+    initResponsiveTables();
     initCounters();
     initSubmitGuards();
     initDropdowns();

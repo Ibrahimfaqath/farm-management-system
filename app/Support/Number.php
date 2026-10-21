@@ -32,6 +32,45 @@ final class Number
     }
 
     /**
+     * A rupiah figure shortened to the largest useful Indonesian unit.
+     *
+     * A phone tile is roughly half a desktop tile wide. "Rp8.946.541" is nine
+     * characters of digits before the reader gets to the label beside it, and
+     * at 320px it was being clipped. "Rp8,9 jt" says the same thing at a
+     * glance; the exact figure remains available as the component's title and
+     * accessible label. Figures below one million stay whole, where they fit
+     * and where a "rb" suffix would save only a couple of characters.
+     */
+    public static function compactMoney(float|int|string|null $value): string
+    {
+        $number = (float) ($value ?? 0);
+        $absolute = abs($number);
+
+        if ($absolute < 1_000_000) {
+            return 'Rp'.self::format($number, 0);
+        }
+
+        // Pick the unit after rounding. Without this, 999.950.000 would render
+        // as "Rp1.000,0 jt" instead of the shorter, correctly rounded "Rp1,0 M".
+        foreach ([[1_000_000_000_000, 'T'], [1_000_000_000, 'M'], [1_000_000, 'jt']] as [$divisor, $suffix]) {
+            $scaled = round($absolute / $divisor, 1);
+
+            if ($scaled < 1 || $scaled >= 1000) {
+                continue;
+            }
+
+            // Keep one decimal even on a whole million. It makes the short form
+            // consistent ("Rp1,0 jt", not "Rp1 jt") and gives the count-up
+            // animation a decimal to move through; a bare "Rp1 jt" was read as a
+            // sub-thousand figure and skipped by the counter. The formatting helper
+            // still supplies the active locale's comma or dot.
+            return ($number < 0 ? '-' : '').'Rp'.self::format($scaled, 1).' '.$suffix;
+        }
+
+        return 'Rp'.self::format($number, 0);
+    }
+
+    /**
      * Format, dropping the decimals when the value is whole.
      *
      * Stock is stored as a decimal so a half bag is possible, but printing

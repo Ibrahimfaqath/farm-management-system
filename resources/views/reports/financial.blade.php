@@ -63,8 +63,8 @@
                             <div class="flex justify-between gap-2 text-sm">
                                 <span class="font-medium">{{ \Illuminate\Support\Carbon::createFromFormat('Y-m', $month)->translatedFormat('M Y') }}</span>
                                 <span class="shrink-0 text-xs tabular-nums">
-                                    <span class="text-tone-success">+{{ number_format($flow['in'], 0) }}</span>
-                                    <span class="text-tone-warning">&minus;{{ number_format($flow['out'], 0) }}</span>
+                                    <span class="text-tone-success">+<x-money :amount="$flow['in']" /></span>
+                                    <span class="text-tone-warning">&minus;<x-money :amount="$flow['out']" /></span>
                                 </span>
                             </div>
                             <div class="mt-1 flex gap-0.5">
