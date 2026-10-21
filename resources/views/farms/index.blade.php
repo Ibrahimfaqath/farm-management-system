@@ -51,7 +51,7 @@
                                 <td class="num">{{ $farm->animals_count }}</td>
                                     <td class="row-actions">
                                         <x-actions-menu :label="__('Actions for :name', ['name' => $farm->name])">
-                                            <x-menu-link :href="route('farms.show', $farm)" icon="eye">
+                                            <x-menu-link :href="route('farms.show', $farm)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                             @if (auth()->user()->hasAbility('settings.manage'))

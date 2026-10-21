@@ -11,7 +11,7 @@
 
         <x-panel :title="__('Identity')">
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <x-form.input name="code" :label="__('Code')" :value="$farm->code" required maxlength="20" placeholder="FRM-001" />
+                <x-form.input name="code" :label="__('Code')" :value="$nextCode ?? $farm->code" readonly maxlength="20" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Farm name')" :value="$farm->name" required maxlength="150" />
                 <x-form.input name="manager_name" :label="__('Manager name')" :value="$farm->manager_name" />
                 <x-form.input name="phone" :label="__('Phone')" :value="$farm->phone" />

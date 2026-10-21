@@ -40,7 +40,7 @@ class PregnancyCheckRequest extends FormRequest
     {
         return [
             'animal_id' => 'ternak betina',
-            'breeding_record_id' => 'catatan peminahan',
+            'breeding_record_id' => 'catatan perkawinan',
             'check_date' => 'tanggal pemeriksaan',
             'expected_due_date' => 'perkiraan tanggal lahir',
         ];
@@ -61,7 +61,7 @@ class PregnancyCheckRequest extends FormRequest
                 $record = BreedingRecord::query()->find($recordId);
 
                 if ($record && (int) $record->animal_id !== (int) $this->input('animal_id')) {
-                    $validator->errors()->add('breeding_record_id', 'Catatan peminahan bukan milik ternak tersebut.');
+                    $validator->errors()->add('breeding_record_id', 'Catatan perkawinan bukan milik ternak tersebut.');
                 }
             }
 
@@ -71,7 +71,7 @@ class PregnancyCheckRequest extends FormRequest
                 && ! $this->filled('expected_due_date') && ! $recordId) {
                 $validator->errors()->add(
                     'expected_due_date',
-                    'Isi perkiraan tanggal lahir atau pilih catatan peminahan agar tanggal dapat dihitung.',
+                    'Isi perkiraan tanggal lahir atau pilih catatan perkawinan agar tanggal dapat dihitung.',
                 );
             }
         });

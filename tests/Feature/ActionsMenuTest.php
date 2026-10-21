@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
@@ -20,9 +21,10 @@ use Tests\TestCase;
  * one entry.
  *
  * A single entry now renders as a direct control and two or more keep the
- * dropdown. This walks the real pages and checks both shapes: an action cell is
- * never empty, a row with one action never gets a menu, and every entry still
- * points somewhere.
+ * dropdown. Direct controls show only their icon; the label stays in the DOM
+ * and in `aria-label`/`title`. This walks the real pages and checks both shapes:
+ * an action cell is never empty, a row with one action never gets a menu, and
+ * every entry still points somewhere.
  */
 class ActionsMenuTest extends TestCase
 {
@@ -41,34 +43,54 @@ class ActionsMenuTest extends TestCase
 
         $html = Blade::render(
             '<x-actions-menu label="Actions for BL-001">'
-            .'<x-menu-link href="/animals/1" icon="eye">Details</x-menu-link>'
+            .'<x-menu-link href="/animals/1" icon="info">Details</x-menu-link>'
             .'</x-actions-menu>'
         );
 
-        $this->assertStringContainsString('row-single-action', $html);
+        $this->assertStringContainsString('row-single-action has-icon', $html);
         $this->assertStringNotContainsString('dropdown', $html, 'One action must not open a menu.');
         $this->assertStringNotContainsString('aria-haspopup', $html);
 
-        // The entry keeps working: a real href, the original label.
+        // The entry keeps working: a real href, its icon, and a name for
+        // assistive technology even though the label is visually hidden.
         $this->assertStringContainsString('href="/animals/1"', $html);
+        $this->assertStringContainsString('<svg', $html);
+        $this->assertStringContainsString('aria-label="Details"', $html);
+        $this->assertStringContainsString('title="Details"', $html);
         $this->assertStringContainsString('Details', $html);
     }
 
-    public function test_a_single_entry_is_never_truncated_or_ambiguous(): void
+    public function test_a_single_entry_keeps_its_icon_and_accessible_name(): void
     {
         $this->seed(DatabaseSeeder::class);
 
         $html = Blade::render(
             '<x-actions-menu label="Actions">'
-            .'<x-menu-link href="/animals/1" icon="eye">Detail</x-menu-link>'
+            .'<x-menu-link href="/animals/1" icon="info">Detail</x-menu-link>'
             .'</x-actions-menu>'
         );
 
-        // Text replaced the glyph: an icon costs about 20px per row and a single
-        // word already names the action, and the width is what decides whether
-        // the table needs a horizontal scrollbar.
-        $this->assertStringNotContainsString('<svg', $html, 'The single-action control should not carry a glyph.');
+        // The icon is the visible control; the text remains as the accessible
+        // name and the hover title, so the action is not ambiguous.
+        $this->assertStringContainsString('<svg', $html, 'The single-action control should carry its icon.');
+        $this->assertStringContainsString('aria-label="Detail"', $html);
+        $this->assertStringContainsString('title="Detail"', $html);
         $this->assertStringContainsString('Detail', $html);
+    }
+
+    public function test_action_views_do_not_use_an_eye_icon(): void
+    {
+        $offenders = [];
+
+        foreach (File::allFiles(resource_path('views')) as $file) {
+            $contents = $file->getContents();
+
+            if (str_contains($contents, 'icon="eye"') || str_contains($contents, 'name="eye"')) {
+                $offenders[] = $file->getRelativePathname();
+            }
+        }
+
+        $this->assertSame([], $offenders, 'Use the info icon for detail actions, not an eye.');
     }
 
     public function test_two_entries_still_render_a_daisyui_dropdown(): void
@@ -77,7 +99,7 @@ class ActionsMenuTest extends TestCase
 
         $html = Blade::render(
             '<x-actions-menu label="Actions for BL-001">'
-            .'<x-menu-link href="/animals/1" icon="eye">Details</x-menu-link>'
+            .'<x-menu-link href="/animals/1" icon="info">Details</x-menu-link>'
             .'<x-menu-link href="/animals/1/edit" icon="edit">Edit</x-menu-link>'
             .'</x-actions-menu>'
         );

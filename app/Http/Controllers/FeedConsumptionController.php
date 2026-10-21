@@ -67,12 +67,6 @@ class FeedConsumptionController extends Controller
             'barns' => Barn::with('farm')->get()->mapWithKeys(fn ($b) => [$b->id => $b->farm->name.' · '.$b->name]),
             'barn' => $barn,
             'feedItems' => $feedItems,
-            'batchesByItem' => $feedItems->mapWithKeys(fn (FeedItem $item) => [
-                $item->getKey() => $inventory->usableBatches($item)->map(fn ($batch) => [
-                    'id' => $batch->getKey(),
-                    'label' => $batch->batch_code.' · sisa '.Number::format((float) $batch->quantity_remaining, 2).' '.$item->unit->shortLabel(),
-                ])->values(),
-            ]),
             'animalsByBarn' => Barn::query()
                 ->with(['farm', 'animals' => fn ($q) => $q->where('status', 'active')->orderBy('animal_code')])
                 ->get()

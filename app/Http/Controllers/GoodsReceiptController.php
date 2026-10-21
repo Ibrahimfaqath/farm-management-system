@@ -152,6 +152,13 @@ class GoodsReceiptController extends Controller
         ]);
     }
 
+    public function document(GoodsReceipt $receipt): View
+    {
+        $receipt->load(['supplier', 'purchaseOrder', 'receiver', 'items.feedItem', 'items.batch']);
+
+        return view('goods-receipts.document', ['receipt' => $receipt]);
+    }
+
     /**
      * Confirm a draft receipt. Only a posted receipt increases inventory.
      */

@@ -91,6 +91,9 @@
                                                     {{ __('Edit') }}
                                                 </button>
                                             </li>
+                                            <x-menu-link :href="route('activity-logs.index', ['user_id' => $user->id])" icon="history">
+                                                {{ __('Activity trail') }}
+                                            </x-menu-link>
                                         </x-actions-menu>
                                     </td>
                                 </tr>

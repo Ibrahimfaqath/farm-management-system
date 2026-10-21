@@ -33,7 +33,6 @@ class BirthRecordRequest extends FormRequest
             'assistance_notes' => ['nullable', 'string', 'max:2000'],
 
             'register_calf' => ['boolean'],
-            'calf_code' => ['nullable', 'required_if:register_calf,1', 'string', 'max:30', 'unique:animals,animal_code'],
             'calf_name' => ['nullable', 'string', 'max:100'],
         ];
     }
@@ -46,7 +45,6 @@ class BirthRecordRequest extends FormRequest
             'sire_id' => 'induk jantan',
             'birth_date' => 'tanggal lahir',
             'birth_weight_kg' => 'berat lahir',
-            'calf_code' => 'kode hewan anak',
             'calf_sex' => 'jenis kelamin anak',
         ];
     }

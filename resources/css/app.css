@@ -510,6 +510,12 @@
         @apply text-sm;
     }
 
+    /* Safari keeps its own disclosure triangle even when list-style is none;
+       the sidebar supplies a chevron that already reflects the open state. */
+    [data-drawer-nav] summary::-webkit-details-marker {
+        display: none;
+    }
+
     /*
      * One horizontal-scroll container for every data table so a wide table
      * scrolls inside its panel instead of stretching the page.
@@ -607,14 +613,19 @@
      *
      * The entry keeps its own element, so this only has to make whatever the
      * caller wrote look like the rest of the table. Width is the constraint
-     * this exists to respect: a labelled ghost button costs roughly 45px where
-     * the overflow trigger costs 24px, so the styling is deliberately tight and
-     * the glyph was dropped rather than paying for it.
+     * this exists to respect: the overflow trigger costs 24px, so the single
+     * action is icon-only and keeps the same tight footprint. Its text remains
+     * in the DOM (and in `aria-label`/`title`) for assistive technology and
+     * hover; only the visible glyph is left to name the action at a glance.
      */
     .row-single-action :is(a, button) {
         @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-field
         border border-transparent px-2 py-1 text-sm font-medium leading-none
         text-base-content/70 transition-colors;
+    }
+
+    .row-single-action.has-icon :is(a, button) {
+        @apply gap-0 text-[0px];
     }
 
     .row-single-action :is(a, button):hover {
@@ -1155,11 +1166,36 @@
     }
 }
 
+@page {
+    size: A4;
+    margin: 14mm;
+}
+
 @media print {
     /* Reports should print cleanly: drop the chrome, keep the data. */
     .print\:hidden,
     [data-print='hide'] {
         display: none !important;
+    }
+
+    .document-page {
+        background: #fff !important;
+    }
+
+    .document-paper {
+        max-width: none !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .document-paper table {
+        break-inside: auto;
+    }
+
+    .document-paper tr {
+        break-inside: avoid;
     }
 
     /*
@@ -1185,6 +1221,16 @@
 
     body {
         @apply bg-white text-black;
+    }
+
+    /* Printing is not a drawer layout: the sidebar is gone, so let the
+       content use the full sheet instead of leaving an empty grid column. */
+    .drawer {
+        display: block !important;
+    }
+
+    .drawer-content {
+        min-height: auto !important;
     }
 
     .card,

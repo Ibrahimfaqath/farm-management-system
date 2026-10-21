@@ -19,23 +19,60 @@ class AnimalManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_animal_code_must_be_unique(): void
+    public function test_animal_code_is_generated_sequentially_and_ignores_the_submitted_code(): void
     {
         $user = $this->owner();
         $existing = Animal::factory()->create(['animal_code' => 'T-00001']);
 
-        $response = $this->actingAs($user)->post(route('animals.store'), [
-            'animal_code' => 'T-00001',
+        $this->actingAs($user)->post(route('animals.store'), [
+            'animal_code' => 'T-99999',
             'farm_id' => $existing->farm_id,
             'breed_id' => $existing->breed_id,
             'sex' => Sex::Female->value,
             'status' => AnimalStatus::Active->value,
             'production_status' => ProductionStatus::Calf->value,
             'breeding_status' => BreedingStatus::Open->value,
-        ]);
+        ])->assertSessionHasNoErrors();
 
-        $response->assertSessionHasErrors('animal_code');
-        $this->assertSame(1, Animal::count());
+        $this->assertSame(2, Animal::count());
+        $this->assertDatabaseHas('animals', ['animal_code' => 'T-00002']);
+        $this->assertDatabaseMissing('animals', ['animal_code' => 'T-99999']);
+    }
+
+    public function test_adding_an_animal_from_a_barn_preselects_that_barn_and_farm(): void
+    {
+        $barn = Barn::factory()->create();
+
+        $response = $this->actingAs($this->owner())
+            ->get(route('animals.create', ['barn_id' => $barn->id]))
+            ->assertOk();
+
+        $animal = $response->viewData('animal');
+
+        $this->assertSame($barn->id, $animal->barn_id);
+        $this->assertSame($barn->farm_id, $animal->farm_id);
+        $this->assertSame($barn->id, $animal->current_barn_id);
+    }
+
+    public function test_lineage_is_optional_when_registering_an_animal(): void
+    {
+        $user = $this->owner();
+        $farm = Farm::factory()->create();
+        $breed = Breed::factory()->create();
+
+        $this->actingAs($user)->post(route('animals.store'), [
+            'farm_id' => $farm->id,
+            'breed_id' => $breed->id,
+            'sex' => Sex::Female->value,
+            'status' => AnimalStatus::Active->value,
+            'production_status' => ProductionStatus::Calf->value,
+            'breeding_status' => BreedingStatus::Open->value,
+        ])->assertSessionHasNoErrors();
+
+        $animal = Animal::query()->where('farm_id', $farm->id)->firstOrFail();
+
+        $this->assertNull($animal->dam_id);
+        $this->assertNull($animal->sire_id);
     }
 
     public function test_male_animal_cannot_be_lactating(): void

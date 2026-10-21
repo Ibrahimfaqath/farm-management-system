@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -35,17 +37,22 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(CodeGenerator $codes): View
     {
-        return view('customers.create', ['customer' => new Customer([
-            'is_active' => true,
-            'payment_terms_days' => 30,
-        ])] + $this->formOptions());
+        return view('customers.create', [
+            'customer' => new Customer([
+                'is_active' => true,
+                'payment_terms_days' => 30,
+            ]),
+            'nextCode' => $codes->next('customers', 'code', 'CUS-'),
+        ] + $this->formOptions());
     }
 
-    public function store(CustomerRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(CustomerRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $customer = Customer::create($request->validated());
+        $customer = DB::transaction(fn () => Customer::create($request->validated() + [
+            'code' => $codes->next('customers', 'code', 'CUS-'),
+        ]));
 
         $audit->log('sales.customer_created', $customer, "Pelanggan {$customer->name} ditambahkan", $customer->code);
 

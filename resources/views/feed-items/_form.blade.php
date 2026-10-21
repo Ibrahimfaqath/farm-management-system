@@ -13,7 +13,7 @@
 
         <x-panel :title="__('Identity')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.input name="code" :label="__('Item code')" :value="$feedItem->code" required maxlength="30" placeholder="FD-001" />
+                <x-form.input name="code" :label="__('Item code')" :value="$nextCode ?? $feedItem->code" readonly maxlength="30" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Feed name')" :value="$feedItem->name" required maxlength="150" />
                 <x-form.select name="category" :label="__('Category')" :options="$categories" :selected="$feedItem->category?->value" required />
                 <x-form.select name="unit" :label="__('Unit')" :options="$units" :selected="$feedItem->unit?->value" required />

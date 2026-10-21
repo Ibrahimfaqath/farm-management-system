@@ -9,6 +9,12 @@
                        ['label' => $purchaseOrder->po_number],
                    ]">
         <x-slot:actions>
+            <a href="{{ route('purchase-orders.document', $purchaseOrder) }}" class="btn btn-ghost btn-sm"
+               target="_blank" rel="noopener">
+                <x-icon name="print" :size="16" />
+                {{ __('Print document') }}
+            </a>
+
             @if ($purchaseOrder->status->isEditable() && auth()->user()->hasAbility('feed.purchase'))
                 <a href="{{ route('purchase-orders.edit', $purchaseOrder) }}" class="btn btn-ghost btn-sm">
                     {{ __('Edit order') }}
@@ -151,7 +157,7 @@
                                         <td class="num"><x-money :amount="$receipt->total_amount" /></td>
                                         <td class="row-actions">
                                             <x-actions-menu :label="__('Actions for receipt :number', ['number' => $receipt->receipt_number])">
-                                                    <x-menu-link :href="route('goods-receipts.show', $receipt)" icon="eye">
+                                                    <x-menu-link :href="route('goods-receipts.show', $receipt)" icon="info">
                                                         {{ __('Details') }}
                                                     </x-menu-link>
                                                 </x-actions-menu>

@@ -806,6 +806,54 @@ import { initCounters } from './counters.js';
      * the close control (a <label> is not focusable), and the drawer should
      * also shut itself after a navigation on small screens.
      */
+    /**
+     * Keep the barn select in step with the farm select.
+     *
+     * An animal form opened from a barn already has both values, but changing
+     * the farm must not leave a barn from the old farm selected. Options carry
+     * `data-farm-id`; the native select is filtered in place so the form still
+     * submits a normal `barn_id` and keeps working without JavaScript.
+     */
+    function initDependentBarnSelects() {
+        document.querySelectorAll('[data-farm-select]').forEach((farmSelect) => {
+            if (!(farmSelect instanceof HTMLSelectElement)) {
+                return;
+            }
+
+            const barnSelect = document.querySelector('[data-barn-select]');
+
+            if (!(barnSelect instanceof HTMLSelectElement)) {
+                return;
+            }
+
+            const sync = () => {
+                let firstMatch = null;
+
+                Array.from(barnSelect.options).forEach((option) => {
+                    if (option.value === '') {
+                        return;
+                    }
+
+                    const matches = option.dataset.farmId === farmSelect.value;
+
+                    option.hidden = !matches;
+                    option.disabled = !matches;
+
+                    if (matches && firstMatch === null) {
+                        firstMatch = option;
+                    }
+                });
+
+                if (!barnSelect.selectedOptions[0] || barnSelect.selectedOptions[0].disabled) {
+                    barnSelect.value = firstMatch?.value ?? '';
+                }
+            };
+
+            farmSelect.addEventListener('change', sync);
+            sync();
+        });
+    }
+
     function initDrawer() {
         const toggle = document.getElementById('app-drawer');
 
@@ -841,6 +889,48 @@ import { initCounters } from './counters.js';
                 close();
             }
         });
+    }
+
+    /**
+     * Bring the current section into view in the sidebar.
+     *
+     * Every navigation is a full document load, so the sidebar starts at its
+     * own top even when the active page sits near the bottom of a long menu.
+     * The group is already open on the server, but its rows can still be below
+     * the fold. Centre the active row in the nav viewport instead of moving
+     * the whole page, and do it again when the mobile drawer is opened.
+     */
+    function initSidebarActiveScroll() {
+        const nav = document.querySelector('[data-drawer-nav]');
+        const active = nav?.querySelector('[data-sidebar-active]');
+        const toggle = document.getElementById('app-drawer');
+
+        if (!(nav instanceof HTMLElement) || !(active instanceof HTMLElement)) {
+            return;
+        }
+
+        const centre = () => {
+            if (nav.clientHeight === 0 || nav.scrollHeight <= nav.clientHeight) {
+                return;
+            }
+
+            const navTop = nav.getBoundingClientRect().top;
+            const activeTop = active.getBoundingClientRect().top;
+            const offset = activeTop - navTop + nav.scrollTop;
+            const target = offset - (nav.clientHeight - active.offsetHeight) / 2;
+
+            nav.scrollTop = Math.max(0, Math.min(target, nav.scrollHeight - nav.clientHeight));
+        };
+
+        window.requestAnimationFrame(centre);
+
+        if (toggle instanceof HTMLInputElement) {
+            toggle.addEventListener('change', () => {
+                if (toggle.checked) {
+                    window.requestAnimationFrame(centre);
+                }
+            });
+        }
     }
 
     /**
@@ -1457,5 +1547,7 @@ import { initCounters } from './counters.js';
     initDropdownState();
     initLineEditors();
     initDrawer();
+    initSidebarActiveScroll();
+    initDependentBarnSelects();
     initLiveFilters();
 })();

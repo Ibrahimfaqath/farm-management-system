@@ -2,18 +2,21 @@
 
 namespace App\Enums;
 
+/**
+ * The farm keeps dairy cattle only.
+ *
+ * Older data may still contain the string values `buffalo` or `goat`; they are
+ * deliberately not enum cases anymore so no new record or filter can select
+ * them. The database column stays a string for that historical compatibility.
+ */
 enum AnimalSpecies: string
 {
     case Cattle = 'cattle';
-    case Buffalo = 'buffalo';
-    case Goat = 'goat';
 
     public function label(): string
     {
         return match ($this) {
             self::Cattle => __('Cattle'),
-            self::Buffalo => __('Buffalo'),
-            self::Goat => __('Goat'),
         };
     }
 

@@ -102,7 +102,7 @@
                                 <td class="num"><x-money :amount="$record->cost ?? 0" /></td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for record :number', ['number' => $record->id])">
-                                            <x-menu-link :href="route('health-records.show', $record)" icon="eye">
+                                            <x-menu-link :href="route('health-records.show', $record)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

@@ -10,7 +10,7 @@
                    ]">
         <x-slot:actions>
             @if (auth()->user()->hasAbility('animal.manage'))
-                <a href="{{ route('animals.create') }}" class="btn btn-sm">{{ __('Add animal') }}</a>
+                <a href="{{ route('animals.create', ['barn_id' => $barn->id]) }}" class="btn btn-sm">{{ __('Add animal') }}</a>
                 <a href="{{ route('feed-consumptions.create', ['barn_id' => $barn->id]) }}" class="btn btn-sm">{{ __('Record consumption') }}</a>
                 <a href="{{ route('barns.edit', $barn) }}" class="btn btn-primary btn-sm">{{ __('Edit barn') }}</a>
             @endif
@@ -31,7 +31,7 @@
             <div class="p-4">
                 <x-empty-state :label="__('This barn is still empty')"
                               :description="__('No active animal is placed in this barn yet.')"
-                              :url="route('animals.create')" :submit-label="__('Add animal')" />
+                              :url="route('animals.create', ['barn_id' => $barn->id])" :submit-label="__('Add animal')" />
             </div>
         @else
             <div class="table-scroll">
@@ -64,7 +64,7 @@
                                 <td><x-badge :label="$animal->breeding_status->label()" :class="$animal->breeding_status->badgeClass()" /></td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for :code', ['code' => $animal->animal_code])">
-                                            <x-menu-link :href="route('animals.show', $animal)" icon="eye">
+                                            <x-menu-link :href="route('animals.show', $animal)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

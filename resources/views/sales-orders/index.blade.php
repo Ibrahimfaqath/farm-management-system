@@ -62,7 +62,7 @@
                                 <td class="num"><x-money :amount="$order->total" /></td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for order :number', ['number' => $order->so_number])">
-                                            <x-menu-link :href="route('sales-orders.show', $order)" icon="eye">
+                                            <x-menu-link :href="route('sales-orders.show', $order)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

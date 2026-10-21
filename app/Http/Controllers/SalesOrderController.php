@@ -78,6 +78,13 @@ class SalesOrderController extends Controller
         return view('sales-orders.show', ['salesOrder' => $salesOrder]);
     }
 
+    public function document(SalesOrder $salesOrder): View
+    {
+        $salesOrder->load(['customer', 'items', 'creator']);
+
+        return view('sales-orders.document', ['salesOrder' => $salesOrder]);
+    }
+
     /**
      * Turn a confirmed order into an invoice. Revenue and receivable are
      * recognised; cash is untouched until payment.

@@ -13,7 +13,7 @@
         <x-panel :title="__('Barn details')">
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-form.select name="farm_id" :label="__('Farm')" :options="$farms" :selected="$barn->farm_id" required />
-                <x-form.input name="code" :label="__('Barn code')" :value="$barn->code" required maxlength="20" placeholder="KAND-A" />
+                <x-form.input name="code" :label="__('Barn code')" :value="$nextCode ?? $barn->code" readonly maxlength="20" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Barn name')" :value="$barn->name" required maxlength="150" />
                 <x-form.select name="type" :label="__('Barn type')" :options="$types" :selected="$barn->type?->value" required />
                 <x-form.input name="capacity" :label="__('Capacity (head)')" type="number" min="1" :value="$barn->capacity" />

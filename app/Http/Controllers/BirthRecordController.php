@@ -14,6 +14,7 @@ use App\Models\BirthRecord;
 use App\Models\PregnancyCheck;
 use App\Services\AuditLogger;
 use App\Services\BreedingService;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,7 +48,7 @@ class BirthRecordController extends Controller
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request, CodeGenerator $codes): View
     {
         $dam = $request->integer('dam_id')
             ? Animal::query()->with('breed')->findOrFail($request->integer('dam_id'))
@@ -66,24 +67,27 @@ class BirthRecordController extends Controller
             'birth' => $birth,
             'dam' => $dam ?? $check?->animal,
             'pregnancyCheck' => $check,
+            'nextCode' => $codes->next('animals', 'animal_code', 'T-', 5),
         ] + $this->formOptions());
     }
 
-    public function store(BirthRecordRequest $request, BreedingService $breeding, AuditLogger $audit): RedirectResponse
+    public function store(BirthRecordRequest $request, BreedingService $breeding, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
         $data = $request->validated();
 
-        $result = DB::transaction(function () use ($data, $request, $breeding) {
+        $result = DB::transaction(function () use ($data, $request, $breeding, $codes) {
             $calfId = null;
 
             // A live calf becomes a real animal record with genealogy links.
             if ($data['birth_type'] !== BirthType::Stillborn->value && ($data['register_calf'] ?? false)) {
+                $dam = Animal::query()->findOrFail($data['dam_id']);
+
                 $calf = Animal::create([
-                    'farm_id' => Animal::findOrFail($data['dam_id'])->farm_id,
-                    'barn_id' => Animal::findOrFail($data['dam_id'])->barn_id,
-                    'current_barn_id' => Animal::findOrFail($data['dam_id'])->barn_id,
-                    'breed_id' => Animal::findOrFail($data['dam_id'])->breed_id,
-                    'animal_code' => $data['calf_code'],
+                    'farm_id' => $dam->farm_id,
+                    'barn_id' => $dam->barn_id,
+                    'current_barn_id' => $dam->barn_id,
+                    'breed_id' => $dam->breed_id,
+                    'animal_code' => $codes->next('animals', 'animal_code', 'T-', 5),
                     'name' => $data['calf_name'] ?? null,
                     'status' => AnimalStatus::Active,
                     'production_status' => ProductionStatus::Calf,

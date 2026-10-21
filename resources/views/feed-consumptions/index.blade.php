@@ -80,7 +80,7 @@
                                 <td class="text-base-content/65">{{ $consumption->creator?->name ?? '—' }}</td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for consumption :number', ['number' => $consumption->id])">
-                                            <x-menu-link :href="route('feed-consumptions.show', $consumption)" icon="eye">
+                                            <x-menu-link :href="route('feed-consumptions.show', $consumption)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

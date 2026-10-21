@@ -10,7 +10,7 @@
     real `href` so the entry can be opened in a new tab and read by assistive
     technology.
 
-    @example <x-menu-link :href="route('animals.show', $animal)" icon="eye">{{ __('Details') }}</x-menu-link>
+    @example <x-menu-link :href="route('animals.show', $animal)" icon="info">{{ __('Details') }}</x-menu-link>
 --}}
 
 <li>

@@ -26,7 +26,7 @@ class AuthenticatedSessionController extends Controller
         $audit->log(
             action: 'auth.login',
             subject: $request->user(),
-            description: "{$request->user()->name} signed in",
+            description: "{$request->user()->name} masuk",
         );
 
         return redirect()->intended(route('dashboard'));
@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
 
         if ($user) {
-            $audit->log('auth.logout', $user, "{$user->name} signed out");
+            $audit->log('auth.logout', $user, "{$user->name} keluar");
         }
 
         Auth::guard('web')->logout();

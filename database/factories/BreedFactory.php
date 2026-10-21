@@ -15,9 +15,9 @@ class BreedFactory extends Factory
     {
         return [
             'code' => 'BRD-'.fake()->unique()->numerify('##'),
-            'name' => fake()->randomElement(['Holstein Friesian', 'Jersey', 'Limosin', 'Brahman', 'Madura']),
+            'name' => fake()->randomElement(['Holstein Friesian', 'Jersey', 'Brown Swiss', 'Ayrshire', 'Sahiwal']),
             'species' => 'cattle',
-            'origin' => fake()->randomElement(['Denmark', 'UK', 'France', 'Australia', 'Indonesia']),
+            'origin' => fake()->randomElement(['Denmark', 'UK', 'Switzerland', 'Scotland', 'Pakistan']),
             'average_milk_liters' => fake()->randomFloat(1, 8, 25),
             'average_lactation_days' => fake()->numberBetween(240, 330),
             'adult_weight_kg' => fake()->randomFloat(1, 350, 650),

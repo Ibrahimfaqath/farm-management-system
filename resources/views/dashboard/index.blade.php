@@ -290,6 +290,12 @@
 
             @if ($showAudit)
                 <x-panel :title="__('Recent activity')" padding="p-0">
+                    <x-slot:actions>
+                        <a href="{{ route('activity-logs.index') }}" class="btn btn-ghost btn-sm">
+                            {{ __('View all activity') }}
+                        </a>
+                    </x-slot:actions>
+
                     @if ($recentActivity->isEmpty())
                         <p class="p-4 text-sm text-base-content/55">{{ __('No activity recorded yet.') }}</p>
                     @else
@@ -298,7 +304,15 @@
                                 <li class="px-4 py-2">
                                     <p class="text-xs">{{ $log->description }}</p>
                                     <p class="text-meta text-base-content/45">
-                                        {{ $log->user_name ?? __('System') }} · {{ $log->created_at->translatedFormat('d M H:i') }}
+                                        @if ($log->user_id)
+                                            <a href="{{ route('activity-logs.index', ['user_id' => $log->user_id]) }}"
+                                               class="link link-hover">
+                                                {{ $log->user_name ?? __('System') }}
+                                            </a>
+                                        @else
+                                            {{ $log->user_name ?? __('System') }}
+                                        @endif
+                                        · {{ $log->created_at->translatedFormat('d M H:i') }}
                                     </p>
                                 </li>
                             @endforeach

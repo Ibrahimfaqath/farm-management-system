@@ -31,7 +31,7 @@ class BreedingService
         $this->audit->log(
             'breeding.mating_recorded',
             $animal,
-            "Peminahan tercatat untuk {$animal->animal_code}; menunggu pemeriksaan kehamilan",
+            "Perkawinan tercatat untuk {$animal->animal_code}; menunggu pemeriksaan kehamilan",
             $animal->animal_code,
             ['breeding_record_id' => $breedingRecordId],
         );

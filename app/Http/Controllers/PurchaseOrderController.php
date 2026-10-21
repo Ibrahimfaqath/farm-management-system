@@ -100,6 +100,13 @@ class PurchaseOrderController extends Controller
         ]);
     }
 
+    public function document(PurchaseOrder $purchaseOrder): View
+    {
+        $purchaseOrder->load(['supplier', 'creator', 'approver', 'items.feedItem']);
+
+        return view('purchase-orders.document', ['purchaseOrder' => $purchaseOrder]);
+    }
+
     public function edit(PurchaseOrder $purchaseOrder): View
     {
         abort_if($purchaseOrder->status !== PurchaseOrderStatus::Draft, 403, 'Pesanan yang sudah disetujui tidak dapat diubah.');

@@ -36,10 +36,10 @@
                  :description="__('When ticked, the system creates the calf as a new animal and links it to both parents.')">
             <x-form.checkbox name="register_calf" value="1" :label="__('Register the calf as a new animal')" />
             <div class="mt-3 grid gap-4 sm:grid-cols-2">
-                <x-form.input name="calf_code" :label="__('Calf code')" placeholder="For example: T-00031" />
+                <x-form.input name="calf_code" :label="__('Calf code')" :value="$nextCode" readonly
+                                  :hint="__('Generated automatically when the calf is registered.')" />
                 <x-form.input name="calf_name" :label="__('Calf name (optional)')" />
             </div>
-            @error('calf_code')<p class="mt-1 text-xs text-tone-error">{{ $message }}</p>@enderror
             @error('calf_sex')<p class="mt-1 text-xs text-tone-error">{{ $message }}</p>@enderror
             @error('register_calf')<p class="mt-1 text-xs text-tone-error">{{ $message }}</p>@enderror
         </x-panel>

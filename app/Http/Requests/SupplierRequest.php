@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class SupplierRequest extends FormRequest
 {
@@ -15,10 +14,7 @@ class SupplierRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $supplierId = $this->route('supplier')?->getKey();
-
         return [
-            'code' => ['required', 'string', 'max:30', Rule::unique('suppliers', 'code')->ignore($supplierId)],
             'name' => ['required', 'string', 'max:150'],
             'contact_person' => ['nullable', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -31,11 +27,5 @@ class SupplierRequest extends FormRequest
             'is_active' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
-    }
-
-    /** @return array<string, string> */
-    public function messages(): array
-    {
-        return ['code.unique' => 'Kode pemasok sudah digunakan.'];
     }
 }

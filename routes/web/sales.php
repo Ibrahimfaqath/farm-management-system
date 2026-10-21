@@ -10,6 +10,7 @@ Route::middleware('module:sales')->group(function (): void {
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('invoices/{invoice}/document', [InvoiceController::class, 'document'])->name('invoices.document');
     Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
     Route::get('sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders.index');
 
@@ -31,6 +32,7 @@ Route::middleware('module:sales')->group(function (): void {
     Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
 
     Route::get('sales-orders/{sales_order}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
+    Route::get('sales-orders/{sales_order}/document', [SalesOrderController::class, 'document'])->name('sales-orders.document');
 
     Route::middleware('ability:payment.record')->group(function (): void {
         Route::get('payments/create', [PaymentController::class, 'create'])->name('payments.create');

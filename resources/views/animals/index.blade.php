@@ -111,7 +111,7 @@
                                     <x-actions-menu :label="__('Actions for :code', ['code' => $animal->animal_code])">
                                         <li>
                                             <a href="{{ route('animals.show', $animal) }}">
-                                                <x-icon name="eye" :size="15" />
+                                                <x-icon name="info" :size="15" />
                                                 {{ __('Details') }}
                                             </a>
                                         </li>

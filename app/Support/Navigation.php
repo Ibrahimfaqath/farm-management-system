@@ -145,6 +145,31 @@ class Navigation
     }
 
     /**
+     * Whether a navigation item owns the current request.
+     *
+     * A resource entry points at its index route, but the same section is
+     * still "current" while the visitor is on a create, edit, show or nested
+     * page. Matching the resource prefix keeps the sidebar marker on the
+     * section instead of making it disappear as soon as a form opens.
+     *
+     * @param  array{route: string}  $item
+     */
+    public static function itemIsActive(array $item): bool
+    {
+        if (request()->routeIs($item['route'])) {
+            return true;
+        }
+
+        if (! str_ends_with($item['route'], '.index')) {
+            return false;
+        }
+
+        $resource = substr($item['route'], 0, -strlen('.index'));
+
+        return request()->routeIs($resource.'.*');
+    }
+
+    /**
      * @return list<array{key: string, label: string, icon: string, items: list<array{label: string, route: string, icon: string}>}>
      */
     public static function forUser(mixed $user): array

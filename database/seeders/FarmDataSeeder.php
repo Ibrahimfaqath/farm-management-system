@@ -57,9 +57,9 @@ class FarmDataSeeder extends Seeder
         $definitions = [
             ['BRD-HRF', 'Holstein Friesian', 'cattle', 'Denmark', 22.5, 305, 600],
             ['BRD-JRS', 'Jersey', 'cattle', 'UK', 14.0, 290, 420],
-            ['BRD-LIM', 'Limosin', 'cattle', 'France', 11.5, 280, 650],
-            ['BRD-BRA', 'Brahman', 'cattle', 'Australia', 8.0, 250, 550],
-            ['BRD-MAD', 'Madura', 'cattle', 'Indonesia', 5.5, 220, 350],
+            ['BRD-BSW', 'Brown Swiss', 'cattle', 'Switzerland', 16.0, 300, 600],
+            ['BRD-AYR', 'Ayrshire', 'cattle', 'Scotland', 15.0, 295, 500],
+            ['BRD-SAH', 'Sahiwal', 'cattle', 'Pakistan', 8.0, 280, 400],
         ];
 
         $breeds = [];
@@ -193,7 +193,7 @@ class FarmDataSeeder extends Seeder
         foreach (range(1, 10) as $i) {
             $animal = $create([
                 'animal_code' => sprintf('LF-B%03d', $i),
-                'breed_id' => $i % 4 === 0 ? $breeds['BRD-LIM']->id : $breeds['BRD-HRF']->id,
+                'breed_id' => $i % 4 === 0 ? $breeds['BRD-BSW']->id : $breeds['BRD-HRF']->id,
                 'barn_id' => $barns['KAND-B']->id,
                 'current_barn_id' => $barns['KAND-B']->id,
                 'sex' => Sex::Female,
@@ -236,7 +236,7 @@ class FarmDataSeeder extends Seeder
         foreach (range(1, 8) as $i) {
             $create([
                 'animal_code' => sprintf('HF-%03d', $i),
-                'breed_id' => $i % 2 === 0 ? $breeds['BRD-LIM']->id : $breeds['BRD-HRF']->id,
+                'breed_id' => $i % 2 === 0 ? $breeds['BRD-BSW']->id : $breeds['BRD-HRF']->id,
                 'barn_id' => $barns['KAND-B']->id,
                 'current_barn_id' => $barns['KAND-B']->id,
                 'sex' => Sex::Female,
@@ -267,7 +267,7 @@ class FarmDataSeeder extends Seeder
         foreach (range(1, 2) as $i) {
             $create([
                 'animal_code' => sprintf('BL-%03d', $i),
-                'breed_id' => $i === 1 ? $breeds['BRD-HRF']->id : $breeds['BRD-LIM']->id,
+                'breed_id' => $i === 1 ? $breeds['BRD-HRF']->id : $breeds['BRD-BSW']->id,
                 'barn_id' => $barns['KAND-B']->id,
                 'current_barn_id' => $barns['KAND-B']->id,
                 'sex' => Sex::Male,
@@ -299,7 +299,7 @@ class FarmDataSeeder extends Seeder
 
         $create([
             'animal_code' => 'LF-C002',
-            'breed_id' => $breeds['BRD-MAD']->id,
+            'breed_id' => $breeds['BRD-SAH']->id,
             'barn_id' => $barns['KAND-A']->id,
             'current_barn_id' => $barns['KAND-A']->id,
             'sex' => Sex::Female,

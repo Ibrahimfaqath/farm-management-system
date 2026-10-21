@@ -41,7 +41,22 @@ class ActivityLog extends Model
 
     public function humanAction(): string
     {
-        return ucfirst(str_replace(['.', '_'], ' ', $this->action));
+        return static::labelFor($this->action);
+    }
+
+    /**
+     * Turn a stored action key into a label the interface can show.
+     *
+     * The English label doubles as the translation key, so an action added
+     * without a dictionary entry still renders as readable text rather than a
+     * blank badge.
+     */
+    public static function labelFor(string $action): string
+    {
+        $label = ucfirst(str_replace(['.', '_'], ' ', $action));
+        $translated = __($label);
+
+        return $translated === $label ? $label : $translated;
     }
 
     public function scopeForSubject(Builder $query, Model $subject): Builder

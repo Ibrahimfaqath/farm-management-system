@@ -12,7 +12,7 @@
 
         <x-panel :title="__('Identity')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.input name="code" :label="__('Customer code')" :value="$customer->code" required maxlength="30" placeholder="CUS-001" />
+                <x-form.input name="code" :label="__('Customer code')" :value="$nextCode ?? $customer->code" readonly maxlength="30" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Customer name')" :value="$customer->name" required maxlength="150" />
                 <x-form.select name="type" :label="__('Customer type')" :options="$types" :selected="$customer->type" required />
                 <x-form.select name="payment_terms_days" :label="__('Payment terms')" :options="$termOptions"

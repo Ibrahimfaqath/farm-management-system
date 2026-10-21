@@ -235,12 +235,12 @@ class BreedingAndProductionTest extends TestCase
             'birth_type' => 'normal',
             'birth_weight_kg' => 38,
             'register_calf' => 1,
-            'calf_code' => 'CF-NEW-1',
             'calf_sex' => 'female',
         ])->assertSessionHasNoErrors();
 
-        $calf = Animal::where('animal_code', 'CF-NEW-1')->firstOrFail();
+        $calf = Animal::where('dam_id', $dam->id)->where('production_status', ProductionStatus::Calf)->firstOrFail();
 
+        $this->assertMatchesRegularExpression('/^T-\d{5}$/', $calf->animal_code);
         $this->assertSame($dam->id, $calf->dam_id);
         $this->assertSame($sire->id, $calf->sire_id);
         $this->assertTrue($calf->is($dam->calves->first()));
@@ -258,7 +258,6 @@ class BreedingAndProductionTest extends TestCase
             'birth_date' => now()->toDateString(),
             'birth_type' => 'stillborn',
             'register_calf' => 1,
-            'calf_code' => 'CF-DEAD-1',
             'calf_sex' => 'male',
         ])->assertSessionHasErrors('register_calf');
     }

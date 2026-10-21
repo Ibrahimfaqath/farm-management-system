@@ -14,13 +14,7 @@
 
     <x-panel padding="p-0">
         <x-filter-bar :search-placeholder="__('Search by name or code…')" :reset="route('breeds.index')"
-                      columns="sm:grid-cols-2 lg:grid-cols-3">
-            <x-filter-select name="species"
-                :options="$speciesOptions"
-                :selected="$filters['species'] ?? ''"
-                :placeholder="__('All species') "
-                :label="__('Filter by species') " />
-        </x-filter-bar>
+                      columns="sm:grid-cols-2" />
 
         @if ($breeds->isEmpty())
             <div class="p-4">
@@ -35,7 +29,6 @@
                         <tr>
                             <th>{{ __('Code') }}</th>
                             <th>{{ __('Name') }}</th>
-                            <th>{{ __('Species') }}</th>
                             <th>{{ __('Origin') }}</th>
                             <th class="num">{{ __('Avg. milk') }}</th>
                             <th class="num">{{ __('Lactation') }}</th>
@@ -54,7 +47,6 @@
                                         <x-badge :label="__('Inactive')" class="badge-ghost" />
                                     @endunless
                                 </td>
-                                <td>{{ $breed->species }}</td>
                                 <td class="text-base-content/70">{{ $breed->origin ?? '—' }}</td>
                                 <td class="num">{{ $breed->average_milk_liters ? $breed->average_milk_liters.' L/hari' : '—' }}</td>
                                 <td class="num">{{ $breed->average_lactation_days ? $breed->average_lactation_days.' '.__('days') : '—' }}</td>
@@ -62,12 +54,12 @@
                                 <td class="num">{{ $breed->animals_count }}</td>
                                 <td class="row-actions">
                                     @if (auth()->user()->hasAbility('animal.manage'))
-                                            <x-actions-menu :label="__('Actions for :name', ['name' => $breed->name])">
-                                                <x-menu-link :href="route('breeds.edit', $breed)" icon="edit">
-                                                    {{ __('Edit') }}
-                                                </x-menu-link>
-                                            </x-actions-menu>
-                                        @endif
+                                        <x-actions-menu :label="__('Actions for :name', ['name' => $breed->name])">
+                                            <x-menu-link :href="route('breeds.edit', $breed)" icon="edit">
+                                                {{ __('Edit') }}
+                                            </x-menu-link>
+                                        </x-actions-menu>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

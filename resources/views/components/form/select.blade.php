@@ -2,6 +2,7 @@
     'name',
     'label' => null,
     'options' => [],
+    'optionAttributes' => [],
     'selected' => null,
     'placeholder' => '— Pilih —',
     'required' => false,
@@ -39,7 +40,8 @@
             <option value="">{{ $placeholder }}</option>
         @endif
         @foreach ($options as $optionValue => $optionLabel)
-            <option value="{{ $optionValue }}" @selected((string) $current === (string) $optionValue)>{{ $optionLabel }}</option>
+            <option value="{{ $optionValue }}" @selected((string) $current === (string) $optionValue)
+                    @foreach (($optionAttributes[$optionValue] ?? []) as $attribute => $attributeValue) {{ $attribute }}="{{ $attributeValue }}" @endforeach>{{ $optionLabel }}</option>
         @endforeach
     </select>
 

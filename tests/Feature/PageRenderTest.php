@@ -43,6 +43,7 @@ class PageRenderTest extends TestCase
             'supplier' => Supplier::value('id'),
             'purchase_order' => PurchaseOrder::value('id'),
             'goods_receipt' => GoodsReceipt::value('id'),
+            'receipt' => GoodsReceipt::value('id'),
             'feed_consumption' => FeedConsumption::value('id'),
             'customer' => Customer::value('id'),
             'sales_order' => SalesOrder::value('id'),

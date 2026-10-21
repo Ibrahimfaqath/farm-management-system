@@ -75,7 +75,7 @@
                                 <td class="num"><x-money :amount="$receipt->total_amount" /></td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for receipt :number', ['number' => $receipt->receipt_number])">
-                                            <x-menu-link :href="route('goods-receipts.show', $receipt)" icon="eye">
+                                            <x-menu-link :href="route('goods-receipts.show', $receipt)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

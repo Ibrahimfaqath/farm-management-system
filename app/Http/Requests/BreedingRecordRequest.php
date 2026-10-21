@@ -39,7 +39,7 @@ class BreedingRecordRequest extends FormRequest
         return [
             'animal_id' => 'ternak betina',
             'record_type' => 'jenis catatan',
-            'breeding_date' => 'tanggal peminahan',
+            'breeding_date' => 'tanggal perkawinan',
             'bull_id' => 'pejantan',
             'expected_next_heat_date' => 'perkiraan birahi berikutnya',
         ];
@@ -51,7 +51,7 @@ class BreedingRecordRequest extends FormRequest
             $animal = Animal::query()->find($this->input('animal_id'));
 
             if ($animal?->sex !== Sex::Female) {
-                $validator->errors()->add('animal_id', 'Peminahan hanya dapat dicatat untuk ternak betina.');
+                $validator->errors()->add('animal_id', 'Perkawinan hanya dapat dicatat untuk ternak betina.');
             }
 
             $bullId = $this->input('bull_id');
@@ -75,7 +75,7 @@ class BreedingRecordRequest extends FormRequest
             ], true);
 
             if ($isMating && ! $this->filled('bull_id') && ! $this->filled('semen_code')) {
-                $validator->errors()->add('bull_id', 'Isi pejantan atau kode semen untuk peminahan.');
+                $validator->errors()->add('bull_id', 'Isi pejantan atau kode semen untuk perkawinan.');
             }
 
             if ($recordType === BreedingRecordType::HeatObserved->value && ! $this->filled('heat_signs')) {

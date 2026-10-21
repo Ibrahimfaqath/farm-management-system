@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FarmRequest;
 use App\Models\Farm;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FarmController extends Controller
 {
@@ -25,14 +27,19 @@ class FarmController extends Controller
         return view('farms.index', ['farms' => $farms]);
     }
 
-    public function create(): View
+    public function create(CodeGenerator $codes): View
     {
-        return view('farms.create', ['farm' => new Farm]);
+        return view('farms.create', [
+            'farm' => new Farm,
+            'nextCode' => $codes->next('farms', 'code', 'FRM-'),
+        ]);
     }
 
-    public function store(FarmRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(FarmRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $farm = Farm::create($request->validated());
+        $farm = DB::transaction(fn () => Farm::create($request->validated() + [
+            'code' => $codes->next('farms', 'code', 'FRM-'),
+        ]));
 
         $audit->log('farm.created', $farm, "Peternakan {$farm->name} dibuat", $farm->code);
 

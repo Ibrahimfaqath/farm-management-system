@@ -7,10 +7,12 @@ use App\Enums\UnitOfMeasure;
 use App\Http\Requests\FeedItemRequest;
 use App\Models\FeedItem;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use App\Services\InventoryService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FeedItemController extends Controller
 {
@@ -40,18 +42,23 @@ class FeedItemController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(CodeGenerator $codes): View
     {
-        return view('feed-items.create', ['feedItem' => new FeedItem([
-            'category' => FeedCategory::Concentrate,
-            'unit' => UnitOfMeasure::Kilogram,
-            'is_active' => true,
-        ])] + $this->formOptions());
+        return view('feed-items.create', [
+            'feedItem' => new FeedItem([
+                'category' => FeedCategory::Concentrate,
+                'unit' => UnitOfMeasure::Kilogram,
+                'is_active' => true,
+            ]),
+            'nextCode' => $codes->next('feed_items', 'code', 'FD-'),
+        ] + $this->formOptions());
     }
 
-    public function store(FeedItemRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(FeedItemRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $feedItem = FeedItem::create($request->validated());
+        $feedItem = DB::transaction(fn () => FeedItem::create($request->validated() + [
+            'code' => $codes->next('feed_items', 'code', 'FD-'),
+        ]));
 
         $audit->log('feed_item.created', $feedItem, "Item pakan {$feedItem->name} ditambahkan", $feedItem->code);
 

@@ -86,7 +86,7 @@
                                 <td class="text-base-content/65">{{ $birth->colostrum_intake ?? '—' }}</td>
                                 <td class="row-actions">
                                     <x-actions-menu :label="__('Actions for :number', ['number' => $birth->birth_number ?? $birth->id])">
-                                            <x-menu-link :href="route('birth-records.show', $birth)" icon="eye">
+                                            <x-menu-link :href="route('birth-records.show', $birth)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

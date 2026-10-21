@@ -7,9 +7,11 @@ use App\Http\Requests\BarnRequest;
 use App\Models\Barn;
 use App\Models\Farm;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BarnController extends Controller
 {
@@ -34,17 +36,22 @@ class BarnController extends Controller
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request, CodeGenerator $codes): View
     {
         $barn = new Barn(['type' => BarnType::Dairy, 'is_active' => true]);
         $barn->farm_id = $request->integer('farm_id') ?: Farm::query()->value('id');
 
-        return view('barns.create', ['barn' => $barn] + $this->formOptions());
+        return view('barns.create', [
+            'barn' => $barn,
+            'nextCode' => $codes->next('barns', 'code', 'KAND-'),
+        ] + $this->formOptions());
     }
 
-    public function store(BarnRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(BarnRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $barn = Barn::create($request->validated());
+        $barn = DB::transaction(fn () => Barn::create($request->validated() + [
+            'code' => $codes->next('barns', 'code', 'KAND-'),
+        ]));
 
         $audit->log('barn.created', $barn, "Kandang {$barn->name} dibuat", $barn->code);
 

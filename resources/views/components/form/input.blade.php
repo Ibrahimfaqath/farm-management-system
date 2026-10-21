@@ -29,7 +29,7 @@
     // existing call sites keep working.
     $utilityClasses = $attributes->get('class');
     $controlAttributes = $attributes->except(['class'])
-        ->merge(['class' => 'input w-full bg-base-100 text-sm'])
+        ->merge(['class' => 'input w-full bg-base-100 text-sm readonly:bg-base-200 readonly:text-base-content/70 readonly:cursor-default'])
         ->class([$utilityClasses]);
 @endphp
 

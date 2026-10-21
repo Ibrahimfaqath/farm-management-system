@@ -9,15 +9,21 @@
                        ['label' => $salesOrder->so_number],
                    ]">
         <x-slot:actions>
+            <a href="{{ route('sales-orders.document', $salesOrder) }}" class="btn btn-ghost btn-sm"
+               target="_blank" rel="noopener">
+                <x-icon name="print" :size="16" />
+                {{ __('Print document') }}
+            </a>
+
             @if (! $salesOrder->invoice && $salesOrder->status->value !== 'cancelled' && auth()->user()->hasAbility('invoice.manage'))
                 <form method="POST" action="{{ route('sales-orders.invoice', $salesOrder) }}">
                     @csrf
-                    <x-form.submit>{{ __('Create invoice') }}</x-form.submit>
+                    <x-form.submit>{{ __('Record invoice') }}</x-form.submit>
                 </form>
             @endif
             @if ($salesOrder->invoice && $salesOrder->invoice->balance() > 0 && auth()->user()->hasAbility('payment.record'))
                 <a href="{{ route('payments.create', ['invoice_id' => $salesOrder->invoice->id]) }}" class="btn btn-primary btn-sm">
-                    {{ __('Record payment') }}
+                    {{ __('Record invoice payment') }}
                 </a>
             @endif
         </x-slot:actions>

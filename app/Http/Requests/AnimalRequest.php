@@ -26,10 +26,6 @@ class AnimalRequest extends FormRequest
         $animalId = $this->route('animal')?->getKey();
 
         return [
-            'animal_code' => [
-                'required', 'string', 'max:30',
-                Rule::unique('animals', 'animal_code')->ignore($animalId),
-            ],
             'name' => ['nullable', 'string', 'max:100'],
             'farm_id' => ['required', 'exists:farms,id'],
             'breed_id' => ['required', 'exists:breeds,id'],
@@ -53,7 +49,6 @@ class AnimalRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'animal_code' => 'kode hewan',
             'farm_id' => 'peternakan',
             'breed_id' => 'ras',
             'barn_id' => 'kandang',
@@ -71,7 +66,6 @@ class AnimalRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'animal_code.unique' => 'Kode hewan sudah digunakan.',
             'dam_id.not_in' => 'Seekor hewan tidak dapat menjadi induknya sendiri.',
             'sire_id.not_in' => 'Seekor hewan tidak dapat menjadi induknya sendiri.',
         ];
@@ -111,7 +105,7 @@ class AnimalRequest extends FormRequest
             }
 
             if ($breeding !== BreedingStatus::NotApplicable->value) {
-                $validator->errors()->add('breeding_status', 'Ternak jantan tidak memiliki status peminahan.');
+                $validator->errors()->add('breeding_status', 'Ternak jantan tidak memiliki status perkawinan.');
             }
 
             return;

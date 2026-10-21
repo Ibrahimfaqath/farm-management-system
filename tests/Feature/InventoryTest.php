@@ -154,6 +154,20 @@ class InventoryTest extends TestCase
         $this->assertSame(0.0, $order->totalOutstanding());
     }
 
+    public function test_feed_consumption_form_shows_automatic_fifo_without_a_batch_dropdown(): void
+    {
+        $owner = $this->owner();
+
+        $html = $this->actingAs($owner)
+            ->get(route('feed-consumptions.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString(__('Automatic FIFO'), $html);
+        $this->assertStringNotContainsString('name="items[0][inventory_batch_id]"', $html);
+        $this->assertStringNotContainsString('data-line-batch', $html);
+    }
+
     public function test_consumption_decreases_stock_and_is_traceable(): void
     {
         $inventory = app(InventoryService::class);

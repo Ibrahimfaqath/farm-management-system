@@ -47,7 +47,7 @@ class HerdHistorySeeder extends Seeder
             $this->birthHistory($lactating, $bulls, $calves, $breeding, $manager);
         });
 
-        $this->command?->info('Rekam kesehatan, vaksinasi, pengobatan, peminahan, pemeriksaan kehamilan, dan kelahiran dibuat.');
+        $this->command?->info('Rekam kesehatan, vaksinasi, pengobatan, perkawinan, pemeriksaan kehamilan, dan kelahiran dibuat.');
     }
 
     private function healthRecords($lactating, $heifers, $calves, User $vet): void

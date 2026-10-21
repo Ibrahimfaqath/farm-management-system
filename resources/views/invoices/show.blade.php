@@ -9,9 +9,15 @@
                        ['label' => $invoice->invoice_number],
                    ]">
         <x-slot:actions>
+            <a href="{{ route('invoices.document', $invoice) }}" class="btn btn-ghost btn-sm"
+               target="_blank" rel="noopener">
+                <x-icon name="print" :size="16" />
+                {{ __('Print document') }}
+            </a>
+
             @if ($balance > 0 && auth()->user()->hasAbility('payment.record'))
                 <a href="{{ route('payments.create', ['invoice_id' => $invoice->id]) }}" class="btn btn-primary btn-sm">
-                    {{ __('Record payment') }}</a>
+                    {{ __('Record invoice payment') }}</a>
             @endif
 
             @if ($invoice->payments->isEmpty() && $invoice->status->value !== 'cancelled' && auth()->user()->hasAbility('sales.manage'))

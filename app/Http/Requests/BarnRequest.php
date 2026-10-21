@@ -16,12 +16,8 @@ class BarnRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $barn = $this->route('barn');
-        $barnId = $barn?->getKey();
-
         return [
             'farm_id' => ['required', 'exists:farms,id'],
-            'code' => ['required', 'string', 'max:20', Rule::unique('barns', 'code')->ignore($barnId)],
             'name' => ['required', 'string', 'max:150'],
             'type' => ['required', Rule::enum(BarnType::class)],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:5000'],
@@ -36,16 +32,8 @@ class BarnRequest extends FormRequest
     {
         return [
             'farm_id' => 'peternakan',
-            'code' => 'kode kandang',
             'capacity' => 'kapasitas',
             'area_m2' => 'luas kandang',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'code.unique' => 'Kode kandang sudah dipakai di peternakan ini.',
         ];
     }
 }

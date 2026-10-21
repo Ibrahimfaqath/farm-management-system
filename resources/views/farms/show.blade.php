@@ -11,7 +11,7 @@
         <x-slot:actions>
             @if (auth()->user()->hasAbility('animal.manage'))
                 <a href="{{ route('barns.create', ['farm_id' => $farm->id]) }}" class="btn btn-sm">{{ __('Add barn') }}</a>
-                <a href="{{ route('animals.create') }}" class="btn btn-sm">{{ __('Add animal') }}</a>
+                <a href="{{ route('animals.create', ['farm_id' => $farm->id]) }}" class="btn btn-sm">{{ __('Add animal') }}</a>
             @endif
             @if (auth()->user()->hasAbility('settings.manage'))
                 <a href="{{ route('farms.edit', $farm) }}" class="btn btn-primary btn-sm">{{ __('Edit farm') }}</a>

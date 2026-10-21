@@ -12,9 +12,8 @@
 
         <x-panel :title="__('Breed details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.input name="code" :label="__('Breed code')" :value="$breed->code" required maxlength="20" placeholder="HRF-01" />
+                <x-form.input name="code" :label="__('Breed code')" :value="$nextCode ?? $breed->code" readonly maxlength="20" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Breed name')" :value="$breed->name" required maxlength="150" />
-                <x-form.select name="species" :label="__('Species')" :options="$speciesOptions" :selected="$breed->species" required />
                 <x-form.input name="origin" :label="__('Origin')" :value="$breed->origin" />
                 <x-form.input name="average_milk_liters" :label="__('Average milk (L/day)')" type="number" step="0.1" min="0"
                               :value="$breed->average_milk_liters" />
@@ -23,6 +22,7 @@
                 <x-form.input name="adult_weight_kg" :label="__('Adult weight (kg)')" type="number" step="0.1" min="0"
                               :value="$breed->adult_weight_kg" />
             </div>
+            <p class="mt-4 text-meta text-base-content/55">{{ __('All breeds are dairy cattle.') }}</p>
             <div class="mt-4">
                 <x-form.checkbox name="is_active" :label="__('Breed is in use')" :checked="$breed->is_active ?? true" />
             </div>

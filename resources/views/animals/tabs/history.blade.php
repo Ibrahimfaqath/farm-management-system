@@ -1,6 +1,7 @@
 <x-panel :title="__('Activity trail')" :description="__('Important changes to this animal’s record.')" padding="p-0">
     @php
         $logs = \App\Models\ActivityLog::forSubject($animal)->latest()->limit(25)->get();
+        $canViewTrail = auth()->user()->canAccessModule('reports');
     @endphp
 
     @if ($logs->isEmpty())
@@ -13,10 +14,25 @@
                     <div class="min-w-0 flex-1">
                         <p class="text-sm">{{ $log->description }}</p>
                         <p class="text-meta mt-0.5 text-base-content/50">
-                            {{ $log->user_name ?? __('System') }} · {{ $log->created_at->translatedFormat('d M Y H:i') }}
+                            @if ($canViewTrail && $log->user_id)
+                                <a href="{{ route('activity-logs.index', ['user_id' => $log->user_id]) }}"
+                                   class="link link-hover">
+                                    {{ $log->user_name ?? __('System') }}
+                                </a>
+                            @else
+                                {{ $log->user_name ?? __('System') }}
+                            @endif
+                            · {{ $log->created_at->translatedFormat('d M Y H:i') }}
                         </p>
                     </div>
-                    <x-badge :label="$log->humanAction()" class="badge-ghost badge-sm" />
+                    @if ($canViewTrail)
+                        <a href="{{ route('activity-logs.index', ['action' => $log->action]) }}"
+                           title="{{ __('Show only this activity type') }}">
+                            <x-badge :label="$log->humanAction()" class="badge-ghost badge-sm" />
+                        </a>
+                    @else
+                        <x-badge :label="$log->humanAction()" class="badge-ghost badge-sm" />
+                    @endif
                 </li>
             @endforeach
         </ul>

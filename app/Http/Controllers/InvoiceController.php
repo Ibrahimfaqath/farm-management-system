@@ -51,6 +51,13 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function document(Invoice $invoice): View
+    {
+        $invoice->load(['customer', 'salesOrder.items', 'creator']);
+
+        return view('invoices.document', ['invoice' => $invoice]);
+    }
+
     public function cancel(Invoice $invoice, AuditLogger $audit): RedirectResponse
     {
         abort_if($invoice->payments()->exists(), 403, 'Faktur yang sudah menerima pembayaran tidak dapat dibatalkan.');

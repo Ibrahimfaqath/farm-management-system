@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\BarnController;
-use App\Http\Controllers\BreedController;
 use App\Models\Farm;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -147,7 +146,6 @@ class FilterSelectTest extends TestCase
         $expected = [
             [BarnController::class, 'barns.index', ['type' => 'dairy'], 'Kandang Laktasi'],
             [BarnController::class, 'barns.index', ['farm_id' => Farm::value('id')], null],
-            [BreedController::class, 'breeds.index', ['species' => 'cattle'], 'Sapi'],
         ];
 
         foreach ($expected as [$controller, $route, $query, $label]) {

@@ -46,11 +46,8 @@
                                 </select>
                             </td>
                             <td class="fc-stock text-sm tabular-nums text-base-content/60">—</td>
-                            <td>
-                                <select name="items[0][inventory_batch_id]" data-line-batch
-                                        class="select select-sm w-full bg-base-100" aria-label="{{ __('Batch') }}">
-                                    <option value="">{{ __('Automatic FIFO') }}</option>
-                                </select>
+                            <td class="text-sm text-base-content/60">
+                                {{ __('Automatic FIFO') }}
                             </td>
                             <td>
                                 <input name="items[0][quantity]" type="number" step="0.01" min="0.01" required
@@ -112,11 +109,8 @@
                 </select>
             </td>
             <td class="fc-stock text-sm tabular-nums text-base-content/60">—</td>
-            <td>
-                <select name="items[__INDEX__][inventory_batch_id]" data-line-batch
-                        class="select select-sm w-full bg-base-100" aria-label="{{ __('Batch') }}">
-                    <option value="">{{ __('Automatic FIFO') }}</option>
-                </select>
+            <td class="text-sm text-base-content/60">
+                {{ __('Automatic FIFO') }}
             </td>
             <td>
                 <input name="items[__INDEX__][quantity]" type="number" step="0.01" min="0.01" required
@@ -129,45 +123,28 @@
         </tr>
     </template>
 
-    <script type="application/json" id="batches-data">{!! json_encode($batchesByItem) !!}</script>
 @endsection
 
 @push('scripts')
     <script>
         (function () {
-            var batches = JSON.parse(document.getElementById('batches-data').textContent || '{}');
-            var automaticLabel = @json(__('Automatic FIFO'));
-
             function refreshLine(select) {
                 var row = select.closest('[data-line-row]');
                 var option = select.options[select.selectedIndex];
-                var stockCell = row.querySelector('.fc-stock');
-                var batchSelect = row.querySelector('[data-line-batch]');
+                var stockCell = row?.querySelector('.fc-stock');
 
-                if (stockCell) {
-                    var stock = option && option.dataset.stock ? Number(option.dataset.stock) : null;
-                    stockCell.textContent = stock === null
-                        ? '—'
-                        : stock.toLocaleString('id-ID') + ' ' + (option.dataset.unit ?? '');
-                }
-
-                if (!batchSelect) {
+                if (!stockCell) {
                     return;
                 }
 
-                batchSelect.innerHTML = '<option value="">' + automaticLabel + '</option>';
-                var available = select.value && batches[select.value] ? batches[select.value] : [];
-
-                available.forEach(function (batch) {
-                    var node = document.createElement('option');
-                    node.value = batch.id;
-                    node.textContent = batch.label;
-                    batchSelect.appendChild(node);
-                });
+                var stock = option && option.dataset.stock ? Number(option.dataset.stock) : null;
+                stockCell.textContent = stock === null
+                    ? '—'
+                    : stock.toLocaleString('id-ID') + ' ' + (option.dataset.unit ?? '');
             }
 
-            // Only touches this page's stock and batch columns; adding and
-            // removing rows is handled once in app.js.
+            // Only touches this page's stock column; adding and removing rows
+            // is handled once in app.js.
             document.addEventListener('change', function (event) {
                 var select = event.target instanceof Element
                     ? event.target.closest('#fc-items [data-line-item]')

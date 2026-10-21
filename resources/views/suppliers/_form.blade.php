@@ -12,7 +12,7 @@
 
         <x-panel :title="__('Identity')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.input name="code" :label="__('Supplier code')" :value="$supplier->code" required maxlength="30" placeholder="SUP-001" />
+                <x-form.input name="code" :label="__('Supplier code')" :value="$nextCode ?? $supplier->code" readonly maxlength="30" :hint="__('Assigned automatically when saved.')" />
                 <x-form.input name="name" :label="__('Supplier name')" :value="$supplier->name" required maxlength="150" />
                 <x-form.select name="category" :label="__('Supplier category')" :options="$categories" :selected="$supplier->category" required />
                 <x-form.input name="tax_number" :label="__('Tax number')" :value="$supplier->tax_number" maxlength="40" />

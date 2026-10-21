@@ -81,7 +81,7 @@
                                 </td>
                                 <td class="row-actions">
                                         <x-actions-menu :label="__('Actions for :name', ['name' => $barn->name])">
-                                            <x-menu-link :href="route('barns.show', $barn)" icon="eye">
+                                            <x-menu-link :href="route('barns.show', $barn)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                             @if (auth()->user()->hasAbility('animal.manage'))

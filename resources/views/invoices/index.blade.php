@@ -103,7 +103,7 @@
                                                     {{ __('Pay') }}
                                                 </x-menu-link>
                                             @endif
-                                            <x-menu-link :href="route('invoices.show', $invoice)" icon="eye">
+                                            <x-menu-link :href="route('invoices.show', $invoice)" icon="info">
                                                 {{ __('Details') }}
                                             </x-menu-link>
                                         </x-actions-menu>

@@ -125,13 +125,15 @@ class DemoDataQualityTest extends TestCase
 
     public function test_breed_origins_match_the_breed(): void
     {
-        // Limosin is French; a duplicate filed under "UK" sat beside it when the
-        // database still held rows from an earlier seeding.
+        // The catalogue is dairy cattle only; a beef breed filed under a
+        // second origin used to slip in when the database held old rows.
         $origins = Breed::pluck('origin', 'name');
 
-        $this->assertSame('France', $origins['Limosin']);
+        $this->assertSame('Switzerland', $origins['Brown Swiss']);
         $this->assertSame('Denmark', $origins['Holstein Friesian']);
-        $this->assertSame('Indonesia', $origins['Madura']);
+        $this->assertSame('Pakistan', $origins['Sahiwal']);
+        $this->assertFalse($origins->keys()->contains('Limosin'));
+        $this->assertFalse($origins->keys()->contains('Madura'));
         $this->assertSame(
             $origins->count(),
             $origins->unique()->count(),

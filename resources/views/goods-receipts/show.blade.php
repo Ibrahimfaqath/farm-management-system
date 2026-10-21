@@ -9,6 +9,12 @@
                        ['label' => $receipt->receipt_number],
                    ]">
         <x-slot:actions>
+            <a href="{{ route('goods-receipts.document', $receipt) }}" class="btn btn-ghost btn-sm"
+               target="_blank" rel="noopener">
+                <x-icon name="print" :size="16" />
+                {{ __('Print document') }}
+            </a>
+
             @if ($receipt->status->value === 'draft' && auth()->user()->hasAbility('feed.receive'))
                 <button type="button" class="btn btn-ghost btn-sm text-tone-error"
                         data-modal-open="cancel-receipt-modal">

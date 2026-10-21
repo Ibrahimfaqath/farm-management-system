@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SupplierRequest;
 use App\Models\Supplier;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -35,14 +37,19 @@ class SupplierController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(CodeGenerator $codes): View
     {
-        return view('suppliers.create', ['supplier' => new Supplier(['is_active' => true])] + $this->formOptions());
+        return view('suppliers.create', [
+            'supplier' => new Supplier(['is_active' => true]),
+            'nextCode' => $codes->next('suppliers', 'code', 'SUP-'),
+        ] + $this->formOptions());
     }
 
-    public function store(SupplierRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(SupplierRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $supplier = Supplier::create($request->validated());
+        $supplier = DB::transaction(fn () => Supplier::create($request->validated() + [
+            'code' => $codes->next('suppliers', 'code', 'SUP-'),
+        ]));
 
         $audit->log('supplier.created', $supplier, "Pemasok {$supplier->name} ditambahkan", $supplier->code);
 

@@ -15,9 +15,11 @@ use App\Models\Breed;
 use App\Models\Farm;
 use App\Services\AnimalExitService;
 use App\Services\AuditLogger;
+use App\Services\CodeGenerator;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AnimalController extends Controller
 {
@@ -48,30 +50,27 @@ class AnimalController extends Controller
             'breedingOptions' => $this->enumOptions(BreedingStatus::class),
             'sexOptions' => $this->enumOptions(Sex::class),
             'barns' => Barn::with('farm')->get()->mapWithKeys(fn ($b) => [$b->id => $b->farm->name.' · '.$b->name]),
-            'breeds' => Breed::orderBy('name')->pluck('name', 'id'),
+            'breeds' => Breed::query()->where('is_active', true)->where('species', 'cattle')->orderBy('name')->pluck('name', 'id'),
             'summary' => $this->summary(),
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(Request $request, CodeGenerator $codes): View
     {
-        $animal = new Animal([
-            'status' => AnimalStatus::Active,
-            'production_status' => ProductionStatus::Calf,
-            'breeding_status' => BreedingStatus::Open,
-            'sex' => Sex::Female,
-            'date_of_birth' => now()->toDateString(),
-        ]);
+        $animal = $this->defaultAnimal($request);
 
-        return view('animals.create', $this->formData($animal, $request));
+        return view('animals.create', $this->formData($animal, $request) + [
+            'nextCode' => $codes->next('animals', 'animal_code', 'T-', 5),
+        ]);
     }
 
-    public function store(AnimalRequest $request, AuditLogger $audit): RedirectResponse
+    public function store(AnimalRequest $request, AuditLogger $audit, CodeGenerator $codes): RedirectResponse
     {
-        $animal = Animal::create($request->validated() + [
+        $animal = DB::transaction(fn () => Animal::create($request->validated() + [
+            'animal_code' => $codes->next('animals', 'animal_code', 'T-', 5),
             'current_barn_id' => $request->input('barn_id'),
             'created_by' => $request->user()->getKey(),
-        ]);
+        ]));
 
         $audit->log('animal.created', $animal, "Ternak {$animal->animal_code} didaftarkan", $animal->animal_code, [
             'breed_id' => $animal->breed_id,
@@ -159,7 +158,11 @@ class AnimalController extends Controller
             'animal' => $animal,
             'farms' => Farm::orderBy('name')->pluck('name', 'id'),
             'barns' => Barn::with('farm')->get()->mapWithKeys(fn ($b) => [$b->id => $b->farm->name.' · '.$b->name]),
-            'breeds' => Breed::orderBy('name')->pluck('name', 'id'),
+            'barnFarms' => Barn::query()
+                ->get(['id', 'farm_id'])
+                ->mapWithKeys(fn (Barn $barn) => [$barn->getKey() => ['data-farm-id' => $barn->farm_id]])
+                ->all(),
+            'breeds' => Breed::query()->where('is_active', true)->where('species', 'cattle')->orderBy('name')->pluck('name', 'id'),
             'parents' => Animal::query()
                 ->when($animal->exists, fn ($q) => $q->whereKeyNot($animal->getKey()))
                 ->orderBy('animal_code')
@@ -176,6 +179,35 @@ class AnimalController extends Controller
                 AnimalStatus::Transferred->value => 'Dipindahkan',
             ],
         ];
+    }
+
+    private function defaultAnimal(Request $request): Animal
+    {
+        $barn = $request->integer('barn_id')
+            ? Barn::query()->find($request->integer('barn_id'))
+            : null;
+
+        $farmId = $barn?->farm_id
+            ?: ($request->integer('farm_id') ?: Farm::query()->orderBy('name')->value('id'));
+
+        $barnId = $barn?->getKey()
+            ?: Barn::query()->where('farm_id', $farmId)->orderBy('name')->value('id');
+
+        return new Animal([
+            'farm_id' => $farmId,
+            'barn_id' => $barnId,
+            'current_barn_id' => $barnId,
+            'breed_id' => Breed::query()
+                ->where('is_active', true)
+                ->where('species', 'cattle')
+                ->orderBy('name')
+                ->value('id'),
+            'status' => AnimalStatus::Active,
+            'production_status' => ProductionStatus::Calf,
+            'breeding_status' => BreedingStatus::Open,
+            'sex' => Sex::Female,
+            'date_of_birth' => now()->toDateString(),
+        ]);
     }
 
     /** @return array<string, int> */

@@ -38,6 +38,7 @@ Route::middleware('module:feed')->group(function (): void {
     Route::get('suppliers/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
 
     Route::get('purchase-orders/{purchase_order}', [PurchaseOrderController::class, 'show'])->name('purchase-orders.show');
+    Route::get('purchase-orders/{purchase_order}/document', [PurchaseOrderController::class, 'document'])->name('purchase-orders.document');
 
     // --- Goods receipts ---
     Route::get('goods-receipts', [GoodsReceiptController::class, 'index'])->name('goods-receipts.index');
@@ -48,6 +49,7 @@ Route::middleware('module:feed')->group(function (): void {
         Route::post('goods-receipts/{receipt}/cancel', [GoodsReceiptController::class, 'cancel'])->name('goods-receipts.cancel');
     });
     Route::get('goods-receipts/{receipt}', [GoodsReceiptController::class, 'show'])->name('goods-receipts.show');
+    Route::get('goods-receipts/{receipt}/document', [GoodsReceiptController::class, 'document'])->name('goods-receipts.document');
 
     // --- Inventory ---
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');

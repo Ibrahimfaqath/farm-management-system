@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class CustomerRequest extends FormRequest
 {
@@ -15,10 +14,7 @@ class CustomerRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $customerId = $this->route('customer')?->getKey();
-
         return [
-            'code' => ['required', 'string', 'max:30', Rule::unique('customers', 'code')->ignore($customerId)],
             'name' => ['required', 'string', 'max:150'],
             'type' => ['required', 'in:retail,wholesale,partner'],
             'contact_person' => ['nullable', 'string', 'max:150'],
@@ -31,11 +27,5 @@ class CustomerRequest extends FormRequest
             'is_active' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
-    }
-
-    /** @return array<string, string> */
-    public function messages(): array
-    {
-        return ['code.unique' => 'Kode pelanggan sudah digunakan.'];
     }
 }

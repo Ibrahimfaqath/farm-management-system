@@ -18,7 +18,7 @@
     <input id="app-drawer" type="checkbox" class="drawer-toggle">
 
     <div class="drawer-content flex min-h-dvh flex-col">
-        <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100">
+        <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100 print:hidden">
             <div class="navbar min-h-14 gap-2 px-3 sm:px-5">
                 <div class="flex-none lg:hidden">
                     <label for="app-drawer" class="btn btn-ghost btn-sm btn-square" aria-label="{{ __('Open menu') }}">
@@ -95,7 +95,7 @@
         </footer>
     </div>
 
-    <aside class="drawer-side z-40">
+    <aside class="drawer-side z-40 print:hidden">
         <label for="app-drawer" aria-label="{{ __('Close menu') }}" class="drawer-overlay"></label>
 
         <div class="flex h-dvh w-64 flex-col overflow-hidden border-r border-base-300 bg-base-100 lg:w-64">
@@ -122,21 +122,35 @@
 
             <nav class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3" data-drawer-nav
                  aria-label="{{ __('Main navigation') }}">
-                <ul class="menu menu-md w-full gap-0.5 p-0 text-nav">
+                <ul class="menu menu-md w-full gap-1 p-0 text-nav">
                     @foreach (\App\Support\Navigation::forUser(auth()->user()) as $group)
-                        <li class="text-label menu-title mt-2 px-3 text-base-content/65 first:mt-0">
-                            {{ $group['label'] }}
+                        @php
+                            $groupActive = collect($group['items'])->contains(
+                                fn (array $item) => \App\Support\Navigation::itemIsActive($item)
+                            );
+                        @endphp
+                        <li>
+                            <details @if ($groupActive) open @endif class="group">
+                                <summary class="text-label list-none text-base-content/65">
+                                    <x-icon :name="$group['icon']" :size="16" />
+                                    <span class="truncate">{{ $group['label'] }}</span>
+                                    <x-icon name="chevron-down" :size="14"
+                                            class="ml-auto shrink-0 text-base-content/40 transition-transform group-open:rotate-180" />
+                                </summary>
+                                <ul class="menu w-full gap-0.5 p-0">
+                                    @foreach ($group['items'] as $item)
+                                        @php $isActive = \App\Support\Navigation::itemIsActive($item); @endphp
+                                        <li>
+                                            <a href="{{ route($item['route']) }}"
+                                               @if ($isActive) class="menu-active" aria-current="page" data-sidebar-active @endif>
+                                                <x-icon :name="$item['icon']" :size="16" />
+                                                <span class="truncate">{{ $item['label'] }}</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </details>
                         </li>
-                        @foreach ($group['items'] as $item)
-                            @php $isActive = request()->routeIs($item['route']); @endphp
-                            <li>
-                                <a href="{{ route($item['route']) }}"
-                                   @if ($isActive) class="menu-active" aria-current="page" @endif>
-                                    <x-icon :name="$item['icon']" :size="16" />
-                                    <span class="truncate">{{ $item['label'] }}</span>
-                                </a>
-                            </li>
-                        @endforeach
                     @endforeach
                 </ul>
             </nav>

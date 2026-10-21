@@ -13,7 +13,7 @@ class ActivityLogController extends Controller
     {
         $logs = ActivityLog::query()
             ->when($request->string('search')->isNotEmpty(), fn ($q) => $q->where('description', 'like', '%'.$request->string('search').'%'))
-            ->when($request->filled('action'), fn ($q) => $q->where('action', 'like', $request->string('action').'%'))
+            ->when($request->filled('action'), fn ($q) => $q->where('action', $request->input('action')))
             ->when($request->filled('user_id'), fn ($q) => $q->where('user_id', $request->integer('user_id')))
             ->when($request->date('date_from'), fn ($q) => $q->whereDate('created_at', '>=', $request->date('date_from')))
             ->when($request->date('date_to'), fn ($q) => $q->whereDate('created_at', '<=', $request->date('date_to')))

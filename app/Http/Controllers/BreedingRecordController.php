@@ -62,7 +62,7 @@ class BreedingRecordController extends Controller
         $audit->log(
             'breeding.recorded',
             $record,
-            "Peminahan {$record->record_type->label()} pada {$record->animal->animal_code}",
+            "Perkawinan {$record->record_type->label()} pada {$record->animal->animal_code}",
             $record->animal->animal_code,
         );
 
@@ -73,7 +73,7 @@ class BreedingRecordController extends Controller
         }
 
         return redirect()->route('pregnancy-checks.create', ['breeding_record_id' => $record->id])
-            ->with('status', 'Peminahan tercatat. Status hewan: menunggu pemeriksaan kehamilan.');
+            ->with('status', 'Perkawinan tercatat. Status hewan: menunggu pemeriksaan kehamilan.');
     }
 
     public function show(BreedingRecord $record): View

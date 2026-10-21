@@ -18,11 +18,11 @@
         <div class="min-w-0 space-y-4 lg:col-span-2">
             <x-panel :title="__('Identity')">
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <x-form.input name="animal_code" :label="__('Animal code')" :value="$animal->animal_code" required
-                                  placeholder="T-00001" maxlength="30" />
+                    <x-form.input name="animal_code" :label="__('Animal code')" :value="$nextCode ?? $animal->animal_code" readonly
+                                  maxlength="30" :hint="__('Assigned automatically when saved.')" />
                     <x-form.input name="name" :label="__('Name / alias')" :value="$animal->name"
                                   :placeholder="__('Optional')" maxlength="100" />
-                    <x-form.select name="farm_id" :label="__('Farm')" :options="$farms" :selected="$animal->farm_id" required />
+                    <x-form.select name="farm_id" :label="__('Farm')" :options="$farms" :selected="$animal->farm_id" data-farm-select required />
                     <x-form.select name="breed_id" :label="__('Breed')" :options="$breeds" :selected="$animal->breed_id" required />
                     <x-form.select name="sex" :label="__('Sex')" :options="$sexOptions" :selected="$animal->sex?->value" required />
                     <x-form.input name="date_of_birth" :label="__('Date of birth')" type="date" :value="$animal->date_of_birth?->toDateString()" />
@@ -62,16 +62,19 @@
 
         <div class="space-y-4">
             <x-panel :title="__('Location')">
-                <x-form.select name="barn_id" :label="__('Barn')" :options="$barns" :selected="$animal->barn_id" />
+                <x-form.select name="barn_id" :label="__('Barn')" :options="$barns" :option-attributes="$barnFarms"
+                                   :selected="$animal->barn_id" data-barn-select />
                 <p class="mt-2 text-xs text-base-content/50">
-                    {{ __('Moving an animal between barns can be done from the detail page.') }}
+                    {{ __('The barn list follows the selected farm. Moving an animal between barns can be done from the detail page.') }}
                 </p>
             </x-panel>
 
-            <x-panel :title="__('Pedigree')" :description="__('Link the dam and sire to build the genealogy.')">
+            <x-panel :title="__('Pedigree')" :description="__('Optional. Link the dam and sire when the parents are known.')">
                 <div class="grid gap-4">
-                    <x-form.select name="dam_id" :label="__('Dam (mother)')" :options="$parents" :selected="$animal->dam_id" />
-                    <x-form.select name="sire_id" :label="__('Sire (father)')" :options="$parents" :selected="$animal->sire_id" />
+                    <x-form.select name="dam_id" :label="__('Dam (mother)')" :options="$parents" :selected="$animal->dam_id"
+                                   :placeholder="__('— Optional —')" />
+                    <x-form.select name="sire_id" :label="__('Sire (father)')" :options="$parents" :selected="$animal->sire_id"
+                                   :placeholder="__('— Optional —')" />
                 </div>
             </x-panel>
 

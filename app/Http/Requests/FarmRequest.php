@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class FarmRequest extends FormRequest
 {
@@ -15,10 +14,7 @@ class FarmRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        $farmId = $this->route('farm')?->getKey();
-
         return [
-            'code' => ['required', 'string', 'max:20', 'uppercase', Rule::unique('farms', 'code')->ignore($farmId)],
             'name' => ['required', 'string', 'max:150'],
             'address' => ['nullable', 'string', 'max:255'],
             'village' => ['nullable', 'string', 'max:100'],
@@ -38,18 +34,9 @@ class FarmRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'code' => 'kode peternakan',
             'name' => 'nama peternakan',
             'area_hectares' => 'luas lahan',
             'established_date' => 'tanggal berdiri',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'code.unique' => 'Kode peternakan sudah digunakan.',
-            'code.uppercase' => 'Kode peternakan harus huruf kapital.',
         ];
     }
 }
