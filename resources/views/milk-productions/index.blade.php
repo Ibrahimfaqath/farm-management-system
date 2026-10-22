@@ -15,9 +15,9 @@
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <x-stat :label="__('Total for period')" :value="number_format($summary['total'], 1).' L'" tone="primary" />
-        <x-stat :label="__('Daily average')" :value="number_format($summary['per_day'], 1).' L'" />
-        <x-stat :label="__('Per lactating head')" :value="number_format($summary['per_lactating_head'], 1).' L'" />
+        <x-stat :label="__('Total for period')" :value="\App\Support\Number::format($summary['total'], 1).' L'" tone="primary" />
+        <x-stat :label="__('Daily average')" :value="\App\Support\Number::format($summary['per_day'], 1).' L'" />
+        <x-stat :label="__('Per lactating head')" :value="\App\Support\Number::format($summary['per_lactating_head'], 1).' L'" />
         <x-stat :label="__('Records')" :value="$summary['records']" />
         <x-stat :label="__('Compared to previous')"
                :value="$trend['change_pct'] === null ? '—' : ($trend['change_pct'] > 0 ? '+' : '').$trend['change_pct'].'%'"
@@ -89,7 +89,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $production->session->label() }}</td>
-                                <td class="num font-medium">{{ number_format((float) $production->liters, 2) }}</td>
+                                <td class="num font-medium">{{ \App\Support\Number::format((float) $production->liters, 2) }}</td>
                                 <td class="num text-base-content/65">{{ $production->fat_percent ?? '—' }}</td>
                                 <td class="num text-base-content/65">{{ $production->protein_percent ?? '—' }}</td>
                                 <td class="text-base-content/65">{{ $production->recorder?->name ?? '—' }}</td>

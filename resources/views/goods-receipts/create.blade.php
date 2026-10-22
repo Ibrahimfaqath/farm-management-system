@@ -24,7 +24,7 @@
      */
     $purchaseOrderOptions = $openOrders->mapWithKeys(fn ($order) => [
         $order->id => $order->po_number.' · '.$order->supplier->name
-            .' ('.__('outstanding').' '.number_format($order->totalOutstanding(), 2).')',
+            .' ('.__('outstanding').' '.\App\Support\Number::format($order->totalOutstanding(), 2).')',
     ]);
 @endphp
 @extends('layouts.app', ['title' => __('Record goods receipt')])
@@ -57,9 +57,9 @@
                             <li class="flex justify-between gap-3">
                                 <span>{{ $line['name'] }}</span>
                                 <span class="tabular-nums">
-                                    {{ __('ordered') }} {{ number_format($line['ordered'], 2) }} · {{ __('received') }} {{ number_format($line['received'], 2) }} ·
+                                    {{ __('ordered') }} {{ \App\Support\Number::format($line['ordered'], 2) }} · {{ __('received') }} {{ \App\Support\Number::format($line['received'], 2) }} ·
                                     <span @class(['font-medium', 'text-tone-warning' => $line['outstanding'] > 0, 'text-tone-success' => $line['outstanding'] <= 0])>
-                                        {{ __('outstanding') }} {{ number_format($line['outstanding'], 2) }}
+                                        {{ __('outstanding') }} {{ \App\Support\Number::format($line['outstanding'], 2) }}
                                     </span>
                                 </span>
                             </li>
@@ -100,7 +100,7 @@
                                             @endforeach
                                         </select>
                                         <p class="text-meta mt-1 text-base-content/50">
-                                            {{ __('Outstanding: :qty :unit', ['qty' => number_format($line['outstanding'], 2), 'unit' => $line['unit']]) }}
+                                            {{ __('Outstanding: :qty :unit', ['qty' => \App\Support\Number::format($line['outstanding'], 2), 'unit' => $line['unit']]) }}
                                         </p>
                                     </td>
                                     <td>

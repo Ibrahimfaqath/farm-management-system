@@ -109,6 +109,34 @@ final class Number
     }
 
     /**
+     * A stock-coverage estimate in words a keeper can scan.
+     *
+     * Feed inventory is seasonal, so "3.970 hari" is mathematically correct
+     * but useless on a warehouse screen: it is longer than the feed's shelf
+     * life and longer than the planning horizon. Once coverage passes a
+     * quarter, the useful answer is that there is more than three months of
+     * stock, not an exact day count nobody will act on.
+     */
+    public static function durationDays(float|int|null $days): string
+    {
+        if ($days === null) {
+            return '—';
+        }
+
+        $days = max(0, (int) floor($days));
+
+        if ($days === 0) {
+            return '< 1 '.__('days');
+        }
+
+        if ($days > 90) {
+            return '> 3 '.__('months');
+        }
+
+        return self::format($days).' '.__('days');
+    }
+
+    /**
      * Expand a stored unit code to the short label shown in the interface.
      */
     public static function unit(string $unit): string

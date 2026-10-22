@@ -20,10 +20,10 @@
         $positionStats = [];
 
         if ($showProduction) {
-            $positionStats[] = ['label' => __('Milk today'), 'value' => number_format($productionToday['per_day'], 1).' L',
+            $positionStats[] = ['label' => __('Milk today'), 'value' => \App\Support\Number::format($productionToday['per_day'], 1).' L',
                 'hint' => $productionToday['records'].' '.__('records'), 'tone' => 'primary', 'icon' => 'milk'];
-            $positionStats[] = ['label' => __('Milk this month'), 'value' => number_format($productionMonth['total'], 0).' L',
-                'hint' => __('Average').' '.number_format($productionMonth['per_day'], 1).' '.__('L/day'), 'tone' => null, 'icon' => null];
+            $positionStats[] = ['label' => __('Milk this month'), 'value' => \App\Support\Number::format($productionMonth['total'], 0).' L',
+                'hint' => __('Average').' '.\App\Support\Number::format($productionMonth['per_day'], 1).' '.__('L/day'), 'tone' => null, 'icon' => null];
         }
 
         if ($showFarm) {
@@ -254,9 +254,9 @@
                                         <p class="text-meta truncate text-base-content/45">{{ $row['animal']->barn?->name ?? '—' }}</p>
                                     </div>
                                     <div class="shrink-0 text-right">
-                                        <p class="text-sm font-medium tabular-nums">{{ number_format($row['total'], 1) }} L</p>
+                                        <p class="text-sm font-medium tabular-nums">{{ \App\Support\Number::format($row['total'], 1) }} L</p>
                                         <p class="text-meta tabular-nums text-base-content/45">
-                                            &plusmn;{{ number_format($row['average'], 1) }} {{ __('L/day') }}
+                                            &plusmn;{{ \App\Support\Number::format($row['average'], 1) }} {{ __('L/day') }}
                                         </p>
                                     </div>
                                 </li>
@@ -348,8 +348,8 @@
                                     </a>
                                     <span class="text-meta block truncate text-base-content/45">{{ $row['animal']->barn?->name ?? '—' }}</span>
                                 </td>
-                                <td class="num text-base-content/65">{{ number_format($row['previous'], 2) }} L</td>
-                                <td class="num">{{ number_format($row['current'], 2) }} L</td>
+                                <td class="num text-base-content/65">{{ \App\Support\Number::format($row['previous'], 2) }} L</td>
+                                <td class="num">{{ \App\Support\Number::format($row['current'], 2) }} L</td>
                                 <td class="num">
                                     <x-badge :label="$row['change_pct'].' %'" class="badge-soft badge-warning" />
                                 </td>

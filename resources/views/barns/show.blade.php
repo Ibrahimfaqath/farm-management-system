@@ -21,8 +21,8 @@
         <x-stat :label="__('Active livestock')" :value="$barn->animals_count" tone="primary" />
         <x-stat :label="__('Capacity')" :value="$barn->capacity ?? '—'"
                :hint="$barn->capacity ? __(':count head free', ['count' => max(0, $barn->capacity - $barn->animals_count)]) : null" />
-        <x-stat :label="__('Milk this month')" :value="number_format((float) $milkThisMonth, 1).' L'" />
-        <x-stat :label="__('Feed this month')" :value="number_format((float) $consumptionThisMonth, 1)"
+        <x-stat :label="__('Milk this month')" :value="\App\Support\Number::format((float) $milkThisMonth, 1).' L'" />
+        <x-stat :label="__('Feed this month')" :value="\App\Support\Number::format((float) $consumptionThisMonth, 1)"
                :hint="__('All items combined')" />
     </div>
 

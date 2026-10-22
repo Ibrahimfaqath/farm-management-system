@@ -66,7 +66,7 @@
             data-chart-payload="{{ $payload }}"
             height="{{ $height }}"
             role="img"
-            aria-label="{{ $label ?? __('Chart') }}: {{ implode(', ', array_map(fn ($s) => ($s['label'] ?? '') . ' ' . implode(' ', array_map(fn ($v) => is_numeric($v) ? rtrim(rtrim(number_format((float) $v, 1, ',', ''), '0'), ',') : '—', $s['data'] ?? [])), $series)) }}"
+            aria-label="{{ $label ?? __('Chart') }}: {{ implode(', ', array_map(fn ($s) => ($s['label'] ?? '') . ' ' . implode(' ', array_map(fn ($v) => is_numeric($v) ? \App\Support\Number::compact((float) $v, 1) : '—', $s['data'] ?? [])), $series)) }}"
         ></canvas>
 
         {{-- Painted before the script arrives, replaced once Chart.js loads.
@@ -74,7 +74,7 @@
              panel, and the script arrives after the network round trip. --}}
         <noscript>
             <p class="chart-fallback text-sm text-base-content/60">
-                {{ implode(' · ', array_map(fn ($s) => ($s['label'] ?? '') . ': ' . implode(', ', array_map(fn ($v) => is_numeric($v) ? rtrim(rtrim(number_format((float) $v, 1, ',', ''), '0'), ',') : '—', $s['data'] ?? [])), $series)) }}
+                {{ implode(' · ', array_map(fn ($s) => ($s['label'] ?? '') . ': ' . implode(', ', array_map(fn ($v) => is_numeric($v) ? \App\Support\Number::compact((float) $v, 1) : '—', $s['data'] ?? [])), $series)) }}
             </p>
         </noscript>
     </figure>

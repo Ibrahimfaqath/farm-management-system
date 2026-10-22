@@ -38,7 +38,7 @@
                                  'unit' => $item->unit->shortLabel(),
                                  'point' => \App\Support\Number::compact($item->reorder_point),
                                  'daily' => \App\Support\Number::compact($item->daily_consumption, 1),
-                             ]).($item->days_remaining ? ' '.__('About :days days left.', ['days' => $item->days_remaining]) : '')"
+                             ])"
                              :url="route('purchase-orders.create')" :url-label="__('Create PO')" />
             @endforeach
         </div>
@@ -96,13 +96,7 @@
                                     <x-qty :value="$item->daily_consumption" :unit="$item->unit->shortLabel()" />
                                 </td>
                                 <td class="num">
-                                    @if ($item->days_remaining === null)
-                                        <span class="text-base-content/45">—</span>
-                                    @else
-                                        <span @class(['text-tone-warning' => $item->days_remaining <= 7])>
-                                            {{ $item->days_remaining }} {{ __('days') }}
-                                        </span>
-                                    @endif
+                                    <x-days-remaining :days="$item->days_remaining" />
                                 </td>
                                 <td class="num"><x-money :amount="$item->stock_value" /></td>
                                 <td>

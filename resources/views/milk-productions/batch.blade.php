@@ -63,7 +63,7 @@
                                         @endif
                                         @if ($existing->has($animal->id))
                                             <span class="text-meta block text-base-content/45">
-                                                {{ __('Recorded :liters L', ['liters' => number_format((float) $existing[$animal->id], 1)]) }}
+                                                {{ __('Recorded :liters L', ['liters' => \App\Support\Number::format((float) $existing[$animal->id], 1)]) }}
                                             </span>
                                         @endif
                                     </td>

@@ -176,8 +176,8 @@
                                     </td>
                                     <td>{{ $row['animal']->name ?: '—' }}</td>
                                     <td class="text-base-content/70">{{ $row['animal']->barn?->name ?? '—' }}</td>
-                                    <td class="num">{{ number_format($row['total'], 2) }}</td>
-                                    <td class="num">{{ number_format($row['average'], 2) }}</td>
+                                    <td class="num">{{ \App\Support\Number::format($row['total'], 2) }}</td>
+                                    <td class="num">{{ \App\Support\Number::format($row['average'], 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

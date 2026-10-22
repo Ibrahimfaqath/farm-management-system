@@ -115,6 +115,30 @@ class NumberFormatTest extends TestCase
         $this->assertSame('-1.500', Number::compact(-1500));
     }
 
+    public function test_feed_coverage_is_written_as_a_planning_horizon(): void
+    {
+        $this->assertSame('—', Number::durationDays(null));
+        $this->assertSame('< 1 hari', Number::durationDays(0));
+        $this->assertSame('7 hari', Number::durationDays(7));
+        $this->assertSame('90 hari', Number::durationDays(90));
+        $this->assertSame('> 3 bulan', Number::durationDays(91));
+        $this->assertSame('> 3 bulan', Number::durationDays(3970));
+    }
+
+    public function test_the_inventory_page_does_not_show_feed_coverage_in_hundreds_of_days(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $html = $this->actingAs($this->owner())
+            ->get(route('inventory.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('3970 hari', $html);
+        $this->assertStringNotContainsString('3.970 hari', $html);
+        $this->assertStringContainsString('&gt; 3 bulan', $html);
+    }
+
     public function test_english_switches_to_its_own_convention(): void
     {
         $this->app->setLocale('en');

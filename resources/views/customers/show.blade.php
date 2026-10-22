@@ -33,8 +33,8 @@
             <x-alert-row tone="error"
                          :title="__('Receivable exceeds the credit limit')"
                          :description="__('Credit limit :limit, current receivable :balance.', [
-                             'limit' => 'Rp'.number_format((float) $customer->credit_limit, 0),
-                             'balance' => 'Rp'.number_format($balance, 0),
+                             'limit' => 'Rp'.\App\Support\Number::format((float) $customer->credit_limit, 0),
+                             'balance' => 'Rp'.\App\Support\Number::format($balance, 0),
                          ])" />
         </div>
     @endif

@@ -55,26 +55,20 @@
                                 <p class="text-meta text-base-content/45">{{ $row->code }} · {{ $row->category->label() }}</p>
                             </td>
                             <td class="num font-medium {{ (float) $row->current_stock <= 0 ? 'text-tone-error' : '' }}">
-                                {{ number_format((float) $row->current_stock, 2) }} <span class="text-meta text-base-content/50">{{ $row->unit->shortLabel() }}</span>
+                                <x-qty :value="$row->current_stock" :unit="$row->unit->shortLabel()" />
                             </td>
-                            <td class="num text-base-content/65">{{ number_format((float) $row->reorder_point, 2) }}</td>
+                            <td class="num text-base-content/65"><x-qty :value="$row->reorder_point" /></td>
                             <td class="num">
-                                {{ number_format((float) $row->purchase_qty, 2) }}
+                                <x-qty :value="$row->purchase_qty" />
                                 <x-money :amount="$row->purchase_amount" class="text-meta block text-base-content/45" />
                             </td>
                             <td class="num">
-                                {{ number_format((float) $row->consumption_qty, 2) }}
+                                <x-qty :value="$row->consumption_qty" />
                                 <x-money :amount="$row->consumption_amount" class="text-meta block text-base-content/45" />
                             </td>
-                            <td class="num text-base-content/65">{{ number_format((float) $row->daily_consumption, 2) }}</td>
+                            <td class="num text-base-content/65"><x-qty :value="$row->daily_consumption" :decimals="2" /></td>
                             <td class="num">
-                                @if ($row->days_remaining === null)
-                                    <span class="text-base-content/45">—</span>
-                                @else
-                                    <span @class(['text-tone-warning' => $row->days_remaining <= 7])>
-                                        {{ $row->days_remaining }} {{ __('days') }}
-                                    </span>
-                                @endif
+                                <x-days-remaining :days="$row->days_remaining" />
                             </td>
                             <td class="num"><x-money :amount="$row->stock_value" /></td>
                             <td>

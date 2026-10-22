@@ -15,7 +15,7 @@
     </x-page-header>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <x-stat :label="__('Quantity used this month')" :value="number_format($monthQuantity, 2)" />
+        <x-stat :label="__('Quantity used this month')" :value="\App\Support\Number::format($monthQuantity, 2)" />
         <x-stat :label="__('Value this month')" :value="'Rp'.number_format($monthTotal, 0, ',', '.')" tone="warning" />
         <x-stat :label="__('All records')" :value="$consumptions->total()" />
         <x-stat :label="__('Average per record')"
@@ -75,7 +75,7 @@
                                 <td class="whitespace-nowrap">{{ $consumption->consumption_date->translatedFormat('d M Y') }}</td>
                                 <td>{{ $consumption->barn?->name ?? __('No barn') }}</td>
                                 <td class="num">{{ $consumption->items_count }}</td>
-                                <td class="num">{{ number_format((float) $consumption->total_quantity, 2) }}</td>
+                                <td class="num">{{ \App\Support\Number::format((float) $consumption->total_quantity, 2) }}</td>
                                 <td class="num"><x-money :amount="$consumption->total_amount" /></td>
                                 <td class="text-base-content/65">{{ $consumption->creator?->name ?? '—' }}</td>
                                 <td class="row-actions">

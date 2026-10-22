@@ -31,9 +31,9 @@
     </div>
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <x-stat :label="__('Total liters')" :value="number_format($summary['total'], 1).' L'" tone="primary" />
-        <x-stat :label="__('Daily average')" :value="number_format($summary['per_day'], 1).' L'" />
-        <x-stat :label="__('Per lactating head')" :value="number_format($summary['per_lactating_head'], 1).' L'" />
+        <x-stat :label="__('Total liters')" :value="\App\Support\Number::format($summary['total'], 1).' L'" tone="primary" />
+        <x-stat :label="__('Daily average')" :value="\App\Support\Number::format($summary['per_day'], 1).' L'" />
+        <x-stat :label="__('Per lactating head')" :value="\App\Support\Number::format($summary['per_lactating_head'], 1).' L'" />
         <x-stat :label="__('Records')" :value="$summary['records']" />
         <x-stat :label="__('vs previous period')"
                :value="$trend['change_pct'] === null ? '—' : ($trend['change_pct'] > 0 ? '+' : '').$trend['change_pct'].'%'"
@@ -64,10 +64,10 @@
                         $max = max(array_map(fn ($point) => (float) $point['total'], $series)) ?: 1;
                     @endphp
                     <div class="flex h-56 items-end gap-1 overflow-x-auto" role="img"
-                         aria-label="{{ implode(', ', array_map(fn ($point) => $point['label'].' '.number_format($point['total'], 2).' L', $series)) }}">
+                         aria-label="{{ implode(', ', array_map(fn ($point) => $point['label'].' '.\App\Support\Number::format($point['total'], 2).' L', $series)) }}">
                         @foreach ($series as $point)
                             <div class="tooltip tooltip-top flex min-w-8 flex-1 flex-col items-center justify-end gap-1"
-                                 data-tip="{{ $point['label'] }} · {{ number_format($point['total'], 2) }} L">
+                                 data-tip="{{ $point['label'] }} · {{ \App\Support\Number::format($point['total'], 2) }} L">
                                 <div class="w-full rounded-t bg-primary/70 transition-colors hover:bg-primary"
                                      style="height: {{ max(2, (float) $point['total'] / $max * 180) }}px"></div>
                                 <span class="text-meta text-base-content/45">{{ $point['label'] }}</span>
@@ -100,8 +100,8 @@
                                             </a>
                                         </td>
                                         <td class="text-base-content/70">{{ $row['animal']->barn?->name ?? '—' }}</td>
-                                        <td class="num">{{ number_format($row['total'], 2) }} L</td>
-                                        <td class="num">{{ number_format($row['average'], 2) }} L</td>
+                                        <td class="num">{{ \App\Support\Number::format($row['total'], 2) }} L</td>
+                                        <td class="num">{{ \App\Support\Number::format($row['average'], 2) }} L</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -120,7 +120,7 @@
                         @foreach ($byBarn as $row)
                             <li class="flex items-center justify-between gap-3 px-4 py-2">
                                 <span class="truncate text-sm">{{ $row['barn'] }}</span>
-                                <span class="shrink-0 text-sm font-medium tabular-nums">{{ number_format($row['total'], 1) }} L</span>
+                                <span class="shrink-0 text-sm font-medium tabular-nums">{{ \App\Support\Number::format($row['total'], 1) }} L</span>
                             </li>
                         @endforeach
                     </ul>

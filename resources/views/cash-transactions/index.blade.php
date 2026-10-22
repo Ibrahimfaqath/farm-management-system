@@ -19,7 +19,7 @@
         <x-stat :label="__('Net cash flow')" :value="'Rp'.number_format($summary['net_cash'], 0, ',', '.')"
                :tone="$summary['net_cash'] >= 0 ? 'success' : 'error'" />
         <x-stat :label="__('Cash in vs revenue')"
-               :value="$summary['revenue'] > 0 ? 'Rp'.number_format($summary['cash_in'] / $summary['revenue'] * 100, 0).'%' : '—'"
+               :value="$summary['revenue'] > 0 ? \App\Support\Number::format($summary['cash_in'] / $summary['revenue'] * 100, 0).'%' : '—'"
                :hint="__('cash in ÷ revenue')" />
     </div>
 

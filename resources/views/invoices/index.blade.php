@@ -26,7 +26,7 @@
         <div class="mb-4">
             <x-alert-row tone="error"
                          :title="trans_choice(':count invoice is past its due date|:count invoices are past their due dates', $overdueCount, ['count' => $overdueCount])"
-                         :description="__('Total overdue receivable: :amount. An invoice counts as overdue once its due date has passed and a balance remains.', ['amount' => 'Rp'.number_format($overdueAmount, 0)])"
+                         :description="__('Total overdue receivable: :amount. An invoice counts as overdue once its due date has passed and a balance remains.', ['amount' => 'Rp'.\App\Support\Number::format($overdueAmount, 0)])"
                          :url="route('invoices.index', ['overdue' => 1])" :url-label="__('Show only overdue')" />
         </div>
     @endif

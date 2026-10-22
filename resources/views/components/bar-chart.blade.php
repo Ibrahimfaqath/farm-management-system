@@ -5,7 +5,7 @@
     // adapts to both themes through semantic tokens, and stays readable at
     // dashboard size. The series is filled with zeroes for missing days so the
     // axis never lies about a gap.
-    $format = $valueFormatter ?? fn (float $value) => rtrim(rtrim(number_format($value, 1, ',', ''), '0'), ',');
+    $format = $valueFormatter ?? fn (float $value) => \App\Support\Number::compact($value, 1);
     $max = max(0.0001, max(array_map(fn (array $point) => (float) $point['value'], $series)));
 @endphp
 

@@ -11,6 +11,7 @@ use App\Models\PurchaseOrder;
 use App\Models\User;
 use App\Services\AttentionService;
 use App\Services\FinanceService;
+use App\Support\Number;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -69,7 +70,7 @@ class DashboardContentTest extends TestCase
         $response->assertOk()
             ->assertSee($order->po_number)
             ->assertSee('Penerimaan sebagian')
-            ->assertSee(number_format($order->totalOutstanding(), 0));
+            ->assertSee(Number::format($order->totalOutstanding(), 2));
     }
 
     public function test_invoice_page_shows_receivable_not_cash(): void

@@ -255,7 +255,7 @@ class FormAndBladeIntegrityTest extends TestCase
             'The requested purchase order was not the selected one.'
         );
         $this->assertStringContainsString('Sisa pesanan '.$second->po_number, $html);
-        $this->assertStringContainsString('2,000.00', $html, 'The outstanding quantity of the chosen order is missing.');
+        $this->assertStringContainsString('2.000,00', $html, 'The outstanding quantity of the chosen order is missing.');
         $this->assertStringContainsString('name="supplier_id"', $html);
 
         // Its line rows carry that order's item, not the earliest order's.

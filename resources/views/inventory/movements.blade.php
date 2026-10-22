@@ -52,7 +52,7 @@
                                 <td class="font-medium">{{ $movement->feedItem?->name ?? '—' }}</td>
                                 <td><x-badge :label="$movement->type->label()" :class="$movement->type->badgeClass()" /></td>
                                 <td class="num font-medium {{ $movement->direction()->sign() > 0 ? 'text-tone-success' : 'text-tone-warning' }}">
-                                    {{ $movement->direction()->sign() > 0 ? '+' : '−' }}{{ number_format((float) $movement->quantity, 2) }}
+                                    {{ $movement->direction()->sign() > 0 ? '+' : '−' }}{{ \App\Support\Number::format((float) $movement->quantity, 2) }}
                                     <span class="text-meta text-base-content/50">{{ $movement->unit->shortLabel() }}</span>
                                 </td>
                                 <td class="text-meta font-mono">{{ $movement->batch?->batch_code ?? '—' }}</td>

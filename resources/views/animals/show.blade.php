@@ -47,9 +47,9 @@
         <x-stat :label="__('Breeding')" :value="$animal->breeding_status->label()" />
         <x-stat :label="__('Barn')" :value="$animal->barn?->name ?? '—'" />
         <x-stat :label="__('Milk, 30 days')"
-               :value="($milkSummary->total ?? 0) > 0 ? number_format((float) $milkSummary->total, 1).' L' : '—'"
+               :value="($milkSummary->total ?? 0) > 0 ? \App\Support\Number::format((float) $milkSummary->total, 1).' L' : '—'"
                :hint="($milkSummary->records ?? 0) > 0
-                    ? __('Average :avg L per record', ['avg' => number_format((float) $milkSummary->average, 1)])
+                    ? __('Average :avg L per record', ['avg' => \App\Support\Number::format((float) $milkSummary->average, 1)])
                     : __('No records yet')" />
     </div>
 

@@ -38,10 +38,10 @@
     @elseif ($receipt->status->affectsInventory())
         <div class="mb-4">
             <x-alert-row tone="info"
-                         :title="__('Received: :received units from the order', ['received' => number_format((float) $receipt->items->sum('quantity_received'), 2)])"
+                         :title="__('Received: :received units from the order', ['received' => \App\Support\Number::format((float) $receipt->items->sum('quantity_received'), 2)])"
                          :description="__('Stock increased by :received units worth :value. Batches were created automatically.', [
-                             'received' => number_format((float) $receipt->items->sum('quantity_received'), 2),
-                             'value' => 'Rp'.number_format((float) $receipt->total_amount, 0),
+                             'received' => \App\Support\Number::format((float) $receipt->items->sum('quantity_received'), 2),
+                             'value' => 'Rp'.\App\Support\Number::format((float) $receipt->total_amount, 0),
                          ])" />
         </div>
     @endif
@@ -77,14 +77,14 @@
                                         <p class="font-medium">{{ $item->feedItem->name }}</p>
                                         <p class="text-meta font-mono text-base-content/45">{{ $item->feedItem->code }}</p>
                                     </td>
-                                    <td class="num">{{ number_format((float) $item->quantity_received, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
+                                    <td class="num">{{ \App\Support\Number::format((float) $item->quantity_received, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
                                     <td class="num"><x-money :amount="$item->unit_price" /></td>
                                     <td class="num"><x-money :amount="$item->line_total" /></td>
                                     <td>
                                         @if ($item->batch)
                                             <span class="text-meta font-mono">{{ $item->batch->batch_code }}</span>
                                             <span class="text-meta block text-base-content/50">
-                                                {{ __('remaining :qty', ['qty' => number_format((float) $item->batch->quantity_remaining, 2)]) }}
+                                                {{ __('remaining :qty', ['qty' => \App\Support\Number::format((float) $item->batch->quantity_remaining, 2)]) }}
                                             </span>
                                         @else
                                             <span class="text-base-content/45">{{ $item->batch_number ?? '—' }}</span>
@@ -122,7 +122,7 @@
                                     <tr>
                                         <td>{{ $movement->feedItem?->name }}</td>
                                         <td><x-badge :label="$movement->type->label()" :class="$movement->type->badgeClass()" /></td>
-                                        <td class="num text-tone-success">+{{ number_format((float) $movement->quantity, 2) }}</td>
+                                        <td class="num text-tone-success">+{{ \App\Support\Number::format((float) $movement->quantity, 2) }}</td>
                                         <td class="text-meta font-mono">{{ $movement->batch?->batch_code ?? '—' }}</td>
                                         <td class="whitespace-nowrap">{{ $movement->movement_date->translatedFormat('d M Y') }}</td>
                                     </tr>

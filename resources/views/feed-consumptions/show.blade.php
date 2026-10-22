@@ -26,10 +26,10 @@
     @endif
 
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <x-stat :label="__('Total quantity')" :value="number_format((float) $consumption->total_quantity, 2)" />
+        <x-stat :label="__('Total quantity')" :value="\App\Support\Number::format((float) $consumption->total_quantity, 2)" />
         <x-stat :label="__('Consumption value')" :value="'Rp'.number_format((float) $consumption->total_amount, 0, ',', '.')" tone="warning" />
         <x-stat :label="__('Animals')" :value="$consumption->animal_count" />
-        <x-stat :label="__('Average per animal')" :value="number_format((float) $consumption->average_per_animal, 2)"
+        <x-stat :label="__('Average per animal')" :value="\App\Support\Number::format((float) $consumption->average_per_animal, 2)"
                :hint="$consumption->barn?->name" />
     </div>
 
@@ -53,11 +53,11 @@
                             @foreach ($consumption->items as $item)
                                 <tr>
                                     <td class="font-medium">{{ $item->feedItem?->name }}</td>
-                                    <td class="num">{{ number_format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
+                                    <td class="num">{{ \App\Support\Number::format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
                                     <td class="text-meta font-mono">{{ $item->batch?->batch_code ?? __('Automatic FIFO') }}</td>
-                                    <td class="num text-base-content/65">{{ number_format((float) $item->stock_before, 2) }}</td>
+                                    <td class="num text-base-content/65">{{ \App\Support\Number::format((float) $item->stock_before, 2) }}</td>
                                     <td class="num font-medium {{ (float) $item->stock_after < 0 ? 'text-tone-error' : 'text-tone-success' }}">
-                                        {{ number_format((float) $item->stock_after, 2) }}
+                                        {{ \App\Support\Number::format((float) $item->stock_after, 2) }}
                                     </td>
                                     <td class="num"><x-money :amount="$item->line_total" /></td>
                                 </tr>
@@ -97,7 +97,7 @@
                                                 @endif
                                             </td>
                                             <td class="text-base-content/70">{{ $allocation->item?->feedItem?->name ?? '—' }}</td>
-                                            <td class="num">{{ number_format((float) $allocation->quantity, 2) }}</td>
+                                            <td class="num">{{ \App\Support\Number::format((float) $allocation->quantity, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 @endforeach
@@ -127,7 +127,7 @@
                                         <td>{{ $movement->feedItem?->name }}</td>
                                         <td><x-badge :label="$movement->type->label()" :class="$movement->type->badgeClass()" /></td>
                                         <td class="num {{ $movement->direction()->sign() > 0 ? 'text-tone-success' : 'text-tone-warning' }}">
-                                            {{ $movement->direction()->sign() > 0 ? '+' : '−' }}{{ number_format((float) $movement->quantity, 2) }}
+                                            {{ $movement->direction()->sign() > 0 ? '+' : '−' }}{{ \App\Support\Number::format((float) $movement->quantity, 2) }}
                                         </td>
                                         <td class="text-meta font-mono">{{ $movement->batch?->batch_code ?? '—' }}</td>
                                     </tr>

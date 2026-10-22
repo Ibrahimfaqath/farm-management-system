@@ -34,7 +34,7 @@
             <x-alert-row tone="error"
                          :title="__('This invoice is :days days overdue', ['days' => $invoice->daysOverdue()])"
                          :description="__('Outstanding: :balance. Due date :date.', [
-                             'balance' => 'Rp'.number_format($balance, 0),
+                             'balance' => 'Rp'.\App\Support\Number::format($balance, 0),
                              'date' => $invoice->due_date->translatedFormat('d M Y'),
                          ])" />
         </div>
@@ -66,7 +66,7 @@
                                 @foreach ($invoice->salesOrder->items as $item)
                                     <tr>
                                         <td>{{ $item->description }}</td>
-                                        <td class="num">{{ number_format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
+                                        <td class="num">{{ \App\Support\Number::format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
                                         <td class="num"><x-money :amount="$item->unit_price" /></td>
                                         <td class="num"><x-money :amount="$item->line_total" /></td>
                                     </tr>

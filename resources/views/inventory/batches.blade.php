@@ -49,9 +49,9 @@
                                 <td class="font-mono text-xs">{{ $batch->batch_code }}</td>
                                 <td class="font-medium">{{ $batch->feedItem?->name ?? '—' }}</td>
                                 <td class="whitespace-nowrap">{{ $batch->received_date->translatedFormat('d M Y') }}</td>
-                                <td class="num">{{ number_format((float) $batch->original_quantity, 2) }}</td>
-                                <td class="num font-medium">{{ number_format((float) $batch->quantity_remaining, 2) }}</td>
-                                <td class="num text-base-content/65">{{ number_format($used, 2) }}</td>
+                                <td class="num">{{ \App\Support\Number::format((float) $batch->original_quantity, 2) }}</td>
+                                <td class="num font-medium">{{ \App\Support\Number::format((float) $batch->quantity_remaining, 2) }}</td>
+                                <td class="num text-base-content/65">{{ \App\Support\Number::format($used, 2) }}</td>
                                 <td class="whitespace-nowrap">
                                     @if ($batch->expiry_date)
                                         {{ $batch->expiry_date->translatedFormat('d M Y') }}

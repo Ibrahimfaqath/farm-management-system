@@ -34,8 +34,8 @@
             <x-alert-row tone="info"
                          :title="__('Invoice :number has been issued', ['number' => $salesOrder->invoice->invoice_number])"
                          :description="__('Revenue of :total recognised and a receivable of :balance raised. Cash only moves once payment is received.', [
-                             'total' => 'Rp'.number_format((float) $salesOrder->invoice->total, 0),
-                             'balance' => 'Rp'.number_format($salesOrder->invoice->balance(), 0),
+                             'total' => 'Rp'.\App\Support\Number::format((float) $salesOrder->invoice->total, 0),
+                             'balance' => 'Rp'.\App\Support\Number::format($salesOrder->invoice->balance(), 0),
                          ])" />
         </div>
     @endif
@@ -65,7 +65,7 @@
                             @foreach ($salesOrder->items as $item)
                                 <tr>
                                     <td class="font-medium">{{ $item->description }}</td>
-                                    <td class="num">{{ number_format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
+                                    <td class="num">{{ \App\Support\Number::format((float) $item->quantity, 2) }} <span class="text-meta text-base-content/50">{{ $item->unit->shortLabel() }}</span></td>
                                     <td class="num"><x-money :amount="$item->unit_price" /></td>
                                     <td class="num"><x-money :amount="$item->line_total" /></td>
                                 </tr>

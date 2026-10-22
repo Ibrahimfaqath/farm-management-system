@@ -200,7 +200,7 @@ class AttentionService
         return [[
             'tone' => 'warning',
             'title' => $overdue.' vaksinasi lewat jadwal',
-            'description' => 'Segera dijadwalkan ulang agar proteksi.kafka tetap terjaga.',
+            'description' => 'Segera dijadwalkan ulang agar proteksi tetap terjaga.',
             'url' => route('vaccinations.index', ['overdue' => 1]),
         ]];
     }

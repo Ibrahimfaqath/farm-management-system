@@ -48,11 +48,11 @@
         <div class="mb-4">
             <x-alert-row tone="warning"
                          :title="__('Partially received: :received of :ordered units', [
-                             'received' => number_format($totalReceived, 2),
-                             'ordered' => number_format($totalOrdered, 2),
+                             'received' => \App\Support\Number::format($totalReceived, 2),
+                             'ordered' => \App\Support\Number::format($totalOrdered, 2),
                          ])"
                          :description="__('Outstanding: :outstanding units. The order stays open until it is fully received.', [
-                             'outstanding' => number_format($totalOutstanding, 2),
+                             'outstanding' => \App\Support\Number::format($totalOutstanding, 2),
                          ])" />
         </div>
     @endif
@@ -60,9 +60,9 @@
     <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <x-stat :label="__('Status')" :value="$purchaseOrder->status->label()"
                :tone="$purchaseOrder->status->value === 'received' ? 'success' : 'warning'" />
-        <x-stat :label="__('Total ordered')" :value="number_format($totalOrdered, 2)" />
-        <x-stat :label="__('Total received')" :value="number_format($totalReceived, 2)" tone="success" />
-        <x-stat :label="__('Outstanding')" :value="number_format($totalOutstanding, 2)"
+        <x-stat :label="__('Total ordered')" :value="\App\Support\Number::format($totalOrdered, 2)" />
+        <x-stat :label="__('Total received')" :value="\App\Support\Number::format($totalReceived, 2)" tone="success" />
+        <x-stat :label="__('Outstanding')" :value="\App\Support\Number::format($totalOutstanding, 2)"
                :tone="$totalOutstanding > 0 ? 'error' : 'success'" />
     </div>
 
@@ -89,10 +89,10 @@
                                         <p class="font-medium">{{ $line->item->feedItem->name }}</p>
                                         <p class="text-meta font-mono text-base-content/45">{{ $line->item->feedItem->code }}</p>
                                     </td>
-                                    <td class="num">{{ number_format($line->ordered, 2) }} <span class="text-meta text-base-content/50">{{ $line->item->unit->shortLabel() }}</span></td>
-                                    <td class="num text-tone-success">{{ number_format($line->received, 2) }}</td>
+                                    <td class="num">{{ \App\Support\Number::format($line->ordered, 2) }} <span class="text-meta text-base-content/50">{{ $line->item->unit->shortLabel() }}</span></td>
+                                    <td class="num text-tone-success">{{ \App\Support\Number::format($line->received, 2) }}</td>
                                     <td class="num {{ $line->outstanding > 0 ? 'text-tone-error' : 'text-base-content/45' }}">
-                                        {{ number_format($line->outstanding, 2) }}
+                                        {{ \App\Support\Number::format($line->outstanding, 2) }}
                                     </td>
                                     <td class="num"><x-money :amount="$line->item->unit_price" /></td>
                                     <td class="num"><x-money :amount="$line->item->line_total" /></td>
