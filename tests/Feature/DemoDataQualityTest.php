@@ -2,12 +2,34 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActivityLog;
 use App\Models\Animal;
+use App\Models\Barn;
+use App\Models\BirthRecord;
 use App\Models\Breed;
+use App\Models\BreedingRecord;
+use App\Models\CashTransaction;
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\Farm;
+use App\Models\FeedConsumption;
 use App\Models\FeedItem;
+use App\Models\GoodsReceipt;
+use App\Models\HealthRecord;
+use App\Models\Income;
+use App\Models\InventoryBatch;
+use App\Models\Invoice;
+use App\Models\MilkProduction;
+use App\Models\Payment;
+use App\Models\PregnancyCheck;
+use App\Models\Product;
+use App\Models\PurchaseOrder;
+use App\Models\SalesOrder;
+use App\Models\SalesOrderItem;
+use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Models\Treatment;
+use App\Models\Vaccination;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -120,7 +142,8 @@ class DemoDataQualityTest extends TestCase
 
         $this->assertSame($before, Farm::count(), 'Re-seeding duplicated the farm.');
         $this->assertSame(1, Farm::count(), 'The demo dataset should be a single farm.');
-        $this->assertSame(5, Breed::count());
+        $this->assertSame(8, Breed::count());
+        $this->assertGreaterThanOrEqual(70, Animal::count());
     }
 
     public function test_breed_origins_match_the_breed(): void
@@ -130,15 +153,14 @@ class DemoDataQualityTest extends TestCase
         $origins = Breed::pluck('origin', 'name');
 
         $this->assertSame('Switzerland', $origins['Brown Swiss']);
-        $this->assertSame('Denmark', $origins['Holstein Friesian']);
+        $this->assertSame('Netherlands', $origins['Holstein Friesian']);
         $this->assertSame('Pakistan', $origins['Sahiwal']);
+        $this->assertSame('Jersey Island', $origins['Jersey']);
         $this->assertFalse($origins->keys()->contains('Limosin'));
         $this->assertFalse($origins->keys()->contains('Madura'));
-        $this->assertSame(
-            $origins->count(),
-            $origins->unique()->count(),
-            'The same breed is defined twice.',
-        );
+        $this->assertSame(8, $origins->count());
+        $this->assertSame(0, Breed::where('species', '!=', 'cattle')->count());
+        $this->assertSame(0, Breed::where('is_active', false)->count());
     }
 
     public function test_every_demo_role_can_sign_in(): void
@@ -174,6 +196,107 @@ class DemoDataQualityTest extends TestCase
             ->pluck('name');
 
         $this->assertTrue($repeated->isEmpty(), 'Animals share a name: '.$repeated->implode(', '));
+
+        $this->assertSame(
+            0,
+            Animal::query()
+                ->whereNull('breed_id')
+                ->orWhereNull('barn_id')
+                ->orWhereNull('date_of_birth')
+                ->count(),
+            'Some animals are missing a breed, barn, or date of birth.',
+        );
+
+        $this->assertSame(
+            0,
+            Animal::query()
+                ->active()
+                ->whereDoesntHave('breed', fn ($query) => $query->where('is_active', true))
+                ->count(),
+            'An active animal points at an inactive breed.',
+        );
+    }
+
+    public function test_all_modules_have_realistic_data_and_sales_are_cow_milk_only(): void
+    {
+        $minimums = [
+            Barn::class => 7,
+            FeedItem::class => 15,
+            Supplier::class => 3,
+            PurchaseOrder::class => 4,
+            GoodsReceipt::class => 3,
+            InventoryBatch::class => 15,
+            FeedConsumption::class => 30,
+            StockMovement::class => 50,
+            HealthRecord::class => 15,
+            Vaccination::class => 60,
+            Treatment::class => 5,
+            BreedingRecord::class => 10,
+            PregnancyCheck::class => 6,
+            BirthRecord::class => 10,
+            MilkProduction::class => 1_500,
+            Customer::class => 7,
+            SalesOrder::class => 10,
+            SalesOrderItem::class => 10,
+            Invoice::class => 7,
+            Payment::class => 5,
+            Expense::class => 12,
+            Income::class => 3,
+            CashTransaction::class => 20,
+            ActivityLog::class => 20,
+        ];
+
+        foreach ($minimums as $model => $minimum) {
+            $this->assertGreaterThanOrEqual(
+                $minimum,
+                $model::count(),
+                class_basename($model).' does not have enough seeded data.',
+            );
+        }
+
+        $milk = Product::where('code', Product::COW_MILK_CODE)->firstOrFail();
+
+        $this->assertSame(1, Product::count(), 'The catalogue should only contain cow milk.');
+        $this->assertSame(1, Product::where('is_active', true)->count());
+        $this->assertSame('Susu Sapi Segar', $milk->name);
+        $this->assertSame(0, SalesOrderItem::query()->where('product_id', '!=', $milk->id)->count());
+        $this->assertSame(0, SalesOrderItem::query()->whereNull('product_id')->count());
+        $this->assertSame(0, SalesOrderItem::query()->where('unit', '!=', 'liter')->count());
+
+        foreach (SalesOrderItem::all() as $item) {
+            $this->assertStringContainsStringIgnoringCase('susu', $item->description);
+        }
+
+        $this->actingAs($this->owner())
+            ->get(route('sales-orders.create'))
+            ->assertOk()
+            ->assertSee('Susu Sapi Segar')
+            ->assertSee('data-unit="liter"', false)
+            ->assertDontSee('Yoghurt')
+            ->assertDontSee('Pupuk Kotor');
+
+        $otherProduct = Product::create([
+            'code' => 'PRD-UJI',
+            'name' => 'Produk Uji',
+            'unit' => 'liter',
+            'default_price' => 10_000,
+            'category' => 'other',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->owner())
+            ->post(route('sales-orders.store'), [
+                'customer_id' => Customer::firstOrFail()->id,
+                'order_date' => now()->toDateString(),
+                'items' => [[
+                    'product_id' => $otherProduct->id,
+                    'description' => 'Produk selain susu sapi',
+                    'quantity' => 1,
+                    'unit' => 'liter',
+                    'unit_price' => 10_000,
+                ]],
+            ])
+            ->assertSessionHasErrors('items.0.product_id');
     }
 
     public function test_animal_names_are_drawn_from_the_pool_not_generated(): void

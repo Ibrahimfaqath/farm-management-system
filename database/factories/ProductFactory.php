@@ -16,18 +16,12 @@ class ProductFactory extends Factory
     {
         return [
             'code' => 'PRD-'.fake()->unique()->numerify('###'),
-            'name' => fake()->randomElement([
-                'Susu Segar',
-                'Susu Pasteurisasi',
-                'Pupuk Kaporit',
-                'Yogurt',
-                'Keju Pestas',
-            ]),
-            'unit' => fake()->randomElement([UnitOfMeasure::Liter, UnitOfMeasure::Kilogram, UnitOfMeasure::Sack]),
-            'default_price' => fake()->randomFloat(0, 5_000, 25_000),
-            'category' => fake()->randomElement(['milk', 'byproduct', 'other']),
+            'name' => 'Susu Sapi Segar',
+            'unit' => UnitOfMeasure::Liter,
+            'default_price' => fake()->randomFloat(0, 11_000, 13_000),
+            'category' => 'milk',
             'is_active' => true,
-            'notes' => null,
+            'notes' => 'Susu sapi segar dari pemerahan harian.',
         ];
     }
 }

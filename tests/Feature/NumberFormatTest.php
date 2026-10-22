@@ -206,8 +206,8 @@ class NumberFormatTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        // Price 6.200 and stock 2.500, both with a dot as thousands separator.
-        $this->assertStringContainsString('Rp6.200', $html);
+        // Price 5.200 and stock 2.500, both with a dot as thousands separator.
+        $this->assertStringContainsString('Rp5.200', $html);
         $this->assertMatchesRegularExpression('/2\.500\s*<span[^>]*>kg<\/span>/', $html);
         $this->assertGreaterThan(0, $item->currentStock());
     }

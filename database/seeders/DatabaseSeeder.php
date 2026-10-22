@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -47,11 +49,38 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SettingSeeder::class,
             FarmDataSeeder::class,
-            InventoryDataSeeder::class,
-            HerdHistorySeeder::class,
-            MilkProductionSeeder::class,
-            SalesFinanceSeeder::class,
         ]);
+
+        // Attribute the operational audit trail to the manager, then the money
+        // trail to the finance user. An activity log full of "System" rows is
+        // technically valid but reads like an unattended import.
+        $manager = User::where('email', 'manager@farm.test')->first();
+
+        if ($manager !== null) {
+            Auth::login($manager);
+        }
+
+        try {
+            $this->call([
+                InventoryDataSeeder::class,
+                HerdHistorySeeder::class,
+                MilkProductionSeeder::class,
+            ]);
+        } finally {
+            Auth::logout();
+        }
+
+        $finance = User::where('email', 'finance@farm.test')->first();
+
+        if ($finance !== null) {
+            Auth::login($finance);
+        }
+
+        try {
+            $this->call(SalesFinanceSeeder::class);
+        } finally {
+            Auth::logout();
+        }
 
         $this->command?->newLine();
         $this->command?->info('Data demonstrasi FARM siap digunakan.');

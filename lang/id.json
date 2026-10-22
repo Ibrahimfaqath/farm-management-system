@@ -1043,6 +1043,7 @@
     "Add at least one line of goods being sold.": "Tambahkan minimal satu baris barang yang dijual.",
     "Product": "Produk",
     "— No product —": "— Tanpa produk —",
+    "— Select product —": "— Pilih produk —",
     "Record feed consumption": "Catat Pemakaian Pakan",
     "Stock decreases by the quantity used. Batches are allocated automatically, oldest first.": "Stok akan berkurang sesuai jumlah yang dipakai. Batch dialokasikan otomatis dengan metode FIFO.",
     "Consumption context": "Konteks Pemakaian",

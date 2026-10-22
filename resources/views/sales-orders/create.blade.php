@@ -35,13 +35,13 @@
                     <tbody id="so-items">
                         <tr data-line-row>
                             <td>
-                                <select name="items[0][product_id]" data-line-item data-line-fill-description
+                                <select name="items[0][product_id]" data-line-item data-line-fill-description required
                                         class="select select-sm w-full bg-base-100" aria-label="{{ __('Product') }}">
-                                    <option value="">{{ __('— No product —') }}</option>
+                                    <option value="">{{ __('— Select product —') }}</option>
                                     @foreach ($products as $product)
                                         <option value="{{ $product->id }}" data-name="{{ $product->name }}"
                                                 data-price="{{ (float) $product->default_price }}"
-                                                data-unit="{{ $product->unit->shortLabel() }}">{{ $product->name }}</option>
+                                                data-unit="{{ $product->unit->value }}">{{ $product->name }}</option>
                                     @endforeach
                                 </select>
                             </td>
@@ -80,6 +80,7 @@
             </div>
 
             @error('items')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
+            @error('items.*.product_id')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
             @error('items.*.description')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
             @error('items.*.quantity')<p class="px-3 pb-2 text-xs text-tone-error">{{ $message }}</p>@enderror
         </x-panel>
@@ -99,13 +100,13 @@
     <template id="so-line-template">
         <tr data-line-row>
             <td>
-                <select name="items[__INDEX__][product_id]" data-line-item data-line-fill-description
+                <select name="items[__INDEX__][product_id]" data-line-item data-line-fill-description required
                         class="select select-sm w-full bg-base-100" aria-label="{{ __('Product') }}">
-                    <option value="">{{ __('— No product —') }}</option>
+                    <option value="">{{ __('— Select product —') }}</option>
                     @foreach ($products as $product)
                         <option value="{{ $product->id }}" data-name="{{ $product->name }}"
                                 data-price="{{ (float) $product->default_price }}"
-                                data-unit="{{ $product->unit->shortLabel() }}">{{ $product->name }}</option>
+                                data-unit="{{ $product->unit->value }}">{{ $product->name }}</option>
                     @endforeach
                 </select>
             </td>

@@ -49,7 +49,11 @@ class SalesOrderController extends Controller
             'customer' => $customer,
             'customers' => Customer::where('is_active', true)->orderBy('name')->get()
                 ->mapWithKeys(fn ($c) => [$c->id => $c->name.' · '.$c->payment_terms_days.' hari']),
-            'products' => Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'unit', 'default_price']),
+            'products' => Product::query()
+                ->where('is_active', true)
+                ->where('code', Product::COW_MILK_CODE)
+                ->orderBy('name')
+                ->get(['id', 'name', 'unit', 'default_price']),
         ]);
     }
 

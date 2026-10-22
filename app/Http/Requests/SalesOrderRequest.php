@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\UnitOfMeasure;
+use App\Models\Product;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,10 +26,17 @@ class SalesOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
 
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.product_id' => [
+                'required',
+                Rule::exists('products', 'id')->where(
+                    fn ($query) => $query
+                        ->where('code', Product::COW_MILK_CODE)
+                        ->where('is_active', true),
+                ),
+            ],
             'items.*.description' => ['required', 'string', 'max:150'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0'],
-            'items.*.unit' => ['required', Rule::enum(UnitOfMeasure::class)],
+            'items.*.unit' => ['required', Rule::enum(UnitOfMeasure::class), Rule::in([UnitOfMeasure::Liter->value])],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'items.*.notes' => ['nullable', 'string', 'max:500'],
         ];
@@ -49,7 +57,10 @@ class SalesOrderRequest extends FormRequest
     {
         return [
             'items.required' => 'Pesanan minimal harus memiliki satu barang.',
+            'items.*.product_id.required' => 'Pilih produk susu sapi segar.',
+            'items.*.product_id.exists' => 'Peternakan ini hanya menjual susu sapi segar.',
             'items.*.quantity.gt' => 'Kuantitas harus lebih dari nol.',
+            'items.*.unit.in' => 'Susu sapi dijual dalam satuan liter.',
         ];
     }
 

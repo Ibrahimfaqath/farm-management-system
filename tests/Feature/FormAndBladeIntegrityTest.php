@@ -6,6 +6,7 @@ use App\Enums\PurchaseOrderStatus;
 use App\Enums\UnitOfMeasure;
 use App\Models\Customer;
 use App\Models\FeedItem;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
@@ -154,18 +155,25 @@ class FormAndBladeIntegrityTest extends TestCase
         $this->seed(DatabaseSeeder::class);
 
         $customer = Customer::firstOrFail();
-        $feedItem = FeedItem::firstOrFail();
+        $milk = Product::where('code', Product::COW_MILK_CODE)->firstOrFail();
 
         $response = $this->actingAs($this->owner())->post(route('sales-orders.store'), [
             'customer_id' => $customer->id,
             'order_date' => now()->toDateString(),
             'items' => [
-                ['feed_item_id' => $feedItem->id, 'quantity' => 10, 'unit' => UnitOfMeasure::Kilogram->value, 'unit_price' => 9000],
+                [
+                    'product_id' => $milk->id,
+                    'description' => 'Susu sapi segar',
+                    'quantity' => 10,
+                    'unit' => UnitOfMeasure::Liter->value,
+                    'unit_price' => 12_000,
+                ],
             ],
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('sales_orders', ['customer_id' => $customer->id]);
+        $this->assertDatabaseHas('sales_order_items', ['product_id' => $milk->id, 'unit' => 'liter']);
     }
 
     public function test_no_rendered_page_contains_a_literal_component_tag(): void

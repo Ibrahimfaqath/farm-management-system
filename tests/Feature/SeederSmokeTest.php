@@ -26,7 +26,7 @@ class SeederSmokeTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertGreaterThanOrEqual(30, Animal::count());
+        $this->assertGreaterThanOrEqual(70, Animal::count());
         $this->assertSame(6, User::count());
 
         // Scenario 1: a purchase order is only partially received.
@@ -43,7 +43,7 @@ class SeederSmokeTest extends TestCase
         $concentrate = FeedItem::where('code', 'FD-KNS01')->firstOrFail();
 
         // Opening 2.600 kg + 4.000 kg diterima, dikurangi pemakaian harian
-        // (336 + 264) dan 800 kg pada skenario fabriquer.
+        // (336 + 264) dan 800 kg pada pemakaian kelompok.
         $this->assertSame(5200.0, $inventory->stockOf($concentrate));
 
         // The opening balance posts its own batch, separate from the receipt.
@@ -59,7 +59,7 @@ class SeederSmokeTest extends TestCase
         $this->assertGreaterThan(0, $finance->accountsReceivable());
 
         // Scenario 6: production recorded with a detectable decline.
-        $this->assertGreaterThan(200, MilkProduction::count());
+        $this->assertGreaterThan(1_500, MilkProduction::count());
         $this->assertNotEmpty(
             app(ProductionAnalyticsService::class)->decliningAnimals(null)
         );

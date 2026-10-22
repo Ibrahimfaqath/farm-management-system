@@ -27,7 +27,7 @@
                     </div>
                     <div>
                         <dt class="text-base-content/55">{{ __('Time') }}</dt>
-                        <dd>{{ $birth->birth_time ?? '—' }}</dd>
+                        <dd>{{ $birth->birth_time?->format('H:i') ?? '—' }}</dd>
                     </div>
                     <div>
                         <dt class="text-base-content/55">{{ __('Birth type') }}</dt>

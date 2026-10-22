@@ -65,12 +65,12 @@ class FeedTaxonomyTest extends TestCase
         $forage = FeedItem::where('category', FeedCategory::Forage)->pluck('name');
 
         $this->assertTrue($forage->contains('Silase Jagung'), 'Silage belongs under forage.');
-        $this->assertTrue($forage->contains('Hay Padi'), 'Hay belongs under forage.');
+        $this->assertTrue($forage->contains('Hay Rumput Gajah'), 'Hay belongs under forage.');
     }
 
     public function test_rice_bran_is_a_concentrate_not_a_by_product(): void
     {
-        $item = FeedItem::where('name', 'Limir Beras')->first();
+        $item = FeedItem::where('name', 'Dedak Padi')->first();
 
         $this->assertNotNull($item, 'The rice bran item is missing.');
         $this->assertSame(FeedCategory::Concentrate, $item->category);
@@ -97,8 +97,8 @@ class FeedTaxonomyTest extends TestCase
         $this->assertGreaterThanOrEqual(12, FeedItem::count(), 'The feed catalogue is too thin to be believable.');
 
         foreach ([
-            'Hay Padi', 'Jerami Padi', 'Silase Jagung',
-            'Konsentrat Sapi 8-16', 'Limir Beras', 'Dedak Jagung', 'Jagung Pipil Kering',
+            'Hay Rumput Gajah', 'Jerami Padi', 'Silase Jagung',
+            'Konsentrat Sapi 8-16', 'Dedak Padi', 'Dedak Jagung', 'Jagung Pipil Kering',
             'Bungkil Kedelai', 'Bungkil Kelapa Sawit',
             'Mineral Blok Sapi Perah', 'Garam Dapur',
         ] as $name) {
