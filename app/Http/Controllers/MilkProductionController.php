@@ -61,7 +61,7 @@ class MilkProductionController extends Controller
                 ->with('barn')
                 ->orderBy('animal_code')
                 ->get()
-                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.' · '.($a->barn?->name ?? 'tanpa kandang')]),
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').' · '.($a->barn?->name ?? 'tanpa kandang')]),
             'sessions' => $this->enumOptions(MilkSession::class),
         ]);
     }

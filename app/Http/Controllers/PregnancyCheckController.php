@@ -33,7 +33,8 @@ class PregnancyCheckController extends Controller
 
         return view('pregnancy-checks.index', [
             'checks' => $checks,
-            'animals' => Animal::where('sex', 'female')->orderBy('animal_code')->pluck('animal_code', 'id'),
+            'animals' => Animal::where('sex', 'female')->orderBy('animal_code')->get(['id', 'animal_code', 'name', 'breeding_status'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').' · '.$a->breeding_status->label()]),
             'filters' => $request->only(['animal_id', 'result', 'due_soon']),
             'results' => $this->enumOptions(PregnancyResult::class),
             'pregnantCount' => PregnancyCheck::query()

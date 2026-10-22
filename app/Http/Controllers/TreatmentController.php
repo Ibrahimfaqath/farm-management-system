@@ -28,7 +28,8 @@ class TreatmentController extends Controller
 
         return view('treatments.index', [
             'treatments' => $treatments,
-            'animals' => Animal::orderBy('animal_code')->pluck('animal_code', 'id'),
+            'animals' => Animal::orderBy('animal_code')->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'filters' => $request->only(['animal_id', 'search', 'active_withdrawal']),
             'monthCost' => (float) Treatment::whereDate('treatment_date', '>=', now()->startOfMonth())->sum('cost'),
             'withdrawalActive' => Treatment::all()
@@ -72,8 +73,8 @@ class TreatmentController extends Controller
     private function formOptions(): array
     {
         return [
-            'animals' => Animal::with('breed')->orderBy('animal_code')->get()
-                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.' · '.$a->breed?->name]),
+            'animals' => Animal::with('breed')->orderBy('animal_code')->get(['id', 'animal_code', 'name', 'breed_id'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').($a->breed ? ' · '.$a->breed->name : '')]),
             'veterinarians' => User::query()
                 ->whereIn('role', ['veterinarian', 'manager', 'owner'])
                 ->orderBy('name')

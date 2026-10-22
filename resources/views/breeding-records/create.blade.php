@@ -15,7 +15,7 @@
                 <x-form.select name="record_type" :label="__('Record type')" :options="$recordTypes" :selected="$record->record_type?->value" required />
                 <x-form.input name="breeding_date" :label="__('Date')" type="date" required
                               :value="$record->breeding_date?->toDateString() ?? now()->toDateString()" />
-                <x-form.select name="bull_id" :label="__('Sire')" :options="$bulls" :selected="$record->bull_id"
+                <x-form.animal-select name="bull_id" :label="__('Sire')" :options="$bulls" :selected="$record->bull_id"
                                :placeholder="__('— Local sire / semen code —')" />
                 <x-form.input name="semen_code" :label="__('Semen code')" :value="$record->semen_code" placeholder="For example: BRF-01" />
                 <x-form.input name="semen_batch" :label="__('Semen batch number')" :value="$record->semen_batch" />

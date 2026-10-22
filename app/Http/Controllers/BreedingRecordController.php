@@ -29,7 +29,8 @@ class BreedingRecordController extends Controller
 
         return view('breeding-records.index', [
             'records' => $records,
-            'animals' => Animal::where('sex', 'female')->orderBy('animal_code')->pluck('animal_code', 'id'),
+            'animals' => Animal::where('sex', 'female')->orderBy('animal_code')->get(['id', 'animal_code', 'name', 'breeding_status'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').' · '.$a->breeding_status->label()]),
             'filters' => $request->only(['animal_id', 'record_type', 'search']),
             'recordTypes' => $this->enumOptions(BreedingRecordType::class),
             'awaitingCheck' => BreedingRecord::query()
@@ -94,7 +95,8 @@ class BreedingRecordController extends Controller
             'bulls' => Animal::where('sex', 'male')
                 ->whereIn('status', ['active'])
                 ->orderBy('animal_code')
-                ->pluck('animal_code', 'id'),
+                ->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'recordTypes' => $this->enumOptions(BreedingRecordType::class),
         ];
     }

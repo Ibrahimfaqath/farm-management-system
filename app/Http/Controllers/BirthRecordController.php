@@ -36,7 +36,8 @@ class BirthRecordController extends Controller
 
         return view('birth-records.index', [
             'births' => $births,
-            'dams' => Animal::where('sex', 'female')->orderBy('animal_code')->pluck('animal_code', 'id'),
+            'dams' => Animal::where('sex', 'female')->orderBy('animal_code')->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'filters' => $request->only(['dam_id', 'birth_type', 'date_from', 'date_to']),
             'birthTypes' => $this->enumOptions(BirthType::class),
             'yearCount' => BirthRecord::whereDate('birth_date', '>=', now()->subYear())->count(),
@@ -136,7 +137,8 @@ class BirthRecordController extends Controller
                 ->orderBy('animal_code')
                 ->get()
                 ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').' · '.$a->breeding_status->label()]),
-            'sires' => Animal::where('sex', 'male')->orderBy('animal_code')->pluck('animal_code', 'id'),
+            'sires' => Animal::where('sex', 'male')->orderBy('animal_code')->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'pregnancyChecks' => PregnancyCheck::query()
                 ->with('animal')
                 ->whereIn('result', ['pregnant', 'confirmed_pregnant'])

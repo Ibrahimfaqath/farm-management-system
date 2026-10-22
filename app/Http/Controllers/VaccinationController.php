@@ -29,7 +29,8 @@ class VaccinationController extends Controller
 
         return view('vaccinations.index', [
             'vaccinations' => $vaccinations,
-            'animals' => Animal::orderBy('animal_code')->pluck('animal_code', 'id'),
+            'animals' => Animal::orderBy('animal_code')->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'filters' => $request->only(['animal_id', 'vaccine_name', 'due', 'overdue']),
             'overdueCount' => Vaccination::whereNotNull('next_due_date')
                 ->whereDate('next_due_date', '<', now()->toDateString())->count(),
@@ -70,8 +71,8 @@ class VaccinationController extends Controller
     private function formOptions(): array
     {
         return [
-            'animals' => Animal::orderBy('animal_code')->get()
-                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.' · '.$a->breed?->name]),
+            'animals' => Animal::with('breed')->orderBy('animal_code')->get(['id', 'animal_code', 'name', 'breed_id'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '').($a->breed ? ' · '.$a->breed->name : '')]),
             'veterinarians' => User::query()
                 ->whereIn('role', ['veterinarian', 'manager', 'owner'])
                 ->orderBy('name')

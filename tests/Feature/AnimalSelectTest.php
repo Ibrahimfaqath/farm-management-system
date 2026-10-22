@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Sex;
+use App\Models\Animal;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
@@ -48,7 +50,7 @@ class AnimalSelectTest extends TestCase
             'health-records.create' => 1,
             'vaccinations.create' => 1,
             'treatments.create' => 1,
-            'breeding-records.create' => 1,
+            'breeding-records.create' => 2,
             'pregnancy-checks.create' => 1,
             'animals.create' => 2,
             'birth-records.create' => 2,
@@ -89,6 +91,44 @@ class AnimalSelectTest extends TestCase
             $this->assertStringContainsString('data-filter-select-searchable', $html, "{$route} needs a searchable animal filter.");
             $this->assertStringContainsString('data-filter-select-search', $html, "{$route} needs a search field in the animal filter.");
             $this->assertStringContainsString('Cari ternak…', $html, "{$route} should label the field in Indonesian.");
+        }
+    }
+
+    public function test_every_animal_option_includes_the_name_so_it_can_be_searched(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $female = Animal::query()->where('sex', Sex::Female->value)->whereNotNull('name')->orderBy('animal_code')->firstOrFail();
+        $male = Animal::query()->where('sex', Sex::Male->value)->whereIn('status', ['active'])->whereNotNull('name')->orderBy('animal_code')->firstOrFail();
+        $lactating = Animal::query()->active()->lactating()->whereNotNull('name')->orderBy('animal_code')->firstOrFail();
+
+        $routes = [
+            'milk-productions.create' => [$lactating],
+            'health-records.create' => [$female],
+            'vaccinations.create' => [$female],
+            'treatments.create' => [$female],
+            'breeding-records.create' => [$female, $male],
+            'pregnancy-checks.create' => [$female],
+            'animals.create' => [$female, $male],
+            'birth-records.create' => [$female, $male],
+            'health-records.index' => [$female],
+            'vaccinations.index' => [$female],
+            'treatments.index' => [$female],
+            'breeding-records.index' => [$female],
+            'pregnancy-checks.index' => [$female],
+            'birth-records.index' => [$female],
+        ];
+
+        foreach ($routes as $route => $animals) {
+            $html = $this->actingAs($this->owner())->get(route($route))->assertOk()->getContent();
+
+            foreach ($animals as $animal) {
+                $this->assertMatchesRegularExpression(
+                    '/<span class="truncate">[^<]*'.preg_quote($animal->animal_code, '/').'[^<]*'.preg_quote((string) $animal->name, '/').'[^<]*<\/span>/',
+                    $html,
+                    "{$route} should expose the animal name to the picker search.",
+                );
+            }
         }
     }
 }

@@ -32,7 +32,8 @@ class HealthRecordController extends Controller
 
         return view('health-records.index', [
             'records' => $records,
-            'animals' => Animal::orderBy('animal_code')->pluck('animal_code', 'id'),
+            'animals' => Animal::orderBy('animal_code')->get(['id', 'animal_code', 'name'])
+                ->mapWithKeys(fn ($a) => [$a->id => $a->animal_code.($a->name ? ' · '.$a->name : '')]),
             'filters' => $request->only(['animal_id', 'status', 'severity', 'open_only', 'date_from', 'date_to']),
             'statuses' => $this->enumOptions(HealthRecordStatus::class),
             'severities' => $this->enumOptions(HealthSeverity::class),
