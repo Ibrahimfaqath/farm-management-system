@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 class Navigation
 {
     /**
-     * @return list<array{key: string, label: string, icon: string, items: list<array{label: string, route: string, icon: string, module?: string, ability?: string}>}>
+     * @return list<array{key: string, label: string, items: list<array{label: string, route: string, icon: string, module?: string, ability?: string}>}>
      */
     public static function groups(): array
     {
@@ -29,7 +29,6 @@ class Navigation
             [
                 'key' => 'dashboard',
                 'label' => 'Dashboard',
-                'icon' => 'dashboard',
                 'items' => [
                     ['label' => 'Overview', 'route' => 'dashboard', 'icon' => 'dashboard'],
                 ],
@@ -37,7 +36,6 @@ class Navigation
             [
                 'key' => 'farm',
                 'label' => 'Farm',
-                'icon' => 'farm',
                 'items' => [
                     ['label' => 'Farm', 'route' => 'farms.index', 'icon' => 'farm'],
                     ['label' => 'Barns', 'route' => 'barns.index', 'icon' => 'barn'],
@@ -48,7 +46,6 @@ class Navigation
             [
                 'key' => 'feed',
                 'label' => 'Feed & Inventory',
-                'icon' => 'inventory',
                 'items' => [
                     ['label' => 'Feed items', 'route' => 'feed-items.index', 'icon' => 'feed'],
                     ['label' => 'Suppliers', 'route' => 'suppliers.index', 'icon' => 'truck'],
@@ -61,7 +58,6 @@ class Navigation
             [
                 'key' => 'health',
                 'label' => 'Livestock health',
-                'icon' => 'health',
                 'items' => [
                     ['label' => 'Health records', 'route' => 'health-records.index', 'icon' => 'health'],
                     ['label' => 'Vaccinations', 'route' => 'vaccinations.index', 'icon' => 'syringe'],
@@ -71,7 +67,6 @@ class Navigation
             [
                 'key' => 'breeding',
                 'label' => 'Breeding',
-                'icon' => 'breeding',
                 'items' => [
                     ['label' => 'Breeding records', 'route' => 'breeding-records.index', 'icon' => 'breeding'],
                     ['label' => 'Pregnancy checks', 'route' => 'pregnancy-checks.index', 'icon' => 'check'],
@@ -81,7 +76,6 @@ class Navigation
             [
                 'key' => 'production',
                 'label' => 'Production',
-                'icon' => 'milk',
                 'items' => [
                     ['label' => 'Milk production', 'route' => 'milk-productions.index', 'icon' => 'milk'],
                 ],
@@ -89,7 +83,6 @@ class Navigation
             [
                 'key' => 'sales',
                 'label' => 'Sales',
-                'icon' => 'sales',
                 'items' => [
                     ['label' => 'Customers', 'route' => 'customers.index', 'icon' => 'users'],
                     ['label' => 'Sales orders', 'route' => 'sales-orders.index', 'icon' => 'order'],
@@ -100,7 +93,6 @@ class Navigation
             [
                 'key' => 'finance',
                 'label' => 'Finance',
-                'icon' => 'wallet',
                 'items' => [
                     ['label' => 'Income', 'route' => 'incomes.index', 'icon' => 'income'],
                     ['label' => 'Expenses', 'route' => 'expenses.index', 'icon' => 'expense'],
@@ -110,7 +102,6 @@ class Navigation
             [
                 'key' => 'reports',
                 'label' => 'Reports',
-                'icon' => 'chart',
                 'items' => [
                     ['label' => 'Farm report', 'route' => 'reports.animal.index', 'icon' => 'report'],
                     ['label' => 'Feed report', 'route' => 'reports.feed.index', 'icon' => 'report'],
@@ -131,7 +122,6 @@ class Navigation
             [
                 'key' => 'settings',
                 'label' => 'Settings',
-                'icon' => 'settings',
                 'items' => [
                     [
                         'label' => 'System settings',
@@ -170,7 +160,7 @@ class Navigation
     }
 
     /**
-     * @return list<array{key: string, label: string, icon: string, items: list<array{label: string, route: string, icon: string}>}>
+     * @return list<array{key: string, label: string, items: list<array{label: string, route: string, icon: string}>}>
      */
     public static function forUser(mixed $user): array
     {
@@ -204,7 +194,6 @@ class Navigation
             return $items === [] ? null : [
                 'key' => $group['key'],
                 'label' => __($group['label']),
-                'icon' => $group['icon'],
                 'items' => array_map(
                     fn (array $item) => [...$item, 'label' => __($item['label'])],
                     $items,

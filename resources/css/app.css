@@ -635,6 +635,17 @@
 
 @layer utilities {
     /*
+     * DaisyUI's `.menu` draws its own disclosure chevron on every
+     * `details > summary`. The sidebar already renders one icon that rotates
+     * with `group-open`, so suppress the built-in marker instead of letting
+     * both stack up on the right.
+     */
+    [data-drawer-nav] .menu :where(li > details > summary)::after {
+        content: none;
+        display: none;
+    }
+
+    /*
      * One hover step for the header controls, and a lighter one for the
      * language segments.
      *

@@ -124,33 +124,32 @@
                  aria-label="{{ __('Main navigation') }}">
                 <ul class="menu menu-md w-full gap-1 p-0 text-nav">
                     @foreach (\App\Support\Navigation::forUser(auth()->user()) as $group)
-                        @php
-                            $groupActive = collect($group['items'])->contains(
-                                fn (array $item) => \App\Support\Navigation::itemIsActive($item)
-                            );
-                        @endphp
-                        <li>
-                            <details @if ($groupActive) open @endif class="group">
-                                <summary class="text-label list-none text-base-content/65">
-                                    <x-icon :name="$group['icon']" :size="16" />
-                                    <span class="truncate">{{ $group['label'] }}</span>
-                                    <x-icon name="chevron-down" :size="14"
-                                            class="ml-auto shrink-0 text-base-content/40 transition-transform group-open:rotate-180" />
-                                </summary>
-                                <ul class="menu w-full gap-0.5 p-0">
-                                    @foreach ($group['items'] as $item)
-                                        @php $isActive = \App\Support\Navigation::itemIsActive($item); @endphp
-                                        <li>
-                                            <a href="{{ route($item['route']) }}"
-                                               @if ($isActive) class="menu-active" aria-current="page" data-sidebar-active @endif>
-                                                <x-icon :name="$item['icon']" :size="16" />
-                                                <span class="truncate">{{ $item['label'] }}</span>
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </details>
-                        </li>
+                        @php $items = $group['items']; @endphp
+
+                        @if (count($items) === 1)
+                            {{-- One destination is a link, not a disclosure that opens to reveal itself. --}}
+                            <x-sidebar-link :item="$items[0]" :label="$group['label']" />
+                        @else
+                            @php
+                                $groupActive = collect($items)->contains(
+                                    fn (array $item) => \App\Support\Navigation::itemIsActive($item)
+                                );
+                            @endphp
+                            <li>
+                                <details @if ($groupActive) open @endif class="group">
+                                    <summary class="text-label flex list-none items-center gap-2 text-base-content/65">
+                                        <span class="min-w-0 flex-1 truncate">{{ $group['label'] }}</span>
+                                        <x-icon name="chevron-down" :size="14" data-sidebar-chevron="true"
+                                                class="shrink-0 text-base-content/40 transition-transform group-open:rotate-180" />
+                                    </summary>
+                                    <ul class="menu w-full gap-0.5 p-0">
+                                        @foreach ($items as $item)
+                                            <x-sidebar-link :item="$item" />
+                                        @endforeach
+                                    </ul>
+                                </details>
+                            </li>
+                        @endif
                     @endforeach
                 </ul>
             </nav>

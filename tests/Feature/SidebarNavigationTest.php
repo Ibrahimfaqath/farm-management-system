@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Support\Navigation;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,10 +12,11 @@ class SidebarNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_sidebar_groups_are_collapsible_and_the_active_group_is_open(): void
+    public function test_sidebar_categories_with_multiple_items_are_collapsible_and_the_active_group_is_open(): void
     {
         $owner = $this->owner();
         $groups = Navigation::forUser($owner);
+        $collapsibleGroups = array_filter($groups, fn (array $group): bool => count($group['items']) > 1);
 
         $html = $this->actingAs($owner)
             ->get(route('animals.index'))
@@ -21,9 +24,9 @@ class SidebarNavigationTest extends TestCase
             ->getContent();
 
         $this->assertSame(
-            count($groups),
+            count($collapsibleGroups),
             substr_count($html, '<details'),
-            'Every navigation category should be a collapsible group.',
+            'Only categories with more than one destination should be collapsible.',
         );
 
         $this->assertSame(
@@ -42,7 +45,45 @@ class SidebarNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.route('animals.index').'"', $html);
     }
 
-    public function test_every_navigation_item_is_inside_a_category_summary(): void
+    public function test_single_destination_categories_render_as_direct_links(): void
+    {
+        $owner = $this->owner();
+        $groups = Navigation::forUser($owner);
+        $singleGroups = array_filter($groups, fn (array $group): bool => count($group['items']) === 1);
+
+        $html = $this->actingAs($owner)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertNotEmpty($singleGroups);
+
+        $document = new DOMDocument;
+        @$document->loadHTML($html);
+        $xpath = new DOMXPath($document);
+
+        foreach ($singleGroups as $group) {
+            $item = $group['items'][0];
+            $links = $xpath->query(
+                '//nav[@data-drawer-nav]/ul[contains(concat(" ", normalize-space(@class), " "), " menu ")]'
+                .'/li/a[@href="'.route($item['route']).'"]'
+            );
+
+            $this->assertSame(
+                1,
+                $links->length,
+                "The {$item['label']} link should be a direct sidebar item, not a one-item disclosure.",
+            );
+        }
+
+        $this->assertMatchesRegularExpression(
+            '/<a href="'.preg_quote(route('dashboard'), '/').'"\s+class="menu-active"\s+aria-current="page"\s+data-sidebar-active\s*>/',
+            $html,
+            'The direct Dashboard link should carry the active state.',
+        );
+    }
+
+    public function test_every_navigation_destination_is_rendered(): void
     {
         $owner = $this->owner();
 
@@ -53,7 +94,52 @@ class SidebarNavigationTest extends TestCase
 
         foreach (Navigation::forUser($owner) as $group) {
             $this->assertStringContainsString('>'.e($group['label']).'</span>', $html);
+
+            foreach ($group['items'] as $item) {
+                $this->assertStringContainsString('href="'.route($item['route']).'"', $html);
+            }
         }
+    }
+
+    public function test_category_summaries_have_no_group_icon_and_only_one_chevron(): void
+    {
+        $owner = $this->owner();
+        $collapsibleGroups = array_filter(
+            Navigation::forUser($owner),
+            fn (array $group): bool => count($group['items']) > 1,
+        );
+
+        $html = $this->actingAs($owner)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        preg_match_all('/<summary\b[^>]*>.*?<\/summary>/s', $html, $matches);
+
+        $this->assertCount(count($collapsibleGroups), $matches[0]);
+
+        foreach ($matches[0] as $summary) {
+            $this->assertSame(
+                1,
+                substr_count($summary, '<svg'),
+                'A category summary should contain only the single disclosure chevron, not a group icon.',
+            );
+            $this->assertSame(1, substr_count($summary, 'data-sidebar-chevron="'));
+        }
+    }
+
+    public function test_sidebar_hides_the_built_in_menu_chevron(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertStringContainsString(
+            '[data-drawer-nav] .menu :where(li > details > summary)::after',
+            $css,
+        );
+        $this->assertMatchesRegularExpression(
+            '/\[data-drawer-nav\][^{]*summary\)::after\s*\{[^}]*content:\s*none/s',
+            $css,
+        );
     }
 
     public function test_create_and_edit_pages_keep_their_section_marked_active(): void
