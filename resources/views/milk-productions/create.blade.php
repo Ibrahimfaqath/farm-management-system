@@ -12,7 +12,7 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-form.select name="farm_id" :label="__('Farm')" :options="$farms"
                                :selected="old('farm_id', $animal?->farm_id ?? $farms->keys()->first())" required />
-                <x-form.select name="animal_id" :label="__('Animal (individual)')"
+                <x-form.animal-select name="animal_id" :label="__('Animal (individual)')"
                                :options="$animals" :selected="old('animal_id', $animal?->id)"
                                :placeholder="__('— Barn-level record —')" />
                 <x-form.select name="barn_id" :label="__('Barn (group)')" :options="$barns" :selected="old('barn_id', $animal?->barn_id)"

@@ -136,7 +136,8 @@ import { initCounters } from './counters.js';
                 // Filter dropdowns run the listbox pattern and keep DOM focus on
                 // their trigger while the list closes. Blurring here would drop
                 // the caret straight out of the filter bar on Escape.
-                if (dropdown.hasAttribute('data-filter-select')) {
+                if (dropdown.hasAttribute('data-filter-select')
+                    || dropdown.hasAttribute('data-animal-select')) {
                     return;
                 }
 
@@ -185,7 +186,7 @@ import { initCounters } from './counters.js';
      * colours, border and shadow. Anything outside a `.table-scroll` is left to
      * DaisyUI, which already positions it correctly.
      */
-    const FLOATING = '.table-scroll .dropdown, [data-filter-select]';
+    const FLOATING = '.table-scroll .dropdown, [data-filter-select], [data-animal-select]';
 
     const GAP = 6;
     const MARGIN = 8;
@@ -217,17 +218,18 @@ import { initCounters } from './counters.js';
         // the generic `:scope > [tabindex]` fallback would resolve to that
         // hidden control and measure a zero-width anchor. Ask for the real
         // trigger first.
-        const trigger = dropdown.querySelector('[data-filter-select-trigger]')
+        const trigger = dropdown.querySelector('[data-filter-select-trigger], [data-animal-select-trigger]')
             || dropdown.querySelector(':scope > button, :scope > label');
 
         if (!(trigger instanceof HTMLElement)) {
             return;
         }
 
-        // Only a filter panel is pinned to the trigger's width. A row action
+        // Only a select panel is pinned to the trigger's width. A row action
         // menu is triggered by a 24px square button but carries its own width,
         // so copying the trigger width squashed the whole menu into 24px.
-        const matchTriggerWidth = dropdown.hasAttribute('data-filter-select');
+        const matchTriggerWidth = dropdown.hasAttribute('data-filter-select')
+            || dropdown.hasAttribute('data-animal-select');
 
         reset(dropdown);
 
@@ -334,7 +336,8 @@ import { initCounters } from './counters.js';
             // A filter listbox keeps focus on its trigger while the panel is
             // closed, so `:focus-within` does not mean the list is open. Its
             // own open/close code owns `aria-expanded`.
-            if (dropdown.hasAttribute('data-filter-select')) {
+            if (dropdown.hasAttribute('data-filter-select')
+                || dropdown.hasAttribute('data-animal-select')) {
                 return;
             }
 
@@ -427,25 +430,72 @@ import { initCounters } from './counters.js';
         dropdowns.forEach((dropdown) => {
             const select = dropdown.querySelector('[data-filter-select-native]');
             const trigger = dropdown.querySelector('[data-filter-select-trigger]');
+            const panel = dropdown.querySelector(':scope > .dropdown-content');
             const list = dropdown.querySelector('[data-filter-select-list]');
+            const search = dropdown.querySelector('[data-filter-select-search]');
+            const empty = dropdown.querySelector('[data-filter-select-empty]');
 
             if (!(select instanceof HTMLSelectElement)
                 || !(trigger instanceof HTMLButtonElement)
+                || !(panel instanceof HTMLElement)
                 || !(list instanceof HTMLElement)) {
                 return;
             }
 
             dropdown.dataset.filterReady = '1';
 
+            const searchable = dropdown.hasAttribute('data-filter-select-searchable');
+            const limit = Math.max(1, Number.parseInt(dropdown.dataset.filterSelectLimit || '12', 10) || 12);
             const options = [...list.querySelectorAll('[role="option"]')];
 
             if (options.length === 0) {
                 return;
             }
 
-            options.forEach((option, index) => option.id = `${dropdown.id || 'filter'}-opt-${index}`);
+            options.forEach((option, index) => option.id = `${select.id || 'filter'}-opt-${index}`);
 
-            let activeIndex = Math.max(0, options.findIndex((option) => option.getAttribute('aria-selected') === 'true'));
+            let activeOption = null;
+
+            const normalise = (value) => value
+                .toLocaleLowerCase('id-ID')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+
+            const visibleOptions = () => options.filter((option) => !option.hidden);
+
+            const renderOptions = () => {
+                if (!searchable) {
+                    options.forEach((option) => option.hidden = false);
+
+                    if (empty) {
+                        empty.hidden = true;
+                    }
+
+                    return;
+                }
+
+                const query = normalise(search?.value ?? '');
+                let visible = 0;
+
+                options.forEach((option, index) => {
+                    const isAll = option.dataset.value === '';
+                    const isSelected = option.dataset.value === select.value;
+                    const matches = query === ''
+                        ? isAll || isSelected || index <= limit
+                        : normalise(option.textContent).includes(query);
+
+                    option.hidden = !matches;
+
+                    if (matches) {
+                        visible += 1;
+                    }
+                });
+
+                if (empty) {
+                    empty.hidden = visible > 0;
+                }
+            };
 
             const syncFromSelect = () => {
                 const chosen = select.options[select.selectedIndex];
@@ -461,44 +511,80 @@ import { initCounters } from './counters.js';
                     option.classList.toggle('text-primary', isSelected);
                 });
 
-                activeIndex = Math.max(0, options.findIndex((option) => option.dataset.value === value));
+                activeOption = options.find((option) => option.dataset.value === value && !option.hidden)
+                    ?? visibleOptions()[0]
+                    ?? null;
             };
 
             const highlight = () => {
-                options.forEach((option, index) => {
+                const visible = visibleOptions();
+
+                if (!visible.includes(activeOption)) {
+                    activeOption = visible[0] ?? null;
+                }
+
+                options.forEach((option) => {
                     // `menu-active` fills the row with solid base-content and
                     // reads as a heavy black bar. `base-200` is too close to
                     // `base-100` to see in the light theme, so the keyboard
                     // cursor uses `base-300` — visible in both themes.
-                    option.classList.toggle('bg-base-300', index === activeIndex);
-                    option.classList.toggle('font-medium', index === activeIndex);
+                    const active = option === activeOption;
+
+                    option.classList.toggle('bg-base-300', active);
+                    option.classList.toggle('font-medium', active);
                 });
 
-                trigger.setAttribute('aria-activedescendant', options[activeIndex].id);
-                options[activeIndex].scrollIntoView({ block: 'nearest' });
+                [trigger, search].forEach((control) => {
+                    if (!(control instanceof HTMLElement)) {
+                        return;
+                    }
+
+                    if (activeOption) {
+                        control.setAttribute('aria-activedescendant', activeOption.id);
+                    } else {
+                        control.removeAttribute('aria-activedescendant');
+                    }
+                });
+
+                activeOption?.scrollIntoView({ block: 'nearest' });
             };
 
-        const open = () => {
-            list.hidden = false;
-            trigger.setAttribute('aria-expanded', 'true');
-            // Re-place now that the panel is actually visible: a hidden element
-            // measures 0x0, so the first placement cannot know whether the
-            // option list fits below the trigger or has to flip upwards.
-            place(dropdown);
-            highlight();
-        };
+            const open = () => {
+                if (searchable && search instanceof HTMLInputElement) {
+                    search.value = '';
+                }
+
+                renderOptions();
+                panel.hidden = false;
+                trigger.setAttribute('aria-expanded', 'true');
+
+                const selected = options.find((option) => option.dataset.value === select.value && !option.hidden);
+                activeOption = selected ?? visibleOptions()[0] ?? null;
+
+                if (searchable && search instanceof HTMLInputElement) {
+                    search.focus({ preventScroll: true });
+                }
+
+                // Re-place now that the panel is actually visible: a hidden element
+                // measures 0x0, so the first placement cannot know whether the
+                // option list fits below the trigger or has to flip upwards.
+                place(dropdown);
+                highlight();
+            };
 
             const close = () => {
-                list.hidden = true;
+                panel.hidden = true;
                 trigger.setAttribute('aria-expanded', 'false');
                 trigger.removeAttribute('aria-activedescendant');
+
+                if (searchable && search instanceof HTMLInputElement) {
+                    search.value = '';
+                }
             };
 
             filterSelectClosers.set(dropdown, close);
 
-            const choose = (index) => {
-                const option = options[index];
-
+            const choose = (option) => {
                 if (!option) {
                     return;
                 }
@@ -518,7 +604,7 @@ import { initCounters } from './counters.js';
             };
 
             trigger.addEventListener('click', () => {
-                if (list.hidden) {
+                if (panel.hidden) {
                     open();
                 } else {
                     close();
@@ -528,24 +614,47 @@ import { initCounters } from './counters.js';
             list.addEventListener('click', (event) => {
                 const option = event.target.closest('[role="option"]');
 
-                if (option) {
-                    choose(options.indexOf(option));
+                if (option instanceof HTMLElement && options.includes(option)) {
+                    choose(option);
                 }
             });
 
+            if (searchable && search instanceof HTMLInputElement) {
+                search.addEventListener('input', () => {
+                    renderOptions();
+                    activeOption = visibleOptions()[0] ?? null;
+                    highlight();
+                });
+            }
+
             dropdown.addEventListener('keydown', (event) => {
-                const isOpen = !list.hidden;
+                const isOpen = !panel.hidden;
+
+                // Space, Home and End belong to the search caret while the
+                // reader is typing; the listbox must not steal them.
+                if (searchable && event.target === search
+                    && (event.key === ' ' || event.key === 'Home' || event.key === 'End')) {
+                    return;
+                }
 
                 if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                     event.preventDefault();
 
                     if (!isOpen) {
                         open();
+                        return;
+                    }
+
+                    const visible = visibleOptions();
+
+                    if (visible.length === 0) {
+                        return;
                     }
 
                     const step = event.key === 'ArrowDown' ? 1 : -1;
+                    const current = Math.max(0, visible.indexOf(activeOption));
 
-                    activeIndex = (activeIndex + step + options.length) % options.length;
+                    activeOption = visible[(current + step + visible.length) % visible.length];
                     highlight();
 
                     return;
@@ -556,8 +665,14 @@ import { initCounters } from './counters.js';
                         return;
                     }
 
+                    const visible = visibleOptions();
+
+                    if (visible.length === 0) {
+                        return;
+                    }
+
                     event.preventDefault();
-                    activeIndex = event.key === 'Home' ? 0 : options.length - 1;
+                    activeOption = event.key === 'Home' ? visible[0] : visible[visible.length - 1];
                     highlight();
 
                     return;
@@ -571,7 +686,7 @@ import { initCounters } from './counters.js';
                     if (!isOpen) {
                         open();
                     } else {
-                        choose(activeIndex);
+                        choose(activeOption);
                     }
 
                     return;
@@ -579,7 +694,9 @@ import { initCounters } from './counters.js';
 
                 if (event.key === 'Escape' && isOpen) {
                     event.preventDefault();
+                    event.stopPropagation();
                     close();
+                    trigger.focus({ preventScroll: true });
                 }
             });
 
@@ -590,6 +707,298 @@ import { initCounters } from './counters.js';
             // Hand the visible control over to the themed trigger. This only
             // runs once all three parts are confirmed present, so a partial
             // match leaves the working native select on screen.
+            select.classList.add('hidden');
+            select.setAttribute('tabindex', '-1');
+            trigger.hidden = false;
+
+            syncFromSelect();
+        });
+    }
+
+    /**
+     * Searchable animal picker.
+     *
+     * An animal list is long enough that a native select becomes a wall of
+     * options. The real select stays in the form as the submitted value and as
+     * the no-JavaScript fallback; this listbox shows a short first page and
+     * narrows all options as the reader types.
+     */
+    const animalSelectClosers = new WeakMap();
+    let animalOutsideClickBound = false;
+
+    function initAnimalSelects() {
+        if (!animalOutsideClickBound) {
+            animalOutsideClickBound = true;
+
+            document.addEventListener('click', (event) => {
+                if (!(event.target instanceof Element)) {
+                    return;
+                }
+
+                document.querySelectorAll('[data-animal-select]').forEach((dropdown) => {
+                    if (dropdown.contains(event.target)) {
+                        return;
+                    }
+
+                    animalSelectClosers.get(dropdown)?.();
+                });
+            });
+        }
+
+        const dropdowns = document.querySelectorAll('[data-animal-select]:not([data-animal-ready])');
+
+        dropdowns.forEach((dropdown) => {
+            const select = dropdown.querySelector('[data-animal-select-native]');
+            const trigger = dropdown.querySelector('[data-animal-select-trigger]');
+            const panel = dropdown.querySelector('[data-animal-select-panel]');
+            const list = dropdown.querySelector('[data-animal-select-list]');
+            const search = dropdown.querySelector('[data-animal-select-search]');
+            const empty = dropdown.querySelector('[data-animal-select-empty]');
+
+            if (!(select instanceof HTMLSelectElement)
+                || !(trigger instanceof HTMLButtonElement)
+                || !(panel instanceof HTMLElement)
+                || !(list instanceof HTMLElement)) {
+                return;
+            }
+
+            dropdown.dataset.animalReady = '1';
+
+            const options = [...list.querySelectorAll('[data-animal-select-option]')];
+
+            if (options.length === 0) {
+                return;
+            }
+
+            const limit = Math.max(1, Number.parseInt(dropdown.dataset.animalSelectLimit || '10', 10) || 10);
+            const fieldLabel = dropdown.closest('.form-field')?.querySelector('[data-animal-select-label]');
+
+            if (fieldLabel instanceof HTMLLabelElement) {
+                fieldLabel.htmlFor = trigger.id;
+            }
+
+            options.forEach((option, index) => option.id = `${select.id || 'animal'}-opt-${index}`);
+
+            let activeOption = null;
+
+            const normalise = (value) => value
+                .toLocaleLowerCase('id-ID')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+
+            const visibleOptions = () => options.filter((option) => !option.hidden);
+
+            const renderOptions = () => {
+                const query = normalise(search?.value ?? '');
+                let visible = 0;
+
+                options.forEach((option, index) => {
+                    const isSelected = option.dataset.value === select.value;
+                    const matches = query === ''
+                        ? isSelected || index < limit
+                        : normalise(option.textContent).includes(query);
+
+                    option.hidden = !matches;
+
+                    if (matches) {
+                        visible += 1;
+                    }
+                });
+
+                if (empty) {
+                    empty.hidden = visible > 0;
+                }
+            };
+
+            const syncFromSelect = () => {
+                const chosen = select.options[select.selectedIndex];
+                const value = select.value;
+
+                trigger.querySelector('[data-animal-select-value]').textContent =
+                    chosen ? chosen.textContent.trim() : '';
+
+                options.forEach((option) => {
+                    const isSelected = option.dataset.value === value;
+
+                    option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                    option.classList.toggle('text-primary', isSelected);
+                });
+
+                activeOption = options.find((option) => option.dataset.value === value && !option.hidden)
+                    ?? visibleOptions()[0]
+                    ?? null;
+            };
+
+            const highlight = () => {
+                const visible = visibleOptions();
+
+                if (!visible.includes(activeOption)) {
+                    activeOption = visible[0] ?? null;
+                }
+
+                options.forEach((option) => {
+                    const active = option === activeOption;
+
+                    option.classList.toggle('bg-base-300', active);
+                    option.classList.toggle('font-medium', active);
+                });
+
+                [trigger, search].forEach((control) => {
+                    if (!(control instanceof HTMLElement)) {
+                        return;
+                    }
+
+                    if (activeOption) {
+                        control.setAttribute('aria-activedescendant', activeOption.id);
+                    } else {
+                        control.removeAttribute('aria-activedescendant');
+                    }
+                });
+
+                activeOption?.scrollIntoView({ block: 'nearest' });
+            };
+
+            const open = () => {
+                if (search instanceof HTMLInputElement) {
+                    search.value = '';
+                }
+
+                renderOptions();
+                panel.hidden = false;
+                trigger.setAttribute('aria-expanded', 'true');
+
+                const selected = options.find((option) => option.dataset.value === select.value && !option.hidden);
+                activeOption = selected ?? visibleOptions()[0] ?? null;
+
+                if (search instanceof HTMLInputElement) {
+                    search.focus({ preventScroll: true });
+                }
+
+                place(dropdown);
+                highlight();
+            };
+
+            const close = () => {
+                panel.hidden = true;
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.removeAttribute('aria-activedescendant');
+
+                if (search instanceof HTMLInputElement) {
+                    search.value = '';
+                    search.removeAttribute('aria-activedescendant');
+                }
+            };
+
+            animalSelectClosers.set(dropdown, close);
+
+            const choose = (option) => {
+                if (!option) {
+                    return;
+                }
+
+                select.value = option.dataset.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                syncFromSelect();
+                close();
+                trigger.focus({ preventScroll: true });
+            };
+
+            trigger.addEventListener('click', () => {
+                if (panel.hidden) {
+                    open();
+                } else {
+                    close();
+                }
+            });
+
+            list.addEventListener('click', (event) => {
+                const option = event.target.closest('[data-animal-select-option]');
+
+                if (option instanceof HTMLElement && options.includes(option)) {
+                    choose(option);
+                }
+            });
+
+            if (search instanceof HTMLInputElement) {
+                search.addEventListener('input', () => {
+                    renderOptions();
+                    activeOption = visibleOptions()[0] ?? null;
+                    highlight();
+                });
+            }
+
+            dropdown.addEventListener('keydown', (event) => {
+                const isOpen = !panel.hidden;
+
+                if (event.target === search
+                    && (event.key === ' ' || event.key === 'Home' || event.key === 'End')) {
+                    return;
+                }
+
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+
+                    if (!isOpen) {
+                        open();
+                        return;
+                    }
+
+                    const visible = visibleOptions();
+
+                    if (visible.length === 0) {
+                        return;
+                    }
+
+                    const step = event.key === 'ArrowDown' ? 1 : -1;
+                    const current = Math.max(0, visible.indexOf(activeOption));
+
+                    activeOption = visible[(current + step + visible.length) % visible.length];
+                    highlight();
+
+                    return;
+                }
+
+                if (event.key === 'Home' || event.key === 'End') {
+                    if (!isOpen) {
+                        return;
+                    }
+
+                    const visible = visibleOptions();
+
+                    if (visible.length === 0) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    activeOption = event.key === 'Home' ? visible[0] : visible[visible.length - 1];
+                    highlight();
+
+                    return;
+                }
+
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+
+                    if (!isOpen) {
+                        open();
+                    } else {
+                        choose(activeOption);
+                    }
+
+                    return;
+                }
+
+                if (event.key === 'Escape' && isOpen) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    close();
+                    trigger.focus({ preventScroll: true });
+                }
+            });
+
+            select.addEventListener('change', syncFromSelect);
+
             select.classList.add('hidden');
             select.setAttribute('tabindex', '-1');
             trigger.hidden = false;
@@ -1235,7 +1644,7 @@ import { initCounters } from './counters.js';
                 // The mobile panel collapses when the last filter is cleared,
                 // taking the control that was just used with it. The search
                 // field stays visible and is the natural next stop.
-                const search = form.querySelector('input[type="search"]');
+                const search = form.querySelector('input[type="search"]:not([data-filter-select-search])');
 
                 if (search instanceof HTMLInputElement) {
                     search.focus({ preventScroll: true });
@@ -1315,6 +1724,7 @@ import { initCounters } from './counters.js';
             // can land on their triggers. Everything else in this file is
             // delegated from the document and keeps working on the new markup.
             initFilterSelects();
+            initAnimalSelects();
 
             if (content.querySelector('canvas[data-chart]')) {
                 initCharts();
@@ -1479,6 +1889,13 @@ import { initCounters } from './counters.js';
                 return;
             }
 
+            // The search field inside a filter dropdown narrows its own list;
+            // it is not the filter bar's free-text query and must not reload
+            // the page while the reader is still choosing an option.
+            if (input.closest('[data-filter-select]')) {
+                return;
+            }
+
             const form = input.closest('form[data-live-filter]');
 
             if (!form) {
@@ -1519,7 +1936,7 @@ import { initCounters } from './counters.js';
             // A reset is the one filter action whose control disappears. Move
             // focus to the search field before the swap so the normal restore
             // carries it into the clean form, instead of dropping it on <body>.
-            link.closest('form')?.querySelector('input[type="search"]')?.focus({ preventScroll: true });
+            link.closest('form')?.querySelector('input[type="search"]:not([data-filter-select-search])')?.focus({ preventScroll: true });
 
             load(url, 'push');
         });
@@ -1544,6 +1961,7 @@ import { initCounters } from './counters.js';
     initDropdowns();
     initScrollableDropdowns();
     initFilterSelects();
+    initAnimalSelects();
     initDropdownState();
     initLineEditors();
     initDrawer();

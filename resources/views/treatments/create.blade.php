@@ -10,7 +10,7 @@
 
         <x-panel :title="__('Treatment details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.select name="animal_id" :label="__('Animal')" :options="$animals"
+                <x-form.animal-select name="animal_id" :label="__('Animal')" :options="$animals"
                                :selected="old('animal_id', $treatment->animal_id ?? $animal?->id)" required class="sm:col-span-2" />
                 <x-form.select name="health_record_id" :label="__('Health record (optional)')"
                                :options="$healthRecords->mapWithKeys(fn ($r) => [$r->id => $r->record_date->translatedFormat('d M Y').' · '.($r->diagnosis ?? $r->symptoms)])"

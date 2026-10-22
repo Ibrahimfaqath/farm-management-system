@@ -10,9 +10,9 @@
 
         <x-panel :title="__('Birth details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.select name="dam_id" :label="__('Dam')" :options="$dams"
+                <x-form.animal-select name="dam_id" :label="__('Dam')" :options="$dams"
                                :selected="old('dam_id', $birth->dam_id ?? $dam?->id)" required class="sm:col-span-2" />
-                <x-form.select name="sire_id" :label="__('Sire')" :options="$sires" :selected="$birth->sire_id"
+                <x-form.animal-select name="sire_id" :label="__('Sire')" :options="$sires" :selected="$birth->sire_id"
                                :placeholder="__('— Unknown —')" />
                 <x-form.select name="pregnancy_check_id" :label="__('Pregnancy check')" :options="$pregnancyChecks"
                                :selected="old('pregnancy_check_id', $pregnancyCheck?->id)"

@@ -10,7 +10,7 @@
 
         <x-panel :title="__('Breeding details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.select name="animal_id" :label="__('Female')" :options="$females"
+                <x-form.animal-select name="animal_id" :label="__('Female')" :options="$females"
                                :selected="old('animal_id', $record->animal_id ?? $animal?->id)" required class="sm:col-span-2" />
                 <x-form.select name="record_type" :label="__('Record type')" :options="$recordTypes" :selected="$record->record_type?->value" required />
                 <x-form.input name="breeding_date" :label="__('Date')" type="date" required

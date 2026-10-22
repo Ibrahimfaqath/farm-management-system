@@ -10,7 +10,7 @@
 
         <x-panel :title="__('Check details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.select name="animal_id" :label="__('Female')" :options="$animals"
+                <x-form.animal-select name="animal_id" :label="__('Female')" :options="$animals"
                                :selected="old('animal_id', $check->animal_id ?? $breedingRecord?->animal_id ?? $breedingRecord?->animal?->id)"
                                required class="sm:col-span-2" />
                 <x-form.select name="breeding_record_id" :label="__('Breeding record')" :options="$breedingRecords"

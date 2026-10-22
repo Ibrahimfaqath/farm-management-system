@@ -10,7 +10,7 @@
 
         <x-panel :title="__('Vaccination details')">
             <div class="grid gap-4 sm:grid-cols-2">
-                <x-form.select name="animal_id" :label="__('Animal')" :options="$animals"
+                <x-form.animal-select name="animal_id" :label="__('Animal')" :options="$animals"
                                :selected="old('animal_id', $vaccination->animal_id ?? $animal?->id)" required class="sm:col-span-2" />
                 <x-form.input name="vaccine_name" :label="__('Vaccine name')" :value="$vaccination->vaccine_name" required
                               :placeholder="__('For example: brucellosis')" list="vaccine-names" />

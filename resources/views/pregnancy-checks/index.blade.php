@@ -25,6 +25,8 @@
     <x-panel padding="p-0">
         <x-filter-bar :reset="route('pregnancy-checks.index')" :with-search="false">
             <x-filter-select name="animal_id"
+                searchable
+                :search-placeholder="__('Search animals…')"
                 :options="$animals"
                 :selected="$filters['animal_id'] ?? ''"
                 :placeholder="__('All females') "

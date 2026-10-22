@@ -16,7 +16,7 @@
 
         <x-panel :title="__('Record context')">
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <x-form.select name="animal_id" :label="__('Livestock')" :options="$animals" :selected="$selectedAnimal" required
+                <x-form.animal-select name="animal_id" :label="__('Livestock')" :options="$animals" :selected="$selectedAnimal" required
                                class="sm:col-span-2" />
                 <x-form.input name="record_date" :label="__('Record date')" type="date" required
                               :value="$record->record_date?->toDateString() ?? now()->toDateString()" />

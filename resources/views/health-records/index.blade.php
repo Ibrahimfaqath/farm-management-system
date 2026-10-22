@@ -34,6 +34,8 @@
         <x-filter-bar :reset="route('health-records.index')" :with-search="false"
                       columns="sm:grid-cols-2 lg:grid-cols-4">
             <x-filter-select name="animal_id"
+                searchable
+                :search-placeholder="__('Search animals…')"
                 :options="$animals"
                 :selected="$filters['animal_id'] ?? ''"
                 :placeholder="__('All animals') "

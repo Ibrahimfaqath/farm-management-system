@@ -71,9 +71,9 @@
 
             <x-panel :title="__('Pedigree')" :description="__('Optional. Link the dam and sire when the parents are known.')">
                 <div class="grid gap-4">
-                    <x-form.select name="dam_id" :label="__('Dam (mother)')" :options="$parents" :selected="$animal->dam_id"
+                    <x-form.animal-select name="dam_id" :label="__('Dam (mother)')" :options="$parents" :selected="$animal->dam_id"
                                    :placeholder="__('— Optional —')" />
-                    <x-form.select name="sire_id" :label="__('Sire (father)')" :options="$parents" :selected="$animal->sire_id"
+                    <x-form.animal-select name="sire_id" :label="__('Sire (father)')" :options="$parents" :selected="$animal->sire_id"
                                    :placeholder="__('— Optional —')" />
                 </div>
             </x-panel>

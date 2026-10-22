@@ -24,6 +24,8 @@
         <x-filter-bar :reset="route('birth-records.index')" :with-search="false"
                       columns="sm:grid-cols-2 lg:grid-cols-4">
             <x-filter-select name="dam_id"
+                searchable
+                :search-placeholder="__('Search animals…')"
                 :options="$dams"
                 :selected="$filters['dam_id'] ?? ''"
                 :placeholder="__('All dams') "
